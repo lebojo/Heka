@@ -17,7 +17,7 @@ xcrun swiftc "${swift_flags[@]}" \
   Heka/Models/UsageModels.swift Heka/Models/UsageStore.swift Heka/Services/UsageService.swift \
   Heka/Models/AgentConversation.swift Heka/Models/AgentLaunch.swift Heka/Models/TerminalTheme.swift Heka/Models/Removal.swift Heka/Models/RemovalConfirmations.swift Heka/Models/TerminalAppearance.swift \
   Heka/Models/InstallationStatus.swift Heka/Platforms/macOS/TerminalKeyRoute.swift Heka/Services/AgentSkillInstaller.swift Heka/Services/CommandLineInstaller.swift Heka/Services/AgentUIMigration.swift Heka/Services/LoginShell.swift \
-  Heka/Services/AgentProcess.swift Heka/Services/ConversationTranscripts.swift Heka/Models/AgentStatus.swift \
+  Heka/Services/AgentProcess.swift Heka/Services/AgentSessionLocator.swift Heka/Services/SessionDatabase.swift Heka/Services/ConversationTranscripts.swift Heka/Models/AgentStatus.swift \
   Heka/Services/ClaudeSubagents.swift Heka/Models/Subagent.swift "Heka/Extensions/String+HomeAbbreviation.swift" \
   Tests/RegressionTests.swift Tests/RefreshTests.swift Tests/InspectorTests.swift Tests/UsageTests.swift Tests/SettingsTests.swift Tests/CoreTests.swift -o "$test_binary"
 "$test_binary"
@@ -53,5 +53,5 @@ xcrun swiftc "${swift_flags[@]}" \
   Heka/Models/Data/SessionMessage.swift Heka/Core/Session/SessionTranscript.swift \
   Heka/Core/Session/ChatMessageLog.swift Heka/Core/Session/ClaudeChatDecoder.swift Heka/Core/Session/CodexChatDecoder.swift \
   Heka/Core/Session/CopilotChatDecoder.swift Heka/Core/Session/ChatJournalReader.swift Heka/Services/FileSystemWatcher.swift \
-  Heka/Platforms/macOS/AgentJournalMonitor.swift Tests/ChatJournalTests.swift -o "$claude_binary"
+  Heka/Platforms/macOS/AgentJournalMonitor.swift Heka/Platforms/macOS/OpenCodeChatReader.swift Heka/Services/SessionDatabase.swift Heka/Services/AgentSessionLocator.swift Heka/Models/AgentConversation.swift Heka/Core/Session/SessionCodeTokens.swift Tests/AgentChatSupportTests.swift Tests/ChatJournalTests.swift -o "$claude_binary"
 "$claude_binary"

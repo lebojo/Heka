@@ -1,6 +1,12 @@
 import SwiftUI
 
 enum Typography {
+    #if os(macOS)
+    static let chatBodySize: CGFloat = 13
+    #else
+    static let chatBodySize: CGFloat = 17
+    #endif
+
     static let display = Font.system(size: 22, weight: .semibold)
     static let title = Font.title3.weight(.semibold)
     static let headline = Font.headline

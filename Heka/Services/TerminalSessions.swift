@@ -165,7 +165,7 @@ import Observation
 
     func conversation() async throws -> [SessionMessage] {
         guard let journal = agent?.journal else {
-            throw WorkspaceError(message: String(localized: "No Claude, Codex or Copilot conversation found in this terminal. Read its screen instead, without --reply or --messages."))
+            throw WorkspaceError(message: String(localized: "No agent conversation found in this terminal. Read its screen instead, without --reply or --messages."))
         }
         return await journal.makeReader()(journal.url)
     }
@@ -558,6 +558,6 @@ import Observation
 private extension AgentProcess {
     var journal: AgentJournal? {
         guard let source = SessionChatSource(agent: agent), let transcriptPath else { return nil }
-        return AgentJournal(source: source, url: URL(fileURLWithPath: transcriptPath))
+        return AgentJournal(source: source, url: URL(fileURLWithPath: transcriptPath), sessionID: sessionID)
     }
 }

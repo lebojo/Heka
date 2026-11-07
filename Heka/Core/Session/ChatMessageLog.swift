@@ -28,8 +28,14 @@ struct ChatMessageLog: Sendable {
         upsert(SessionMessage(id: id, kind: kind, text: Self.bounded(text)))
     }
 
+    mutating func appendText(_ text: String, id: String, kind: SessionMessage.Kind) {
+        let previous = positions[id].map { messages[$0].text } ?? ""
+        addText(previous + text, id: id, kind: kind)
+    }
+
     mutating func startTool(_ call: String, name: String, detail: String) {
-        upsert(SessionMessage(id: "tool:\(call)", kind: .tool, text: Self.bounded(detail), title: name, toolState: .running))
+        upsert(SessionMessage(id: "tool:\(call)", kind: .tool, text: Self.bounded(detail), title: name, toolState: .running,
+                              detail: Self.bounded(detail)))
     }
 
     mutating func finishTool(_ call: String, output: String, failed: Bool) {

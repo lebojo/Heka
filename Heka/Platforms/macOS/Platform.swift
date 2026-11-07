@@ -18,7 +18,7 @@ extension Color {
 extension View {
     func commandInputTraits() -> some View { self }
 
-    func submitsOnReturn(_ text: Binding<String>, perform submit: @escaping () -> Void) -> some View {
+    func submitsChatMessage(perform submit: @escaping () -> Void) -> some View {
         onSubmit(submit)
     }
 

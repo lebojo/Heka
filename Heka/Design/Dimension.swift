@@ -1,6 +1,11 @@
 import SwiftUI
 
 enum Dimension {
+    enum Chat {
+        static let readableWidth: CGFloat = 760
+        static let actionSize: CGFloat = 36
+    }
+
     enum Window {
         static let defaultWidth: CGFloat = 1180
         static let defaultHeight: CGFloat = 760

@@ -67,6 +67,8 @@ Contrôles et feuilles conservent leurs formes macOS. Le filtre utilise un recta
 
 ## Components
 
+- **Chat** : colonne de lecture centrée (760 pt maximum), prompts utilisateur dans une bulle alignée à droite et réponses de l’agent directement sur le fond. Le Markdown natif présente titres, listes, citations, tableaux défilants et blocs de code colorés. Les outils restent repliables, avec leur commande visible. Le champ de saisie multiligne grandit de 3 à 8 lignes ; sur Mac, Entrée envoie et ⌥Entrée ajoute une ligne. Sur iPhone et iPad, Entrée ajoute une ligne. Le bouton et ⌘Entrée permettent aussi d’envoyer. Le cadre accentué signale le focus.
+
 - **Navigation** : SF Symbols `folder`, `shippingbox`, `arrow.triangle.branch` et `terminal` distinguent les niveaux. Sélection native du terminal ; noms sur une ligne, menus contextuels et déplacement des projets vers les dossiers virtuels.
 - **Ajout** : menu + dans l’en-tête de la barre latérale pour projet, import et dossier virtuel. Le plus d’un projet crée un worktree ; le plus d’un worktree et l’action du détail créent un terminal. Chaque bouton à icône porte une aide et un libellé d’accessibilité.
 - **Filtre** : recherche textuelle avec effacement accessible ; les groupes se déploient pendant la recherche et un état « Aucun résultat » explique l’absence de correspondances.

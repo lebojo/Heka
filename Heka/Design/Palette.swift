@@ -22,6 +22,9 @@ enum Palette {
     static let danger = Color.red
     static let agentWorking = Color.yellow
     static let codeBackground = Color.white
+    static let codeKeyword = Color(.codeKeyword)
+    static let codeString = Color(.codeString)
+    static let codeNumber = Color(.codeNumber)
 
     static let branchForeground = Color(.branchForeground)
     static let branchBackground = Color(.branchBackground)

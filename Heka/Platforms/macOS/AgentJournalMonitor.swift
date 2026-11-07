@@ -4,6 +4,7 @@ struct AgentJournal: Equatable, Sendable {
     let source: SessionChatSource
     let url: URL
     var isSubagent = false
+    var sessionID: String? = nil
 
     func makeReader() -> @Sendable (URL) async -> [SessionMessage] {
         switch source {
@@ -11,8 +12,15 @@ struct AgentJournal: Equatable, Sendable {
         case .claude: Self.reader(decoding: ClaudeChatDecoder.self)
         case .codex: Self.reader(decoding: CodexChatDecoder.self)
         case .copilot: Self.reader(decoding: CopilotChatDecoder.self)
+        case .openCode:
+            Self.openCodeReader(sessionID: sessionID ?? "")
         case .terminal: { _ in [] }
         }
+    }
+
+    private static func openCodeReader(sessionID: String) -> @Sendable (URL) async -> [SessionMessage] {
+        let reader = OpenCodeChatReader(sessionID: sessionID)
+        return { await reader.read($0) }
     }
 
     private static func reader<Decoder: ChatJournalDecoder>(decoding: Decoder.Type) -> @Sendable (URL) async -> [SessionMessage] {
@@ -27,6 +35,7 @@ struct AgentJournal: Equatable, Sendable {
     private var read: (@Sendable (URL) async -> [SessionMessage])?
     private var fileWatch: FileSystemWatcher?
     private var watchRetry: Task<Void, Never>?
+    private var databaseRefresh: Task<Void, Never>?
     private var reading: Task<Void, Never>?
     private var readAgain = false
     private var isSuspended = false
@@ -63,12 +72,23 @@ struct AgentJournal: Equatable, Sendable {
         isSuspended = false
         installFileWatch()
         scheduleRead()
+        if attached?.source == .openCode {
+            // SQLite writes usually touch the WAL, whose inode can change on checkpoints.
+            databaseRefresh = Task { [weak self] in
+                while !Task.isCancelled {
+                    do { try await Task.sleep(for: .seconds(1)) } catch { return }
+                    guard let self else { return }
+                    scheduleRead()
+                }
+            }
+        }
     }
 
     private func stopWatching() {
         generation = UUID()
         fileWatch?.cancel(); fileWatch = nil
         watchRetry?.cancel(); watchRetry = nil
+        databaseRefresh?.cancel(); databaseRefresh = nil
         reading?.cancel(); reading = nil
         readAgain = false
     }

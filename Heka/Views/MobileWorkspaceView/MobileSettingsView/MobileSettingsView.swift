@@ -14,6 +14,7 @@ struct MobileSettingsView: View {
                 MobileTerminalSettingsSection()
                 MobileSavedHostsSection()
                 MobileManualHostSection()
+                TestFlightSettingsSection()
             }
             .environment(store)
             .navigationTitle("Settings")

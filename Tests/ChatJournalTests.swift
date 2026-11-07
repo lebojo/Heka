@@ -71,6 +71,7 @@ import Foundation
     }
 
     @MainActor static func main() async throws {
+        try await agentChatSupport()
         var decoder = ClaudeChatDecoder()
         let user = try record("user", "u1", "Bonjour 👋")
         decoder.consume(user, offset: 0)

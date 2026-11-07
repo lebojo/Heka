@@ -11,7 +11,7 @@ struct SessionTranscriptList: View {
         GeometryReader { viewport in
             ScrollViewReader { proxy in
                 ScrollView {
-                    LazyVStack(alignment: .leading, spacing: Spacing.l) {
+                    LazyVStack(alignment: .leading, spacing: Spacing.xxl) {
                         if messages.isEmpty {
                             ContentUnavailableView(source.agent.map { "\($0.title) Conversation" } ?? "The Session Is Ready",
                                                    systemImage: "bubble.left.and.bubble.right",
@@ -22,7 +22,10 @@ struct SessionTranscriptList: View {
                             HStack { ProgressView().controlSize(.small); Text("Waiting for a response…").font(Typography.caption) }
                         }
                         Color.clear.frame(height: 1).id("latest")
-                    }.padding()
+                    }
+                    .frame(maxWidth: Dimension.Chat.readableWidth)
+                    .padding(Spacing.xl)
+                    .frame(maxWidth: .infinity)
                     .background(GeometryReader { geometry in
                         Color.clear.preference(key: TranscriptFrame.self, value: geometry.frame(in: .named("transcript")))
                     })

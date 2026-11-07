@@ -15,13 +15,15 @@ struct SessionMessage: Identifiable, Codable, Equatable, Sendable {
     var text: String
     var title: String?
     var toolState: ToolState?
+    var detail: String?
 
-    init(id: String = UUID().uuidString, kind: Kind, text: String, title: String? = nil, toolState: ToolState? = nil) {
+    init(id: String = UUID().uuidString, kind: Kind, text: String, title: String? = nil, toolState: ToolState? = nil, detail: String? = nil) {
         self.id = id
         self.title = title
         self.toolState = toolState
         self.kind = kind
         self.text = text
+        self.detail = detail
     }
 }
 
@@ -48,7 +50,7 @@ struct SessionTranscriptDelta: Sendable {
         let firstChanged = zip(kept, current).prefix { $0 == $1 }.count
         if kept.count == current.count, firstChanged == current.count - 1,
            let old = kept.last, let new = current.last,
-           old.id == new.id, old.kind == new.kind, old.title == new.title, old.toolState == new.toolState,
+           old.id == new.id, old.kind == new.kind, old.title == new.title, old.toolState == new.toolState, old.detail == new.detail,
            case let shared = Self.sharedScalarBytes(old.text, new.text), shared > 0 {
             start = current.count
             messages = []
@@ -70,14 +72,15 @@ struct SessionTranscriptDelta: Sendable {
 
 enum SessionChatSource: String, Codable, Sendable {
     case terminal, claude, codex, copilot
+    case openCode = "opencode"
 }
 
 extension Array where Element == SessionMessage {
     mutating func trimHistory(keepingAtLeast minimum: Int) {
-        var bytes = reduce(0) { $0 + $1.text.utf8.count }
+        var bytes = reduce(0) { $0 + $1.text.utf8.count + ($1.detail?.utf8.count ?? 0) }
         var dropped = 0
         while count - dropped > minimum && (count - dropped > 200 || bytes > 262_144) {
-            bytes -= self[dropped].text.utf8.count
+            bytes -= self[dropped].text.utf8.count + (self[dropped].detail?.utf8.count ?? 0)
             dropped += 1
         }
         removeFirst(dropped)

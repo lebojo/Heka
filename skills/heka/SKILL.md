@@ -2,7 +2,7 @@
 name: heka
 description: Drive the Heka macOS app with the `heka` CLI. Use when the HEKA_INSTANCE environment variable is set (you are in a Heka terminal), or when the user asks to use Heka from another terminal. Use it to start another agent in parallel on its own branch (`heka worktree create`), to ask another agent for a review or a second opinion in the same worktree (`heka terminal create`), to run a long process such as a dev server or watcher in a visible terminal, to send a message or keys to another agent's terminal, read its reply or wait for it to finish (`heka terminal send`, `read`, `wait`), to close a terminal (`heka terminal close`), to add a project to the sidebar, to list projects, worktrees and terminals, or to delete a worktree once its branch is merged into the main branch, including your own worktree when the user asks you to merge your work and delete it. Prefer it over raw `git worktree add`, background jobs or a new shell when Heka is running.
 metadata:
-  version: "13"
+  version: "14"
 ---
 
 # Heka CLI
@@ -84,7 +84,7 @@ heka terminal read --terminal "$CHILD" --reply
 - `send` types the text into the terminal, as if on its keyboard. With `--enter`, it is submitted as one message, multi-line text included, like pressing Return in Claude, Codex, Copilot or OpenCode. Without `--enter`, the text is typed but not submitted. `--enter` alone presses Return, for example to accept a default choice. The text after `--` is joined with spaces and sent verbatim; for a long or multi-line message, pipe it with `--stdin` (`heka terminal send --terminal "$CHILD" --enter --stdin < prompt.md`). 64 KB at most.
 - `--key` presses keys one after the other, in order: `enter`, `escape`, `tab`, `shift-tab`, `backspace`, `delete`, `space`, `up`, `down`, `left`, `right`, `home`, `end`, `page-up`, `page-down`, `ctrl-a` … `ctrl-z`. Use it to interrupt a child (`escape` for Claude, Codex and Copilot; `ctrl-c` for most other programs) or to move in a menu (`--key down --key enter`). It can't be combined with text: send the text in another command.
 - `wait` returns once the terminal has printed nothing for `--idle` seconds (5 by default), counted from the call, or with `--exit` once its command has exited. An agent that works shows a spinner or a timer, so a quiet terminal usually means it finished or waits for an answer. It gives up after `--timeout` seconds (120 by default, 3600 at most) with `ok: false` and the current state. Keep `--timeout` below the time limit of your own shell tool, and call `wait` again if needed.
-- `read --reply` returns in `output` the agent's answer to the last message it received, as plain text without the screen around it: menus, spinners and tool output are left out. It works for Claude, Codex and Copilot once the agent has recorded its conversation, and fails with a `message` otherwise. Prefer it to read a child's result.
+- `read --reply` returns in `output` the agent's answer to the last message it received, as plain text without the screen around it: menus, spinners and tool output are left out. It works for Claude, Codex, Copilot and OpenCode once the agent has recorded its conversation, and fails with a `message` otherwise. Prefer it to read a child's result.
 - `read --messages N` returns the last N messages of the conversation (200 at most) in `messages`, each with `kind` (`input`, `assistant`, `tool` or `notice`), `text`, and for tools `title` and `toolState`.
 - `read` alone returns the last `--lines` lines of the screen (50 by default, 10,000 at most) in `output`, wrapped lines joined. Use it for programs other than these agents, and to see what the child shows right now: a permission prompt or a menu appears on the screen, not in `--reply`.
 - Each reply includes `running`, `exitCode` once the command has exited and, for a recognized agent, `agent` and `status` (`working`, `ready` or `waitingForInput`).
@@ -96,7 +96,7 @@ heka terminal read --terminal "$CHILD" --reply
 
 ## Limits
 
-- `--reply` and `--messages` are not available for OpenCode or other programs: read the screen instead. For a large result, ask the child to commit it or write it to a file in its worktree.
+- `--reply` and `--messages` require an associated conversation journal (OpenCode uses its SQLite database). If no session is found or multiple new sessions make the association ambiguous, read the screen instead. For a large result, ask the child to commit it or write it to a file in its worktree.
 - `heka` only works while Heka is running.
 
 ## Deleting a worktree

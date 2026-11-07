@@ -16,15 +16,24 @@ struct CopilotChatDecoder: ChatJournalDecoder {
             log.addText(ChatMessageLog.text(data["content"]), id: id, kind: .input)
         case "assistant.message":
             log.addText(ChatMessageLog.text(data["content"]), id: data["messageId"] as? String ?? id, kind: .assistant)
+            for request in data["toolRequests"] as? [[String: Any]] ?? [] {
+                guard let call = request["toolCallId"] as? String else { continue }
+                log.startTool(call, name: request["name"] as? String ?? String(localized: "Tool"),
+                              detail: ChatMessageLog.summary(of: request["arguments"] as? [String: Any] ?? [:]))
+            }
+        case "assistant.message_delta":
+            guard let messageID = data["messageId"] as? String else { return }
+            log.appendText(data["deltaContent"] as? String ?? "", id: messageID, kind: .assistant)
         case "tool.execution_start":
             guard let call = data["toolCallId"] as? String else { return }
             log.startTool(call, name: data["toolName"] as? String ?? String(localized: "Tool"),
                           detail: ChatMessageLog.summary(of: data["arguments"] as? [String: Any] ?? [:]))
         case "tool.execution_complete":
             guard let call = data["toolCallId"] as? String else { return }
-            let result = (data["result"] as? [String: Any])?["content"] as? String
+            let result = data["result"] as? [String: Any] ?? [:]
+            let output = ChatMessageLog.text(result["detailedContent"] ?? result["content"])
             let error = (data["error"] as? [String: Any])?["message"] as? String
-            log.finishTool(call, output: result ?? error ?? "", failed: data["success"] as? Bool == false)
+            log.finishTool(call, output: output.isEmpty ? error ?? "" : output, failed: data["success"] as? Bool == false)
         default: return
         }
     }

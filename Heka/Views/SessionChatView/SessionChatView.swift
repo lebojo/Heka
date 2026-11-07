@@ -24,7 +24,7 @@ struct SessionChatView: View {
     }
 
     private func submit() {
-        guard !sending, !draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
+        guard isEnabled, !sending, !draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
         let text = draft
         sending = true
         Task {

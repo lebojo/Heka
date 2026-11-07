@@ -40,10 +40,13 @@ struct AgentProcess: Equatable, Sendable {
             guard pid > 0, visited.insert(pid).inserted else { continue }
             let arguments = arguments(of: pid)
             if let agent = agent(of: pid, arguments: arguments) {
+                let startedAt = startDate(of: pid) ?? .distantPast
+                let directory = TerminalProcessDirectory.read(pid: pid) ?? fallbackDirectory
                 let config = agent == .claude ? processClaudeConfig(of: pid) ?? claudeConfig : claudeConfig
-                let session = resolveSession(of: agent, in: subtree(of: pid), claudeConfig: config, previous: previous)
-                return AgentProcess(agent: agent, startedAt: startDate(of: pid) ?? .distantPast,
-                                    directory: TerminalProcessDirectory.read(pid: pid) ?? fallbackDirectory,
+                let known = previous.flatMap { $0.agent == agent && $0.startedAt == startedAt ? $0 : nil }
+                let session = resolveSession(of: agent, in: subtree(of: pid), claudeConfig: config, previous: known,
+                                             arguments: arguments, directory: directory, startedAt: startedAt)
+                return AgentProcess(agent: agent, startedAt: startedAt, directory: directory,
                                     sessionID: session.id, transcriptPath: session.path, claudeStatus: session.status,
                                     skipsPermissions: agent.skipsPermissions(in: arguments))
             }
@@ -108,7 +111,8 @@ struct AgentProcess: Equatable, Sendable {
     }
 
     private static func resolveSession(of agent: ConversationAgent, in pids: [Int32], claudeConfig: URL,
-                                       previous: AgentProcess?) -> (id: String?, path: String?, status: String?) {
+                                       previous: AgentProcess?, arguments: [String], directory: String,
+                                       startedAt: Date) -> (id: String?, path: String?, status: String?) {
         switch agent {
         case .claude:
             let sessions = claudeConfig.appendingPathComponent("sessions", isDirectory: true)
@@ -125,12 +129,34 @@ struct AgentProcess: Equatable, Sendable {
             return (session.sessionId, session.transcript(in: projects)?.path, session.status)
         case .codex:
             let rollout = pids.lazy.flatMap(openFiles).first { codexSessionID(inRolloutPath: $0) != nil }
-            return (rollout.flatMap(codexSessionID(inRolloutPath:)), rollout, nil)
+            if let rollout { return (codexSessionID(inRolloutPath: rollout), rollout, nil) }
+            if let previous, let path = previous.transcriptPath { return (previous.sessionID, path, nil) }
+            let home = pids.first.flatMap { environmentValue("CODEX_HOME", of: $0) }.map { URL(fileURLWithPath: $0) }
+                ?? FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(".codex")
+            let match = AgentSessionLocator.codex(home: home, directory: directory, startedAt: startedAt,
+                                                 sessionID: AgentSessionLocator.explicitSession(in: arguments, agent: agent))
+            return (match?.id, match?.path, nil)
         case .copilot:
             let file = pids.lazy.flatMap(openFiles).first { copilotSessionID(inPath: $0) != nil }
             return (file.flatMap(copilotSessionID(inPath:)), file.flatMap(copilotJournalPath(inPath:)), nil)
         case .openCode:
-            return (nil, nil, nil)
+            if let previous, let path = previous.transcriptPath { return (previous.sessionID, path, nil) }
+            let environment = pids.first.map { commandLine(of: $0, includingEnvironment: true).environment } ?? []
+            let values = Dictionary(environment.compactMap { entry -> (String, String)? in
+                guard let separator = entry.firstIndex(of: "=") else { return nil }
+                return (String(entry[..<separator]), String(entry[entry.index(after: separator)...]))
+            }, uniquingKeysWith: { _, last in last })
+            let data = values["XDG_DATA_HOME"].map { URL(fileURLWithPath: $0) }
+                ?? FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(".local/share")
+            let openDatabase = pids.lazy.flatMap(openFiles).first {
+                let name = URL(fileURLWithPath: $0).lastPathComponent
+                return name.hasPrefix("opencode") && name.hasSuffix(".db")
+            }
+            let database = (values["OPENCODE_DB"] ?? openDatabase).map { URL(fileURLWithPath: $0) }
+                ?? data.appendingPathComponent("opencode/opencode.db")
+            let match = AgentSessionLocator.openCode(database: database, directory: directory, startedAt: startedAt,
+                                                    sessionID: AgentSessionLocator.explicitSession(in: arguments, agent: agent))
+            return (match?.id, match?.path, nil)
         }
     }
 
@@ -174,10 +200,14 @@ struct AgentProcess: Equatable, Sendable {
     }
 
     private static func processClaudeConfig(of pid: Int32) -> URL? {
-        let prefix = "CLAUDE_CONFIG_DIR="
+        environmentValue("CLAUDE_CONFIG_DIR", of: pid).map { URL(fileURLWithPath: $0) }
+    }
+
+    private static func environmentValue(_ key: String, of pid: Int32) -> String? {
+        let prefix = key + "="
         guard let value = commandLine(of: pid, includingEnvironment: true).environment.first(where: { $0.hasPrefix(prefix) })?
             .dropFirst(prefix.count), value.hasPrefix("/") else { return nil }
-        return URL(fileURLWithPath: String(value))
+        return String(value)
     }
 
     private static func commandLine(of pid: Int32, includingEnvironment: Bool) -> (arguments: [String], environment: [String]) {
