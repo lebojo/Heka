@@ -85,6 +85,7 @@
       }
     },
     "%@: %@" : {
+      "comment" : "Failed Git action; the first variable is its title, the second the Git error.",
       "localizations" : {
         "fr" : {
           "stringUnit" : {
@@ -95,6 +96,7 @@
       }
     },
     "%lld more changes aren’t listed." : {
+      "comment" : "Notice under a capped list of changed files; the variable is the number of files not listed.",
       "localizations" : {
         "en" : {
           "variations" : {
@@ -135,6 +137,7 @@
       }
     },
     "%lld more changes aren’t listed. Stage All and Unstage All also apply to them." : {
+      "comment" : "Notice under a capped list of changed files; the variable is the number of files not listed.",
       "localizations" : {
         "en" : {
           "variations" : {
@@ -315,6 +318,7 @@
       }
     },
     "At least %lld more changes aren’t listed." : {
+      "comment" : "Notice under a capped list of changed files; the variable is the minimum number of files not listed.",
       "localizations" : {
         "en" : {
           "variations" : {
@@ -355,6 +359,7 @@
       }
     },
     "At least %lld more changes aren’t listed. Stage All and Unstage All also apply to them." : {
+      "comment" : "Notice under a capped list of changed files; the variable is the minimum number of files not listed.",
       "localizations" : {
         "en" : {
           "variations" : {
@@ -485,6 +490,7 @@
       }
     },
     "Couldn’t publish %@" : {
+      "comment" : "Title of a failed Git action; the variable is a branch name.",
       "localizations" : {
         "fr" : {
           "stringUnit" : {
@@ -505,6 +511,7 @@
       }
     },
     "Couldn’t stage %@" : {
+      "comment" : "Title of a failed Git action; the variable is a file name.",
       "localizations" : {
         "fr" : {
           "stringUnit" : {
@@ -525,6 +532,7 @@
       }
     },
     "Couldn’t unstage %@" : {
+      "comment" : "Title of a failed Git action; the variable is a file name.",
       "localizations" : {
         "fr" : {
           "stringUnit" : {
@@ -675,6 +683,7 @@
       }
     },
     "Its terminals will be closed and its folder will be erased from disk, including uncommitted changes. This can’t be undone. You can keep the branch “%@” and its commits in the repository, or delete it too if it’s merged into the main branch." : {
+      "comment" : "Message of the worktree deletion dialog; the variable is the branch name.",
       "localizations" : {
         "fr" : {
           "stringUnit" : {
@@ -885,6 +894,7 @@
       }
     },
     "Push this branch to a new %@/%@ branch and track it" : {
+      "comment" : "Help of the Publish button; the variables are a remote name and a branch name.",
       "localizations" : {
         "fr" : {
           "stringUnit" : {
@@ -925,6 +935,7 @@
       }
     },
     "Recreate the deleted %@/%@ branch from this branch and track it" : {
+      "comment" : "Help of the Publish Again button; the variables are a remote name and a branch name.",
       "localizations" : {
         "fr" : {
           "stringUnit" : {
@@ -1015,6 +1026,7 @@
       }
     },
     "Stage %@" : {
+      "comment" : "Accessibility label of the button that stages one file; the variable is the file name.",
       "localizations" : {
         "fr" : {
           "stringUnit" : {
@@ -1045,6 +1057,7 @@
       }
     },
     "Staged Changes · %lld" : {
+      "comment" : "Section title; the variable is the number of staged files.",
       "localizations" : {
         "fr" : {
           "stringUnit" : {
@@ -1335,6 +1348,7 @@
       }
     },
     "Unstage %@" : {
+      "comment" : "Accessibility label of the button that unstages one file; the variable is the file name.",
       "localizations" : {
         "fr" : {
           "stringUnit" : {
@@ -2643,6 +2657,7 @@
       }
     },
     "Changes · %lld" : {
+      "comment" : "Section title; the variable is the number of changed files.",
       "localizations" : {
         "fr" : {
           "stringUnit" : {
@@ -4528,6 +4543,7 @@
       }
     },
     "No differences with %@" : {
+      "comment" : "Empty branch comparison; the variable is the compared branch.",
       "localizations" : {
         "fr" : {
           "stringUnit" : {
@@ -7023,7 +7039,8 @@
           }
         }
       }
-    }
+    },
+    "" : {}
   },
   "version" : "1.0"
 }

@@ -446,6 +446,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				"INFOPLIST_KEY_ITSAppUsesNonExemptEncryption[sdk=iphoneos*]" = NO;
 				"INFOPLIST_FILE[sdk=macosx*]" = "Configuration/Info-macOS.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = Heka;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Heka utilise l’appareil photo pour scanner le QR code affiché sur votre Mac.";
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Heka se connecte à votre Mac sur le réseau local pour reprendre vos sessions.";
@@ -650,6 +651,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				"INFOPLIST_KEY_ITSAppUsesNonExemptEncryption[sdk=iphoneos*]" = NO;
 				"INFOPLIST_FILE[sdk=macosx*]" = "Configuration/Info-macOS.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = Heka;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Heka utilise l’appareil photo pour scanner le QR code affiché sur votre Mac.";
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Heka se connecte à votre Mac sur le réseau local pour reprendre vos sessions.";
