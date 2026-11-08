@@ -64,7 +64,7 @@ xcodebuild -project Heka.xcodeproj -scheme Heka -configuration Debug \
   -derivedDataPath /tmp/heka-build -skipPackagePluginValidation build CODE_SIGNING_ALLOWED=NO
 ```
 
-The repository includes a shared **Heka-iOS** scheme and Xcode Cloud build scripts for iOS beta distribution. The **iOS Beta** workflow builds and archives changes to `main` for TestFlight. Its settings and first-run checks are documented in [ci_scripts/README.md](ci_scripts/README.md).
+The repository includes a shared **Heka-iOS** scheme and Xcode Cloud build scripts for iOS beta distribution. The **iOS Beta** workflow builds and archives release tags for TestFlight. Its settings and first-run checks are documented in [ci_scripts/README.md](ci_scripts/README.md).
 
 ## Usage
 

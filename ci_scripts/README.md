@@ -1,8 +1,8 @@
 # iOS beta builds with Xcode Cloud
 
-The **iOS Beta** workflow is enabled in Xcode Cloud and connected to `lebojo/Heka`. It builds and archives iOS on changes to `main`. Its external TestFlight post-action uses the **Github link** group and the **Archive - iOS** artifact. The shared schemes and scripts in this branch must be merged into `main` before the first Cloud run can use them; no Cloud run has been validated yet.
+The **iOS Beta** workflow is enabled in Xcode Cloud and connected to `lebojo/Heka`. It builds and archives iOS when a release tag is pushed, matching the GitHub Release workflow. Its external TestFlight post-action uses the **Github link** group and the **Archive - iOS** artifact. The shared schemes and scripts in this branch must be merged into `main` before the first Cloud run can use them; no Cloud run has been validated yet.
 
-App: `6831797156`; Cloud product: `c42d365c-baba-41bf-871c-b61818834f71`; workflow: `63057B02-D13C-48E0-B3FD-1DB220349956`. `ios-beta-workflow.json` records the API update used for the build actions and start condition. TestFlight post-actions are configured separately in Xcode, because the public API does not expose them.
+App: `6831797156`; Cloud product: `c42d365c-baba-41bf-871c-b61818834f71`; workflow: `63057B02-D13C-48E0-B3FD-1DB220349956`. `ios-beta-workflow.json` records the API update used for the build actions and start condition. The null `branchStartCondition` explicitly removes the previous branch trigger. TestFlight post-actions are configured separately in Xcode, because the public API does not expose them.
 
 ## Workflow settings
 
@@ -17,13 +17,13 @@ Use these settings, matching StreamClipper's build/archive workflow:
 | Scheme for both actions | `Heka-iOS` |
 | Xcode | 27.2 (the version used for local validation) |
 | Environment | Compatible macOS version, **Clean** enabled |
-| Start condition | **Branch Changes**, exact branch `main`, any file change |
-| Other automatic start conditions | None: remove suggested pull request, tag, and schedule conditions |
+| Start condition | **Tag Changes**, all tags, automatic cancellation disabled |
+| Other automatic start conditions | None: remove branch, pull request, and schedule conditions |
 | Build action | **iOS**, Any iOS Device, required to pass |
 | Archive action | **iOS**, Release, required to pass, **TestFlight and App Store** distribution |
 | Post-action | TestFlight External Testing → **Github link** |
 
-Branch Changes runs after every merge into `main`, and also after a direct push to `main`. Do not add macOS actions. The host machine runs macOS, but both build actions target iOS. The shared target still supports normal local Mac builds.
+The release script `../update.sh <version>` pushes `main` and its version tag atomically. Only the tag triggers Xcode Cloud; ordinary pushes and merges to `main` do not. All tags are included, matching `.github/workflows/release.yml`. The build starts when the tag is pushed, independently of GitHub release publication. Do not add macOS actions. The host machine runs macOS, but both build actions target iOS. The shared target still supports normal local Mac builds.
 
 The **Github link** group owns [the public TestFlight invitation](https://testflight.apple.com/join/DsVPEUqk). External distribution needs a clean build and an archive eligible for App Store distribution; do not select **TestFlight Internal Only**. Apple's beta review and any required TestFlight information still apply. The post-actions must be selected in Xcode or App Store Connect, even when a workflow is otherwise managed through the API.
 

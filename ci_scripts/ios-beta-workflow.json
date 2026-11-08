@@ -4,17 +4,8 @@
     "id": "63057B02-D13C-48E0-B3FD-1DB220349956",
     "attributes": {
       "name": "iOS Beta",
-      "description": "Build and archive Heka for iOS beta testers after changes to main.",
-      "branchStartCondition": {
-        "source": {
-          "patterns": [
-            {
-              "pattern": "main"
-            }
-          ]
-        },
-        "autoCancel": true
-      },
+      "description": "Build and archive Heka for iOS beta testers when a release tag is pushed.",
+      "branchStartCondition": null,
       "clean": true,
       "isEnabled": true,
       "containerFilePath": "Heka.xcodeproj",
@@ -35,7 +26,13 @@
           "platform": "IOS",
           "isRequiredToPass": true
         }
-      ]
+      ],
+      "tagStartCondition": {
+        "source": {
+          "isAllMatch": true
+        },
+        "autoCancel": false
+      }
     }
   }
 }
