@@ -124,6 +124,7 @@ extension ChatJournalTests {
         boundedTools.trimHistory(keepingAtLeast: 1)
         try require(boundedTools.count == 3, "Tool commands count toward the remote history byte budget")
         print("PASS Copilot streaming, tool requests, detailed results and remote command metadata")
+        try copilotTaskComplete()
 
         let code = "let café = \"👋 // not a comment\" // comment\nlet number = 42"
         let tokens = SessionCodeTokens.parse(code, language: "swift")
@@ -132,5 +133,54 @@ extension ChatJournalTests {
         try require(SessionCodeTokens.parse("plain text", language: "unknown").isEmpty, "Unknown languages remain readable")
         try require(SessionCodeTokens.parse("- old\n+ new", language: "diff").map(\.kind) == [.deletion, .addition], "Diff additions and deletions highlighted")
         print("PASS syntax highlighting tokens and Unicode ranges")
+    }
+
+    static func copilotTaskComplete() throws {
+        let summary = "**Terminé 👋**\n\n- Le correctif est prêt.\n\n```swift\nlet fixed = true\n```"
+        let request = try line(["type": "assistant.message", "id": "request", "data": ["messageId": "answer", "content": "",
+            "toolRequests": [["toolCallId": "done", "name": "task_complete", "arguments": ["summary": summary]]]]])
+        let start = try line(["type": "tool.execution_start", "data": ["toolCallId": "done", "toolName": "task_complete",
+            "arguments": ["summary": summary]]])
+        let complete = try line(["type": "tool.execution_complete", "data": ["toolCallId": "done", "success": true,
+            "result": ["content": "Task completed", "detailedContent": "Internal acknowledgement"]]])
+        let expected = SessionMessage(id: "tool:done", kind: .assistant, text: summary)
+
+        // A persisted journal can include both declarations, or start after the request.
+        for declarations in [[request, start], [request], [start]] {
+            var decoder = CopilotChatDecoder()
+            for (offset, event) in declarations.enumerated() { decoder.consume(event, offset: UInt64(offset)) }
+            try require(decoder.messages == [expected], "task_complete exposes one Markdown assistant reply before completion")
+            decoder.consume(complete, offset: 10)
+            decoder.consume(complete, offset: 10)
+            decoder.consume(try line(["type": "session.task_complete", "data": ["summary": summary]]), offset: 11)
+            try require(decoder.messages == [expected], "Completion acknowledgements never replace, duplicate or reclassify the reply")
+            decoder.consumeOversized(Data(#"{"type":"tool.execution_complete","data":{"toolCallId":"done","result":{"content":""#.utf8))
+            try require(decoder.messages == [expected], "Oversized completion acknowledgements preserve the reply and its metadata")
+            let encoded = try JSONEncoder().encode(decoder.messages)
+            let decoded = try JSONDecoder().decode([SessionMessage].self, from: encoded)
+            try require(decoded == [expected], "task_complete stays an assistant reply over the remote protocol")
+        }
+
+        var decoder = CopilotChatDecoder()
+        decoder.consume(request, offset: 0)
+        decoder.consume(try line(["type": "tool.execution_start", "data": ["toolCallId": "done", "toolName": "task_complete"]]), offset: 1)
+        try require(decoder.messages == [expected], "A start event without arguments keeps the request's summary")
+        decoder.consume(complete, offset: 2)
+        decoder.consume(try line(["type": "tool.execution_start", "data": ["toolCallId": "bash", "toolName": "bash",
+            "arguments": ["command": "swift test"]]]), offset: 3)
+        decoder.consume(try line(["type": "tool.execution_complete", "data": ["toolCallId": "bash", "success": false,
+            "error": ["message": "1 test failed"]]]), offset: 4)
+        try require(decoder.messages.map(\.kind) == [.assistant, .tool] && decoder.messages[1].title == "bash"
+                    && decoder.messages[1].toolState == .failed && decoder.messages[1].text == "1 test failed",
+                    "Ordinary bash calls still display their tool state and output")
+
+        for (index, arguments) in [[:], ["summary": " \n"]].enumerated() {
+            decoder.consume(try line(["type": "tool.execution_start", "data": ["toolCallId": "empty-\(index)",
+                "toolName": "task_complete", "arguments": arguments]]), offset: 5)
+            decoder.consume(try line(["type": "tool.execution_complete", "data": ["toolCallId": "empty-\(index)", "success": true,
+                "result": ["content": "Task completed"]]]), offset: 6)
+        }
+        try require(decoder.messages.count == 2, "Absent or blank summaries do not create empty replies or acknowledgement tool rows")
+        print("PASS Copilot task_complete assistant replies, lifecycle deduplication, oversized results and remote encoding")
     }
 }

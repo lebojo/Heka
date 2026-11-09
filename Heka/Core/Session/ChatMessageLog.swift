@@ -53,13 +53,16 @@ struct ChatMessageLog: Sendable {
         }
     }
 
-    mutating func finishOversizedTools(in head: Data, key: String) {
+    mutating func finishOversizedTools(in head: Data, key: String, excluding calls: Set<String> = []) {
         let text = String(decoding: head, as: UTF8.self)
         var remaining = text[...]
         while let marker = remaining.range(of: "\"\(key)\":\"") {
             let value = remaining[marker.upperBound...]
             guard let end = value.firstIndex(of: "\"") else { break }
-            finishTool(String(value[..<end]), output: String(localized: "Result too large to display."), state: .completed)
+            let call = String(value[..<end])
+            if !calls.contains(call) {
+                finishTool(call, output: String(localized: "Result too large to display."), state: .completed)
+            }
             remaining = value[end...]
         }
     }
