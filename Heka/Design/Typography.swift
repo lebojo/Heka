@@ -17,6 +17,8 @@ enum Typography {
     static let captionMono = Font.system(.caption, design: .monospaced)
     static let code = Font.system(size: 12, design: .monospaced)
     static let chatOutput = Font.system(.callout, design: .monospaced)
+    static let chatQuestion = Font.body.weight(.semibold)
+    static let chatChoice = Font.body.weight(.medium)
 
     static let xxs = Font.system(size: 9)
     static let xs = Font.system(size: 10)

@@ -94,6 +94,37 @@ import Foundation
         try require(decoder.messages.count == 3, "Background task notifications are not shown as user messages")
         print("PASS Claude roles, stable IDs, tool results, meta filtering and remote metadata deltas")
 
+        var questions = ClaudeChatDecoder()
+        let questionInput = try JSONSerialization.jsonObject(with: Data(#"""
+{"questions":[{"question":"Où tournent les jobs : en local d'abord avec débordement vers le cloud, ou tout dans le cloud ?","header":"Mode","multiSelect":false,"options":[{"label":"Local + débordement (Recommandé)","description":"On garde les 2 slots du VPS (pas de démarrage à attendre, gratuit), et une VM est créée seulement quand ils sont pleins."},{"label":"Tout dans le cloud","description":"Chaque job a sa VM. Le VPS ne fait plus que le web, mais chaque job attend 1 à 2 minutes de démarrage."}]},{"question":"Combien de VM simultanées au maximum, pour plafonner la facture ?","header":"Plafond","multiSelect":false,"options":[{"label":"10","description":"Plafond prudent pour démarrer, modifiable par variable d'env."},{"label":"25","description":"Plus de marge."},{"label":"Illimité","description":"Aucun garde-fou sur le coût."}]},{"question":"As-tu déjà un projet Public Cloud Infomaniak avec ses identifiants OpenStack (fichier openrc / application credential) ?","header":"Accès","multiSelect":false,"options":[{"label":"Oui","description":"Je les mets dans .env. Tu codes avec des variables OS_* et on testera ensuite."},{"label":"Pas encore","description":"Code-le quand même, je créerai le projet plus tard."}]}]}
+"""#.utf8))
+        let questionCall = try record("assistant", "questions", [["type": "tool_use", "id": "ask", "name": "AskUserQuestion", "input": questionInput]])
+        questions.consume(questionCall, offset: 0)
+        questions.consume(questionCall, offset: 0)
+        let pendingQuestions = questions.messages
+        try require(pendingQuestions.count == 1, "Repeated question records keep one stable row")
+        let parsed = pendingQuestions[0].userQuestions
+        try require(parsed.count == 3 && parsed.map(\.header) == ["Mode", "Plafond", "Accès"],
+                    "All three Claude questions are available for direct display")
+        try require(parsed[0].options?.count == 2 && parsed[1].options?.count == 3 && parsed[2].options?.count == 2,
+                    "Every choice survives decoding")
+        try require(parsed[0].options?.first?.description?.contains("2 slots du VPS") == true && parsed[0].multiSelect == false,
+                    "Question descriptions and selection mode survive decoding")
+        let wire = try JSONDecoder().decode(SessionMessage.self, from: JSONEncoder().encode(pendingQuestions[0]))
+        try require(wire.userQuestions == parsed, "Questions remain available over the remote protocol")
+        questions.consume(try record("user", "answers", [["type": "tool_result", "tool_use_id": "ask", "content": "Mode: Local + débordement; Plafond: 10; Accès: Oui"]]), offset: 1)
+        try require(questions.messages[0].userQuestions == parsed && questions.messages[0].toolState == .completed,
+                    "Finishing the tool preserves questions alongside the answer")
+        try require(SessionMessage(kind: .tool, text: "", title: "AskUserQuestion", detail: "{broken").userQuestions.isEmpty,
+                    "Malformed questions fall back to the ordinary tool display")
+        try require(SessionMessage(kind: .tool, text: "", title: "OtherTool", detail: pendingQuestions[0].detail).userQuestions.isEmpty,
+                    "Other tools keep their normal display")
+        let multiple = SessionMessage(kind: .tool, text: "", title: "AskUserQuestion",
+                                      detail: #"{"questions":[{"question":"Choose","multiSelect":true,"options":[{"label":"A"}]}]}"#)
+        try require(multiple.userQuestions.first?.multiSelect == true && multiple.userQuestions.first?.options?.first?.description == nil,
+                    "Multiple selection and optional descriptions are supported")
+        print("PASS Claude questions, choices, answers and remote serialization")
+
         let sidechain = try line(["type": "user", "uuid": "s1", "isSidechain": true, "agentId": "a1", "message": ["content": "Audit the release workflow"]])
         var session = ClaudeChatDecoder()
         session.consume(sidechain, offset: 0)

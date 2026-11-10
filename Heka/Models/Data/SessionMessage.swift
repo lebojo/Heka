@@ -17,6 +17,17 @@ struct SessionMessage: Identifiable, Codable, Equatable, Sendable {
     var toolState: ToolState?
     var detail: String?
 
+    var userQuestions: [SessionUserQuestion] {
+        guard kind == .tool, title == "AskUserQuestion", let detail,
+              let data = detail.data(using: .utf8),
+              let request = try? JSONDecoder().decode(SessionUserQuestion.Request.self, from: data) else { return [] }
+        return request.questions
+    }
+
+    var questionAnswer: String? {
+        toolState != .running && text != detail ? text : nil
+    }
+
     init(id: String = UUID().uuidString, kind: Kind, text: String, title: String? = nil, toolState: ToolState? = nil, detail: String? = nil) {
         self.id = id
         self.title = title
@@ -25,6 +36,28 @@ struct SessionMessage: Identifiable, Codable, Equatable, Sendable {
         self.text = text
         self.detail = detail
     }
+}
+
+struct SessionUserQuestion: Decodable, Equatable, Sendable {
+    struct Request: Decodable, Sendable {
+        let questions: [SessionUserQuestion]
+    }
+
+    struct Option: Decodable, Equatable, Sendable {
+        let label: String
+        let description: String?
+
+        var detail: String? { description?.isEmpty == false ? description : nil }
+    }
+
+    let header: String?
+    let question: String
+    let multiSelect: Bool?
+    let options: [Option]?
+
+    var heading: String? { header?.isEmpty == false ? header : nil }
+    var choices: [Option] { options ?? [] }
+    var choiceSymbol: String { multiSelect == true ? "square" : "circle" }
 }
 
 struct SessionTextAppend: Codable, Sendable {

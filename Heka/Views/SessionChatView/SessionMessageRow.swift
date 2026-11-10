@@ -26,7 +26,12 @@ struct SessionMessageRow: View, Equatable {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         case .tool:
-            SessionToolMessage(message: message)
+            let questions = message.userQuestions
+            if questions.isEmpty {
+                SessionToolMessage(message: message)
+            } else {
+                SessionQuestionMessage(message: message, questions: questions)
+            }
         case .output, .notice:
             VStack(alignment: .leading, spacing: Spacing.s) {
                 Text("Session Output").font(Typography.caption).foregroundStyle(Palette.textSecondary)
