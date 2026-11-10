@@ -2,9 +2,11 @@ import SwiftUI
 
 struct HostSettingsPane: View {
     @Environment(LocalHost.self) private var host
+    @Environment(SettingsStore.self) private var settings
 
     var body: some View {
         @Bindable var host = host
+        @Bindable var settings = settings
         Form {
             Section {
                 Toggle("Allow Access from the Local Network", isOn: $host.enabled)
@@ -19,6 +21,20 @@ struct HostSettingsPane: View {
                 }
             } header: { Text("iPhone and iPad") } footer: {
                 Text("On the same network, enter this IP address and code in the mobile app’s settings. The Mac must stay on with Heka open.")
+            }
+            Section {
+                Picker("Keep Mac Awake While a Device Is Connected", selection: $settings.keepAwake) {
+                    ForEach(KeepAwakePolicy.allCases) { policy in
+                        Text(policy.title).tag(policy)
+                    }
+                }
+                .disabled(!host.enabled)
+                if host.sleepPreventer.isPreventingSleep {
+                    Label("The Mac is kept awake for a connected device", systemImage: "cup.and.saucer")
+                        .foregroundStyle(Palette.textSecondary)
+                }
+            } footer: {
+                Text("Prevents the Mac from sleeping so the mobile app can still reach it. The display can still turn off.")
             }
             if let invitation = host.invitation {
                 Section {

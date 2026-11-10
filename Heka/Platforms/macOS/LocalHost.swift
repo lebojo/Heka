@@ -24,6 +24,7 @@ import SystemConfiguration
     private(set) var pairingStorageError: String?
     private(set) var status = String(localized: "Local Access off")
     private(set) var addresses: [String] = []
+    let sleepPreventer = SleepPreventer()
     @ObservationIgnored private let identifier = LocalHost.deviceIdentifier()
     @ObservationIgnored private let pairingStore: any PairingCodeStore
     @ObservationIgnored private let name = SCDynamicStoreCopyComputerName(nil, nil) as String? ?? "Mac"
@@ -58,6 +59,7 @@ import SystemConfiguration
         self.store = store
         self.settings = settings
         self.installedAgents = installedAgents
+        sleepPreventer.configure(settings: settings)
         pathMonitor.pathUpdateHandler = { [weak self] _ in
             Task { @MainActor [weak self] in self?.refreshAddresses() }
         }
@@ -137,6 +139,11 @@ import SystemConfiguration
         for entry in connections.values { entry.connection.cancel() }
         jobs.removeAll()
         connections.removeAll()
+        sleepPreventer.release()
+    }
+
+    private func refreshSleepPrevention() {
+        sleepPreventer.update(isConnected: connections.values.contains(where: \.isPaired))
     }
 
     private func restart() {
@@ -231,6 +238,7 @@ import SystemConfiguration
                 connection.cancel()
                 self.connections[id] = nil
                 self.jobs[id] = nil
+                self.refreshSleepPrevention()
             }
             do {
                 let request: RemoteRequest
@@ -256,6 +264,8 @@ import SystemConfiguration
     private func admitPaired(_ id: UUID) -> Bool {
         guard connections[id] != nil, connections.values.count(where: \.isPaired) < Self.maximumConnections else { return false }
         connections[id]?.isPaired = true
+        sleepPreventer.recordActivity()
+        refreshSleepPrevention()
         return true
     }
 
@@ -293,6 +303,7 @@ import SystemConfiguration
                 while !Task.isCancelled {
                     let request: RemoteRequest = try await RemoteChannel.receive(on: connection)
                     guard !Task.isCancelled else { return }
+                    sleepPreventer.recordActivity()
                     switch request {
                     case .streamInput(let requestID, let terminalID, let data, let message) where terminalID == terminal:
                         let failure: String?
@@ -332,6 +343,7 @@ import SystemConfiguration
                 _ = store.sessions.runningAgents
             } onChange: { continuation.yield(()) }
             try await Task.sleep(for: .milliseconds(100))
+            sleepPreventer.recordActivity()
             let workspace = Workspace(folders: store.folders, projects: store.projects, selection: nil, collapsed: [])
             if previousWorkspace != workspace {
                 try await RemoteChannel.push(RemoteEvent.workspace(workspace), on: connection)

@@ -1,6 +1,96 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Always while connected" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toujours pendant la connexion"
+          }
+        }
+      }
+    },
+    "For 1 hour after the last activity" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pendant 1 heure après la dernière activité"
+          }
+        }
+      }
+    },
+    "For 15 minutes after the last activity" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pendant 15 minutes après la dernière activité"
+          }
+        }
+      }
+    },
+    "For 2 hours after the last activity" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pendant 2 heures après la dernière activité"
+          }
+        }
+      }
+    },
+    "For 30 minutes after the last activity" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pendant 30 minutes après la dernière activité"
+          }
+        }
+      }
+    },
+    "Keep Mac Awake While a Device Is Connected" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Garder le Mac éveillé quand un appareil est connecté"
+          }
+        }
+      }
+    },
+    "Never" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jamais"
+          }
+        }
+      }
+    },
+    "Prevents the Mac from sleeping so the mobile app can still reach it. The display can still turn off." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Empêche le Mac de se mettre en veille pour que l’app mobile puisse toujours le joindre. L’écran peut quand même s’éteindre."
+          }
+        }
+      }
+    },
+    "The Mac is kept awake for a connected device" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le Mac est maintenu éveillé pour un appareil connecté"
+          }
+        }
+      }
+    },
     "⌥Return for a new line" : {
       "localizations" : {
         "fr" : {
