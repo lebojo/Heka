@@ -11,7 +11,7 @@ enum RemoteProtocol {
         #endif
         return 52741
     }
-    static let version = 8
+    static let version = 9
     static let maximumFrame = 4 * 1024 * 1024
     static let maximumPayload = maximumFrame / 4 * 3 - 4096
 
@@ -111,13 +111,19 @@ enum RemoteRequest: Codable, Sendable {
     case projectBranches(project: UUID)
     case fetchRemotes(project: UUID)
     case refreshWorktrees(project: UUID)
+    case moveFolder(folder: UUID, parent: UUID?)
+    case removeFolder(folder: UUID)
+    case moveWorktree(worktree: UUID, group: UUID?)
+    case removeWorktreeGroup(group: UUID)
+    case useAutomaticName(terminal: UUID)
     case deletableBranch(removal: Removal)
     case remove(removal: Removal, branch: BranchRemoval)
 
     var waitsForInspectorSlot: Bool {
         switch self {
         case .newTerminal, .launchAgent, .resume, .input, .addFolder, .rename, .moveProject,
-             .addWorktreeGroup, .createWorktree, .projectBranches, .fetchRemotes, .refreshWorktrees, .deletableBranch, .remove: false
+             .addWorktreeGroup, .createWorktree, .projectBranches, .fetchRemotes, .refreshWorktrees, .deletableBranch, .remove,
+             .moveFolder, .removeFolder, .moveWorktree, .removeWorktreeGroup, .useAutomaticName: false
         default: true
         }
     }
@@ -168,7 +174,7 @@ enum RemoteEvent: Codable, Sendable {
     case repositoryChanged
     case conversationsChanged
     case installedAgents([ConversationAgent])
-    case terminalAgents([UUID: ConversationAgent])
+    case activity(SidebarActivity)
     case agentLaunch(AgentLaunch)
 }
 

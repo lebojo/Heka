@@ -149,9 +149,7 @@ import Observation
     }
 
     func canMoveFolder(_ id: UUID, to parentID: UUID?) -> Bool {
-        guard let folder = folders.first(where: { $0.id == id }), folder.parentID != parentID else { return false }
-        guard let parentID else { return true }
-        return folders.contains { $0.id == parentID } && !folders.subtree(of: id).contains(parentID)
+        folders.canMove(id, to: parentID)
     }
 
     func moveFolder(_ id: UUID, to parentID: UUID?) {

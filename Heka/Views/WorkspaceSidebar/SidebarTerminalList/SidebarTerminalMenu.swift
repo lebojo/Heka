@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct SidebarTerminalMenu: View {
-    @Environment(WorkspaceStore.self) private var store
+    @Environment(SidebarStore.self) private var store
     @Environment(WorkspacePresentation.self) private var presentation
 
     let terminal: TerminalRecord

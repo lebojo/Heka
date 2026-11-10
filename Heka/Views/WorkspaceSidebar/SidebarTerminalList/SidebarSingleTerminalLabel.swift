@@ -1,13 +1,15 @@
 import SwiftUI
 
 struct SidebarSingleTerminalLabel: View {
-    @Environment(WorkspaceStore.self) private var store
+    @Environment(SidebarStore.self) private var store
 
     let terminal: TerminalRecord
 
     var body: some View {
-        SidebarTerminalLabel(name: terminal.name, session: store.sessions.session(terminal.id))
+        SidebarTerminalLabel(name: terminal.name, summary: store.terminalSummary(terminal.id))
             .padding(.vertical, Spacing.xxs)
+            #if os(macOS)
             .terminalDragSource(terminal.id)
+            #endif
     }
 }

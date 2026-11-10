@@ -134,6 +134,12 @@ struct FolderDestination: Identifiable, Equatable, Sendable {
 }
 
 extension [ProjectFolder] {
+    func canMove(_ id: UUID, to parentID: UUID?) -> Bool {
+        guard let folder = first(where: { $0.id == id }), folder.parentID != parentID else { return false }
+        guard let parentID else { return true }
+        return contains { $0.id == parentID } && !subtree(of: id).contains(parentID)
+    }
+
     func isRoot(_ folder: ProjectFolder) -> Bool {
         guard let parentID = folder.parentID else { return true }
         return !contains { $0.id == parentID }

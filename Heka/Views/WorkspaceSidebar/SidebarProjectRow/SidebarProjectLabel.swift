@@ -1,14 +1,14 @@
 import SwiftUI
 
 struct SidebarProjectLabel: View {
-    @Environment(WorkspaceStore.self) private var store
+    @Environment(SidebarStore.self) private var store
     @Environment(WorkspacePresentation.self) private var presentation
 
     let project: Project
 
     private var isIdle: Bool { project.worktrees.allSatisfy { $0.terminals.isEmpty } }
     private var primaryBranch: GitBranch? {
-        project.worktrees.first(where: \.isPrimary).flatMap { store.sessions.branch(at: $0.path) }
+        project.worktrees.first(where: \.isPrimary).flatMap { store.branch(at: $0.path) }
     }
 
     var body: some View {
@@ -39,7 +39,9 @@ struct SidebarProjectLabel: View {
         }
         .contentShape(Rectangle())
         .help(project.path)
+        #if os(macOS)
         .draggable(project.id.uuidString)
+        #endif
         .contextMenu { SidebarProjectMenu(project: project) }
         .swipeActions(edge: .trailing) {
             RemovalButton(removal: .project(project.id), placement: .swipe)

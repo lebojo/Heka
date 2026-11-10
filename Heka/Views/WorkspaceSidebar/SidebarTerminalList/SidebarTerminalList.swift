@@ -1,8 +1,7 @@
 import SwiftUI
-import UniformTypeIdentifiers
 
 struct SidebarTerminalList: View {
-    @Environment(WorkspaceStore.self) private var store
+    @Environment(SidebarStore.self) private var store
 
     let worktreeID: UUID
     let query: String
@@ -12,6 +11,7 @@ struct SidebarTerminalList: View {
         ForEach(blocks) { block in
             SidebarTerminalBlockRow(block: block)
         }
+        #if os(macOS)
         .onMove(perform: store.isReadOnly ? nil : { store.reorderTerminalBlocks(in: worktreeID, blocks, from: $0, to: $1) })
         .onInsert(of: store.acceptsTerminalInsert(in: worktreeID) ? [.hekaTerminal] : []) { index, providers in
             store.endDragging()
@@ -20,5 +20,6 @@ struct SidebarTerminalList: View {
                 store.insertTerminal(dragged, in: worktreeID, blocks, at: index)
             }
         }
+        #endif
     }
 }

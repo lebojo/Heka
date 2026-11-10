@@ -1,9 +1,8 @@
-import AppKit
 import SwiftUI
 
 struct SidebarWorktreeLabel: View {
-    @Environment(SettingsStore.self) private var settings
-    @Environment(WorkspaceStore.self) private var store
+    @Environment(\.agentLaunch) private var agentLaunch
+    @Environment(SidebarStore.self) private var store
     @Environment(WorkspacePresentation.self) private var presentation
 
     let projectID: UUID
@@ -14,7 +13,7 @@ struct SidebarWorktreeLabel: View {
     let path: String
     let groupID: UUID?
 
-    private var branch: GitBranch? { store.sessions.branch(at: path) }
+    private var branch: GitBranch? { store.branch(at: path) }
     private var worktreeRemoval: Removal { .worktree(projectID: projectID, worktreeID: worktreeID, name: displayName) }
 
     var body: some View {
@@ -30,10 +29,14 @@ struct SidebarWorktreeLabel: View {
                 .accessibilityLabel("New terminal in \(displayName)")
         }
         .help(path)
+        #if os(macOS)
         .draggable(worktreeID.uuidString)
+        #endif
         .contextMenu {
             Button("New Terminal", systemImage: "terminal") { openTerminal() }
+            #if os(macOS)
             Button("Show in Finder", systemImage: "folder") { NSWorkspace.shared.selectFile(nil, inFileViewerRootedAtPath: path) }
+            #endif
             Menu("Group", systemImage: "rectangle.stack") {
                 Button("No Group") { store.moveWorktree(worktreeID, to: nil) }
                     .disabled(groupID == nil)
@@ -52,5 +55,5 @@ struct SidebarWorktreeLabel: View {
         }
     }
 
-    private func openTerminal() { store.openTerminal(projectID: projectID, worktreeID: worktreeID, launch: settings.agentLaunch) }
+    private func openTerminal() { store.openTerminal(projectID: projectID, worktreeID: worktreeID, launch: agentLaunch) }
 }

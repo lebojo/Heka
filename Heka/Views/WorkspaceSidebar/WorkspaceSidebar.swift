@@ -8,6 +8,26 @@ struct WorkspaceSidebar: View {
     @State private var search = ""
     @State private var filtered = SidebarFilterResult()
 
+    private var hasNoResults: Bool {
+        !search.isEmpty && filtered.groups.isEmpty && filtered.ungrouped.isEmpty
+            && !store.orphanWorktrees.contains { $0.folderName.localizedStandardContains(search) || ($0.branch?.localizedStandardContains(search) ?? false) }
+    }
+
+    @ViewBuilder private var emptyState: some View {
+        if store.projects.isEmpty && store.folders.isEmpty && store.orphanWorktrees.isEmpty {
+            VStack(spacing: Spacing.m) {
+                Image(systemName: "folder.badge.plus").font(Typography.emptyStateSymbol)
+                Text("All your projects in one place").font(Typography.m.weight(.medium))
+                Text("Add a project to get started.").font(Typography.s).foregroundStyle(Palette.textSecondary)
+                Button("Add Project…") { store.chooseProjects() }.controlSize(.small).padding(.top, Spacing.xs)
+            }
+            .foregroundStyle(Palette.textSecondary)
+            .padding()
+        } else if hasNoResults {
+            Text("No Results").font(Typography.body).foregroundStyle(Palette.textSecondary)
+        }
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             HStack {
@@ -47,6 +67,8 @@ struct WorkspaceSidebar: View {
             .padding(.horizontal, Spacing.l).padding(.top, Spacing.m).padding(.bottom, Spacing.l)
 
             SidebarProjectList(result: filtered, query: search)
+                .safeAreaInset(edge: .bottom, spacing: 0) { UsageBar() }
+                .overlay { emptyState }
             SidebarFooter()
         }
         .toolbar {

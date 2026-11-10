@@ -11,6 +11,9 @@ struct SidebarSubagentRow: View {
             AgentStatusBadge(title: subagent.status.title, color: subagent.status.color)
         }
         .tag(subagent.id)
+        #if os(iOS)
+        .selectionDisabled()
+        #endif
         .help(subagent.title)
         .accessibilityElement(children: .combine)
     }

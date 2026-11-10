@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct SidebarWorkInProgressSection: View {
-    @Environment(WorkspaceStore.self) private var store
+    @Environment(SidebarStore.self) private var store
 
     let query: String
 

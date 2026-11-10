@@ -1,6 +1,6 @@
 import Foundation
 
-struct Subagent: Identifiable, Equatable, Sendable {
+struct Subagent: Identifiable, Codable, Equatable, Sendable {
     let id: UUID
     let title: String
     let status: SubagentStatus
@@ -9,7 +9,7 @@ struct Subagent: Identifiable, Equatable, Sendable {
     let isVisible: Bool
 }
 
-enum SubagentStatus: Equatable, Sendable {
+enum SubagentStatus: Codable, Equatable, Sendable {
     case working, done, stopped
 
     var title: String {

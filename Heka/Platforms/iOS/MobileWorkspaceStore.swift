@@ -31,7 +31,8 @@ import Observation
     private(set) var repositoryRevision = 0
     private(set) var conversationRevision = 0
     private(set) var installedAgents: [ConversationAgent] = []
-    private(set) var terminalAgents: [UUID: ConversationAgent] = [:]
+    private(set) var activity = SidebarActivity()
+    private var collapsed: Set<UUID> = []
     private(set) var agentLaunch = AgentLaunch()
     private(set) var busyProjects: Set<UUID> = []
     var selection: UUID? {
@@ -151,7 +152,7 @@ import Observation
         workspace = Workspace()
         installedAgents = []
         agentLaunch = AgentLaunch()
-        terminalAgents = [:]
+        activity = SidebarActivity()
         selection = nil
     }
 
@@ -178,7 +179,7 @@ import Observation
         streamConnection = nil
         streamTerminal = nil
         cancelInputs(keepingQueuedFor: nil)
-        terminalAgents = [:]
+        activity = SidebarActivity()
     }
 
     func watch(prefersChat: Bool) async {
@@ -258,7 +259,7 @@ import Observation
                     case .repositoryChanged: repositoryRevision += 1
                     case .conversationsChanged: conversationRevision += 1
                     case .installedAgents(let agents): installedAgents = agents
-                    case .terminalAgents(let agents): if terminalAgents != agents { terminalAgents = agents }
+                    case .activity(let value): if activity != value { activity = value }
                     case .agentLaunch(let launch): agentLaunch = launch
                     }
                 }
@@ -266,7 +267,7 @@ import Observation
         } catch {
             guard generation == token, !Task.isCancelled else { return }
             status = .failed(error.localizedDescription)
-            terminalAgents = [:]
+            activity = SidebarActivity()
             guard (error as? RemoteError)?.isPermanent != true else { wantsConnection = false; return }
             if !streamReady { tryNextAddress() }
             do { try await Task.sleep(for: .seconds(3)) } catch { return }
@@ -374,6 +375,12 @@ import Observation
         busyProjects.insert(projectID)
         defer { busyProjects.remove(projectID) }
         return try await operation()
+    }
+
+    func isExpanded(_ id: UUID) -> Bool { !collapsed.contains(id) }
+
+    func setExpanded(_ id: UUID, _ expanded: Bool) {
+        if expanded { collapsed.remove(id) } else { collapsed.insert(id) }
     }
 
     func newTerminal(in context: TerminalContext) async {

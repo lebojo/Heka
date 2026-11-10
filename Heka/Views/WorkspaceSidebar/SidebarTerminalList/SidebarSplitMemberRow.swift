@@ -1,20 +1,22 @@
 import SwiftUI
 
 struct SidebarSplitMemberRow: View {
-    @Environment(WorkspaceStore.self) private var store
+    @Environment(SidebarStore.self) private var store
 
     let terminal: TerminalRecord
     let isFocused: Bool
 
     var body: some View {
         Button { store.selection = terminal.id } label: {
-            SidebarTerminalLabel(name: terminal.name, session: store.sessions.session(terminal.id))
+            SidebarTerminalLabel(name: terminal.name, summary: store.terminalSummary(terminal.id))
                 .fontWeight(isFocused ? .semibold : nil)
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .accessibilityAddTraits(isFocused ? .isSelected : [])
+        #if os(macOS)
         .terminalDragSource(terminal.id)
+        #endif
         .contextMenu { SidebarTerminalMenu(terminal: terminal) }
     }
 }

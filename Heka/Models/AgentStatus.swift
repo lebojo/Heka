@@ -1,6 +1,6 @@
 import Foundation
 
-enum AgentStatus: Equatable, Sendable {
+enum AgentStatus: Codable, Equatable, Sendable {
     case working, ready, waitingForInput
 
     static let outputActivityWindow: TimeInterval = 2

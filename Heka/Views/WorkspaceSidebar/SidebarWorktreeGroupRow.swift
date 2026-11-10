@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct SidebarWorktreeGroupRow: View {
-    @Environment(WorkspaceStore.self) private var store
+    @Environment(SidebarStore.self) private var store
     @Environment(WorkspacePresentation.self) private var presentation
 
     @State private var isDropTargeted = false
@@ -22,7 +22,9 @@ struct SidebarWorktreeGroupRow: View {
             ForEach(worktrees) { worktree in
                 SidebarWorktreeRow(projectID: project.id, worktreeGroups: project.worktreeGroups, worktree: worktree, query: query, showAll: showAll)
             }
+            #if os(macOS)
             .onMove(perform: store.isReadOnly ? nil : { store.reorderWorktrees(in: project.id, worktrees.map(\.id), from: $0, to: $1) })
+            #endif
             if project.worktrees(in: group.id).isEmpty {
                 Text("Drag a worktree here").font(Typography.caption).foregroundStyle(Palette.textSecondary)
             }
@@ -37,10 +39,12 @@ struct SidebarWorktreeGroupRow: View {
             .contentShape(Rectangle())
             .background(isDropTargeted ? Palette.dropTargetFill : .clear, in: RoundedRectangle(cornerRadius: Radius.s))
             .help(group.name)
+            #if os(macOS)
             .dropDestination(for: String.self) { values, _ in
                 guard let value = values.first, let id = UUID(uuidString: value) else { return false }
                 return store.moveWorktree(id, to: group.id)
             } isTargeted: { isDropTargeted = $0 }
+            #endif
             .contextMenu {
                 Button("Rename…", systemImage: "pencil") { presentation.sheet = .rename(group.id, group.name) }
                 Divider()

@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct SidebarWorkInProgressItemRow: View {
-    @Environment(WorkspaceStore.self) private var store
+    @Environment(SidebarStore.self) private var store
 
     let item: WorkInProgressItem
 

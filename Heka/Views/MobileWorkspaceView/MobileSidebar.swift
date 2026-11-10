@@ -9,26 +9,15 @@ struct MobileSidebar: View {
 
     let showSettings: () -> Void
 
-    private var selection: Binding<Selection?> {
-        Binding(get: { store.selection.map(Selection.terminal) }, set: { value in
-            store.selection = value?.terminalID
-        })
-    }
-
     var body: some View {
-        List(selection: selection) {
-            Section("Projects") {
-                ForEach(filtered.groups) { group in MobileFolderRow(group: group) }
-                ForEach(filtered.ungrouped) { project in MobileProjectRow(project: project) }
-            }
-        }
-        .modifier(MobileRemovalConfirmation())
-        .environment(store)
-        .environment(presentation)
+        SidebarProjectList(result: filtered, query: search)
+            .modifier(MobileRemovalConfirmation())
+            .environment(store)
+            .environment(presentation)
+            .environment(\.agentLaunch, store.agentLaunch)
         .sheet(item: $presentation.sheet) { item in
             WorkspaceEditor(store: store, sheet: item, defaultLaunch: store.agentLaunch, agents: store.installedAgents)
         }
-        .listStyle(.sidebar)
         .searchable(text: $search, prompt: "Filter projects and terminals")
         .onChange(of: SidebarFilterInput(folders: store.workspace.folders, projects: store.workspace.projects, query: search), initial: true) { _, input in
             filtered = input.filtered()
@@ -60,14 +49,6 @@ struct MobileSidebar: View {
                 Button("New Virtual Folder…", systemImage: "folder.badge.plus") { presentation.sheet = .folder(parentID: nil) }
                     .disabled(!store.isConnected)
             }
-        }
-    }
-
-    enum Selection: Hashable {
-        case terminal(UUID)
-
-        var terminalID: UUID {
-            switch self { case .terminal(let id): id }
         }
     }
 }

@@ -1,8 +1,8 @@
 import SwiftUI
 
 struct SidebarProjectRow: View {
-    @Environment(SettingsStore.self) private var settings
-    @Environment(WorkspaceStore.self) private var store
+    @Environment(\.agentLaunch) private var agentLaunch
+    @Environment(SidebarStore.self) private var store
 
     let project: Project
     let query: String
@@ -21,19 +21,23 @@ struct SidebarProjectRow: View {
             ForEach(project.worktrees.filter(\.isPrimary)) { worktree in
                 SidebarTerminalList(worktreeID: worktree.id, query: showsEverything ? "" : query)
                 if worktree.terminals.isEmpty {
-                    Button("Open Terminal") { store.openTerminal(projectID: project.id, worktreeID: worktree.id, launch: settings.agentLaunch) }
+                    Button("Open Terminal") { store.openTerminal(projectID: project.id, worktreeID: worktree.id, launch: agentLaunch) }
                         .buttonStyle(.plain).font(Typography.caption).foregroundStyle(Palette.textSecondary)
                 }
             }
             ForEach(visibleGroups) { group in
                 SidebarWorktreeGroupRow(project: project, group: group, query: query, showAll: showsEverything || matches(group.name))
             }
+            #if os(macOS)
             .onMove(perform: store.isReadOnly ? nil : { store.reorderWorktreeGroups(in: project.id, visibleGroups.map(\.id), from: $0, to: $1) })
+            #endif
             let ungrouped = visibleWorktrees(in: nil)
             ForEach(ungrouped) { worktree in
                 SidebarWorktreeRow(projectID: project.id, worktreeGroups: project.worktreeGroups, worktree: worktree, query: query, showAll: showsEverything)
             }
+            #if os(macOS)
             .onMove(perform: store.isReadOnly ? nil : { store.reorderWorktrees(in: project.id, ungrouped.map(\.id), from: $0, to: $1) })
+            #endif
         } label: {
             SidebarProjectLabel(project: project)
         }

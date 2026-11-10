@@ -17,6 +17,8 @@ struct ContentView: View {
     var body: some View {
         WorkspaceSplitView(inspectorVisible: $inspectorVisible) {
             WorkspaceSidebar()
+                .environment(\.agentLaunch, settings.agentLaunch)
+                .environment(\.removalConfirmations, settings.confirmations)
                 .disabled(store.isReadOnly)
         } detail: {
             Group {

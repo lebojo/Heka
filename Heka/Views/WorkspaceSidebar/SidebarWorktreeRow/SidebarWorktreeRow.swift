@@ -1,8 +1,8 @@
 import SwiftUI
 
 struct SidebarWorktreeRow: View {
-    @Environment(SettingsStore.self) private var settings
-    @Environment(WorkspaceStore.self) private var store
+    @Environment(\.agentLaunch) private var agentLaunch
+    @Environment(SidebarStore.self) private var store
 
     @State private var isInserted = false
 
@@ -24,7 +24,7 @@ struct SidebarWorktreeRow: View {
         DisclosureGroup(isExpanded: isExpanded) {
             SidebarTerminalList(worktreeID: worktree.id, query: terminalQuery)
             if worktree.terminals.isEmpty {
-                Button("Open Terminal") { store.openTerminal(projectID: projectID, worktreeID: worktree.id, launch: settings.agentLaunch) }
+                Button("Open Terminal") { store.openTerminal(projectID: projectID, worktreeID: worktree.id, launch: agentLaunch) }
                     .buttonStyle(.plain).font(Typography.caption).foregroundStyle(Palette.textSecondary)
             }
         } label: {

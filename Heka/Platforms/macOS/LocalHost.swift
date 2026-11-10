@@ -287,7 +287,7 @@ import SystemConfiguration
         let notifications = Task { await notifyInspectorChanges(on: connection, terminal: terminal) }
         defer { notifications.cancel() }
         var previousAgents: [ConversationAgent]?
-        var previousTerminalAgents: [UUID: ConversationAgent]?
+        var previousActivity: SidebarActivity?
         var previousLaunch: AgentLaunch?
         var previousWorkspace: Workspace?
         var streamed = StreamedSession()
@@ -340,7 +340,7 @@ import SystemConfiguration
                 _ = session?.agent
                 _ = installedAgents?.agents
                 _ = settings?.agentLaunch
-                _ = store.sessions.runningAgents
+                _ = store.sidebarActivity
             } onChange: { continuation.yield(()) }
             try await Task.sleep(for: .milliseconds(100))
             sleepPreventer.recordActivity()
@@ -354,10 +354,10 @@ import SystemConfiguration
                 try await RemoteChannel.push(RemoteEvent.installedAgents(agents), on: connection)
                 previousAgents = agents
             }
-            let terminalAgents = store.sessions.runningAgents
-            if previousTerminalAgents != terminalAgents {
-                try await RemoteChannel.push(RemoteEvent.terminalAgents(terminalAgents), on: connection)
-                previousTerminalAgents = terminalAgents
+            let activity = store.sidebarActivity
+            if previousActivity != activity {
+                try await RemoteChannel.push(RemoteEvent.activity(activity), on: connection)
+                previousActivity = activity
             }
             let launch = settings?.agentLaunch ?? AgentLaunch()
             if previousLaunch != launch {
@@ -513,6 +513,25 @@ import SystemConfiguration
         case .refreshWorktrees(let project):
             try requireWritable()
             await store.refreshWorktrees(project)
+            return try .success(true)
+        case .moveFolder(let folder, let parent):
+            try requireWritable()
+            store.moveFolder(folder, to: parent)
+            return try .success(true)
+        case .removeFolder(let folder):
+            try requireWritable()
+            store.removeFolder(folder)
+            return try .success(true)
+        case .moveWorktree(let worktree, let group):
+            try requireWritable()
+            return try .success(store.moveWorktree(worktree, to: group))
+        case .removeWorktreeGroup(let group):
+            try requireWritable()
+            store.removeWorktreeGroup(group)
+            return try .success(true)
+        case .useAutomaticName(let terminal):
+            try requireWritable()
+            store.useAutomaticName(terminal)
             return try .success(true)
         case .deletableBranch(let removal):
             return try .success(await store.deletableBranch(for: removal))

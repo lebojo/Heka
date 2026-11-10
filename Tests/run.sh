@@ -42,7 +42,7 @@ xcrun swiftc "${swift_flags[@]}" \
   Heka/Models/Workspace.swift Heka/Services/WorkspaceDisk.swift Heka/Models/TerminalLayout.swift Heka/Models/SidebarAppearance.swift Heka/Models/GitBranch.swift \
   Heka/Models/InspectorModels.swift Heka/Models/GitAction.swift Heka/Models/RemoteWebAddress.swift "Heka/Extensions/String+QueryValue.swift" Heka/Models/BranchMergeState.swift Heka/Models/GitDiff.swift Heka/Models/AgentConversation.swift \
   Heka/Models/Data/RemoteProtocol.swift Heka/Models/Data/RemoteTerminalSnapshot.swift Heka/Models/Data/TerminalGridSize.swift Heka/Models/Data/SessionMessage.swift \
-  Heka/Models/Data/RemoteGridRequests.swift "Heka/Extensions/Collection+TerminalReport.swift" Heka/Models/Removal.swift Heka/Models/WorktreeBranch.swift Heka/Models/AgentLaunch.swift \
+  Heka/Models/Data/RemoteGridRequests.swift "Heka/Extensions/Collection+TerminalReport.swift" Heka/Models/Removal.swift Heka/Models/WorktreeBranch.swift Heka/Models/AgentLaunch.swift Heka/Models/Data/SidebarActivity.swift Heka/Models/AgentStatus.swift Heka/Models/Subagent.swift \
   Heka/Models/Data/PairingInvitation.swift Heka/Models/Data/SavedHost.swift Heka/Models/Data/LocalAddress.swift Heka/Core/Remote/QRCode.swift \
   Heka/Core/Session/SessionTranscript.swift \
   Tests/RemoteTests.swift -o "$remote_binary"

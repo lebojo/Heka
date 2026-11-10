@@ -63,7 +63,7 @@ extension MobileWorkspaceStore: WorkspaceEditing {
         self.error = error.localizedDescription
     }
 
-    private func call<Value: Decodable & Sendable>(_ request: RemoteRequest) async throws -> Value {
+    func call<Value: Decodable & Sendable>(_ request: RemoteRequest) async throws -> Value {
         guard wantsConnection else { throw RemoteError(message: String(localized: "The Mac is disconnected.")) }
         return try await RemoteChannel.call(request, host: host, key: try await requiredPairingKey())
     }
