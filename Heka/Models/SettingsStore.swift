@@ -7,6 +7,7 @@ import Observation
         static let agentLaunch = "settings.agentLaunch"
         static let confirmations = "settings.confirmations"
         static let prompts = "settings.prompts"
+        static let keepAwake = "settings.keepAwake"
     }
 
     var terminal: TerminalAppearance {
@@ -20,6 +21,9 @@ import Observation
     }
     var prompts: AgentPrompts {
         didSet { if oldValue != prompts { save(prompts, forKey: Key.prompts) } }
+    }
+    var keepAwake: KeepAwakePolicy {
+        didSet { if oldValue != keepAwake { save(keepAwake, forKey: Key.keepAwake) } }
     }
     var worktreesDirectory: URL {
         didSet { if oldValue != worktreesDirectory { saveWorktreesDirectory() } }
@@ -42,6 +46,7 @@ import Observation
         agentLaunch = Self.load(AgentLaunch.self, forKey: Key.agentLaunch, from: defaults) ?? AgentLaunch()
         confirmations = Self.load(RemovalConfirmations.self, forKey: Key.confirmations, from: defaults) ?? RemovalConfirmations()
         prompts = Self.load(AgentPrompts.self, forKey: Key.prompts, from: defaults) ?? AgentPrompts()
+        keepAwake = Self.load(KeepAwakePolicy.self, forKey: Key.keepAwake, from: defaults) ?? .oneHour
         WorkspaceDisk.scanLegacyWorktreesDirectories(in: defaults)
         worktreesDirectory = WorkspaceDisk.storedWorktreesDirectory(in: defaults)
         scannedWorktreesDirectories = WorkspaceDisk.storedScannedWorktreesDirectories(in: defaults)

@@ -24,6 +24,14 @@ import SystemConfiguration
     private(set) var pairingStorageError: String?
     private(set) var status = String(localized: "Local Access off")
     private(set) var addresses: [String] = []
+    let sleepPreventer = SleepPreventer()
+    var keepAwake: KeepAwakePolicy {
+        get { settings?.keepAwake ?? .oneHour }
+        set {
+            settings?.keepAwake = newValue
+            refreshSleepPrevention()
+        }
+    }
     @ObservationIgnored private let identifier = LocalHost.deviceIdentifier()
     @ObservationIgnored private let pairingStore: any PairingCodeStore
     @ObservationIgnored private let name = SCDynamicStoreCopyComputerName(nil, nil) as String? ?? "Mac"
@@ -137,6 +145,11 @@ import SystemConfiguration
         for entry in connections.values { entry.connection.cancel() }
         jobs.removeAll()
         connections.removeAll()
+        sleepPreventer.release()
+    }
+
+    private func refreshSleepPrevention() {
+        sleepPreventer.update(isConnected: connections.values.contains(where: \.isPaired), policy: keepAwake)
     }
 
     private func restart() {
@@ -220,6 +233,7 @@ import SystemConfiguration
                 Task { @MainActor [weak self] in
                     self?.connections[id] = nil
                     self?.jobs[id]?.cancel()
+                    self?.refreshSleepPrevention()
                 }
             default: break
             }
@@ -231,6 +245,7 @@ import SystemConfiguration
                 connection.cancel()
                 self.connections[id] = nil
                 self.jobs[id] = nil
+                self.refreshSleepPrevention()
             }
             do {
                 let request: RemoteRequest
@@ -256,6 +271,8 @@ import SystemConfiguration
     private func admitPaired(_ id: UUID) -> Bool {
         guard connections[id] != nil, connections.values.count(where: \.isPaired) < Self.maximumConnections else { return false }
         connections[id]?.isPaired = true
+        refreshSleepPrevention()
+        sleepPreventer.recordActivity()
         return true
     }
 
@@ -292,6 +309,7 @@ import SystemConfiguration
                 while !Task.isCancelled {
                     let request: RemoteRequest = try await RemoteChannel.receive(on: connection)
                     guard !Task.isCancelled else { return }
+                    sleepPreventer.recordActivity()
                     switch request {
                     case .streamInput(let requestID, let terminalID, let data, let message) where terminalID == terminal:
                         let failure: String?

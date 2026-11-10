@@ -20,6 +20,19 @@ struct HostSettingsPane: View {
             } header: { Text("iPhone and iPad") } footer: {
                 Text("On the same network, enter this IP address and code in the mobile app’s settings. The Mac must stay on with Heka open.")
             }
+            Section {
+                Picker("Keep Mac Awake While a Device Is Connected", selection: $host.keepAwake) {
+                    ForEach(KeepAwakePolicy.allCases) { policy in
+                        Text(policy.title).tag(policy)
+                    }
+                }
+                if host.sleepPreventer.isPreventingSleep {
+                    Label("The Mac is kept awake for a connected device", systemImage: "cup.and.saucer")
+                        .foregroundStyle(Palette.textSecondary)
+                }
+            } footer: {
+                Text("Prevents the Mac from sleeping so the mobile app can still reach it. The display can still turn off.")
+            }
             if let invitation = host.invitation {
                 Section {
                     PairingQRCode(content: invitation.link)
