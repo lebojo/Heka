@@ -53,6 +53,7 @@ struct HostSettingsPane: View {
             } footer: {
                 Text("Only devices that know this code can read projects and control terminals. Traffic is encrypted with this code. Generate a new code to revoke devices that are already paired.")
             }
+            TestFlightSettingsSection()
         }.formStyle(.grouped)
     }
 }

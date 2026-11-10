@@ -11,7 +11,7 @@ struct GeneralSettingsPane: View {
                 Toggle("Before closing a terminal", isOn: $settings.confirmations.onTerminalClosing)
             }
             WorktreeFolderSettings()
-            TestFlightSettingsSection()
+            AboutSettingsSection()
         }
         .formStyle(.grouped)
     }

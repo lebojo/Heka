@@ -50,6 +50,6 @@ struct PairingInvitation: Equatable, Sendable {
     }
 
     private static var unrecognized: RemoteError {
-        RemoteError(message: String(localized: "This QR code doesn’t come from Heka. Scan the code shown on the Mac in Settings → Local Access."))
+        RemoteError(message: String(localized: "This QR code doesn’t come from Heka. Scan the code shown on the Mac in Settings → Mobile Control."))
     }
 }

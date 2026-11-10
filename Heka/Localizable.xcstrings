@@ -3150,12 +3150,12 @@
         }
       }
     },
-    "Copy the pairing code shown on the Mac in Settings → Local Access." : {
+    "Copy the pairing code shown on the Mac in Settings → Mobile Control." : {
       "localizations" : {
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Recopie le code d’appairage affiché sur le Mac dans Réglages → Accès local."
+            "value" : "Recopie le code d’appairage affiché sur le Mac dans Réglages → Contrôle mobile."
           }
         }
       }
@@ -3613,12 +3613,12 @@
         }
       }
     },
-    "Enter the IP address and pairing code shown on the Mac in Settings → Local Access." : {
+    "Enter the IP address and pairing code shown on the Mac in Settings → Mobile Control." : {
       "localizations" : {
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Saisis l’adresse IP et le code d’appairage affichés sur le Mac dans Réglages → Accès local."
+            "value" : "Saisis l’adresse IP et le code d’appairage affichés sur le Mac dans Réglages → Contrôle mobile."
           }
         }
       }
@@ -3633,12 +3633,12 @@
         }
       }
     },
-    "Enter the pairing code shown on the Mac in Settings → Local Access." : {
+    "Enter the pairing code shown on the Mac in Settings → Mobile Control." : {
       "localizations" : {
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Saisis le code d’appairage affiché sur le Mac dans Réglages → Accès local."
+            "value" : "Saisis le code d’appairage affiché sur le Mac dans Réglages → Contrôle mobile."
           }
         }
       }
@@ -4236,12 +4236,12 @@
         }
       }
     },
-    "Local Access" : {
+    "Mobile Control" : {
       "localizations" : {
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Accès local"
+            "value" : "Contrôle mobile"
           }
         }
       }
@@ -4813,12 +4813,12 @@
         }
       }
     },
-    "On the Mac, turn on Settings → Local Access, then scan the QR code it shows. Tap a saved Mac to switch to it. Both devices must be on the same network. The session continues on the Mac when you leave the mobile app." : {
+    "On the Mac, turn on Settings → Mobile Control, then scan the QR code it shows. Tap a saved Mac to switch to it. Both devices must be on the same network. The session continues on the Mac when you leave the mobile app." : {
       "localizations" : {
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sur le Mac, active Réglages → Accès local puis scanne le QR code affiché. Touche un Mac enregistré pour passer dessus. Les deux appareils doivent être sur le même réseau. La session continue sur le Mac lorsque tu quittes l’app mobile."
+            "value" : "Sur le Mac, active Réglages → Contrôle mobile puis scanne le QR code affiché. Touche un Mac enregistré pour passer dessus. Les deux appareils doivent être sur le même réseau. La session continue sur le Mac lorsque tu quittes l’app mobile."
           }
         }
       }
@@ -4973,12 +4973,12 @@
         }
       }
     },
-    "Pairing code rejected. Copy the code shown on the Mac in Settings → Local Access." : {
+    "Pairing code rejected. Copy the code shown on the Mac in Settings → Mobile Control." : {
       "localizations" : {
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Code d’appairage refusé. Recopie le code affiché sur le Mac dans Réglages → Accès local."
+            "value" : "Code d’appairage refusé. Recopie le code affiché sur le Mac dans Réglages → Contrôle mobile."
           }
         }
       }
@@ -5053,12 +5053,12 @@
         }
       }
     },
-    "Point the camera at the QR code shown on the Mac in Settings → Local Access." : {
+    "Point the camera at the QR code shown on the Mac in Settings → Mobile Control." : {
       "localizations" : {
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Vise le QR code affiché sur le Mac dans Réglages → Accès local."
+            "value" : "Vise le QR code affiché sur le Mac dans Réglages → Contrôle mobile."
           }
         }
       }
@@ -6617,12 +6617,12 @@
         }
       }
     },
-    "This QR code doesn’t come from Heka. Scan the code shown on the Mac in Settings → Local Access." : {
+    "This QR code doesn’t come from Heka. Scan the code shown on the Mac in Settings → Mobile Control." : {
       "localizations" : {
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ce QR code ne vient pas de Heka. Scanne le code affiché sur le Mac dans Réglages → Accès local."
+            "value" : "Ce QR code ne vient pas de Heka. Scanne le code affiché sur le Mac dans Réglages → Contrôle mobile."
           }
         }
       }
@@ -7159,6 +7159,19 @@
           }
         }
       }
+    },
+    "Made with ❤️ by Jordan Chap" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fait avec ❤️ par Jordan Chap"
+          }
+        }
+      }
+    },
+    "Version %@" : {
+      "shouldTranslate" : false
     },
     "" : {}
   },

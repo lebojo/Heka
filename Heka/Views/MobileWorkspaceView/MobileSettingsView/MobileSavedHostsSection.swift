@@ -28,7 +28,7 @@ struct MobileSavedHostsSection: View {
                 Button("Disconnect", role: .destructive) { store.disconnect() }
             }
         } header: { Text("Macs") } footer: {
-            Text("On the Mac, turn on Settings → Local Access, then scan the QR code it shows. Tap a saved Mac to switch to it. Both devices must be on the same network. The session continues on the Mac when you leave the mobile app.")
+            Text("On the Mac, turn on Settings → Mobile Control, then scan the QR code it shows. Tap a saved Mac to switch to it. Both devices must be on the same network. The session continues on the Mac when you leave the mobile app.")
         }
         .sheet(isPresented: $scannerVisible) {
             MobileScannerSheet().environment(store)

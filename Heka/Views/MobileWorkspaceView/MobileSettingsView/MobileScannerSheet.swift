@@ -11,7 +11,7 @@ struct MobileScannerSheet: View {
     @State private var error: String?
 
     private var hint: String {
-        error ?? String(localized: "Point the camera at the QR code shown on the Mac in Settings → Local Access.")
+        error ?? String(localized: "Point the camera at the QR code shown on the Mac in Settings → Mobile Control.")
     }
 
     var body: some View {

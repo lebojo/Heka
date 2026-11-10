@@ -12,7 +12,7 @@ struct SettingsView: View {
             PromptSettingsPane()
                 .tabItem { Label("Prompts", systemImage: "text.bubble") }
             HostSettingsPane()
-                .tabItem { Label("Local Access", systemImage: "network") }
+                .tabItem { Label("Mobile Control", systemImage: "iphone") }
         }
         .frame(width: Dimension.Settings.width)
         .frame(minHeight: Dimension.Settings.minHeight, idealHeight: Dimension.Settings.idealHeight)

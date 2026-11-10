@@ -53,7 +53,7 @@ enum RemotePairing {
     static func normalized(_ code: String) throws -> String {
         let value = code.uppercased().filter { $0.isLetter || $0.isNumber }
         guard value.count == length, value.allSatisfy(alphabet.contains) else {
-            throw RemoteError(message: String(localized: "Copy the pairing code shown on the Mac in Settings → Local Access."))
+            throw RemoteError(message: String(localized: "Copy the pairing code shown on the Mac in Settings → Mobile Control."))
         }
         return value
     }

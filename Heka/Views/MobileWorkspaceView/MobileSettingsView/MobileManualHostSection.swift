@@ -27,7 +27,7 @@ struct MobileManualHostSection: View {
             if let error { Text(error).foregroundStyle(Palette.danger) }
             Button("Connect", action: connect).disabled(isIncomplete)
         } header: { Text("Add Manually") } footer: {
-            Text("Enter the IP address and pairing code shown on the Mac in Settings → Local Access.")
+            Text("Enter the IP address and pairing code shown on the Mac in Settings → Mobile Control.")
         }
     }
 

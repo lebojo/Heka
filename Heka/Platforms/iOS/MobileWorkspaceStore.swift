@@ -345,7 +345,7 @@ import Observation
         let key = await derivation.value
         if pairingDerivation?.code == code { pairingDerivation = nil }
         guard let key else {
-            throw RemoteError(message: String(localized: "Enter the pairing code shown on the Mac in Settings → Local Access."), isPermanent: true)
+            throw RemoteError(message: String(localized: "Enter the pairing code shown on the Mac in Settings → Mobile Control."), isPermanent: true)
         }
         if pairingCode == code { pairingKey = key }
         return key

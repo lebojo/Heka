@@ -146,7 +146,7 @@ enum RemoteChannel {
 
     private static func translated(_ error: NWError) -> Error {
         guard case .tls(let status) = error, pairingMismatch.contains(status) else { return error }
-        return RemoteError(message: String(localized: "Pairing code rejected. Copy the code shown on the Mac in Settings → Local Access."), isPermanent: true)
+        return RemoteError(message: String(localized: "Pairing code rejected. Copy the code shown on the Mac in Settings → Mobile Control."), isPermanent: true)
     }
 }
 
