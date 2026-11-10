@@ -25,13 +25,6 @@ import SystemConfiguration
     private(set) var status = String(localized: "Local Access off")
     private(set) var addresses: [String] = []
     let sleepPreventer = SleepPreventer()
-    var keepAwake: KeepAwakePolicy {
-        get { settings?.keepAwake ?? .oneHour }
-        set {
-            settings?.keepAwake = newValue
-            refreshSleepPrevention()
-        }
-    }
     @ObservationIgnored private let identifier = LocalHost.deviceIdentifier()
     @ObservationIgnored private let pairingStore: any PairingCodeStore
     @ObservationIgnored private let name = SCDynamicStoreCopyComputerName(nil, nil) as String? ?? "Mac"
@@ -66,6 +59,7 @@ import SystemConfiguration
         self.store = store
         self.settings = settings
         self.installedAgents = installedAgents
+        sleepPreventer.configure(settings: settings)
         pathMonitor.pathUpdateHandler = { [weak self] _ in
             Task { @MainActor [weak self] in self?.refreshAddresses() }
         }
@@ -149,7 +143,7 @@ import SystemConfiguration
     }
 
     private func refreshSleepPrevention() {
-        sleepPreventer.update(isConnected: connections.values.contains(where: \.isPaired), policy: keepAwake)
+        sleepPreventer.update(isConnected: connections.values.contains(where: \.isPaired))
     }
 
     private func restart() {
@@ -233,7 +227,6 @@ import SystemConfiguration
                 Task { @MainActor [weak self] in
                     self?.connections[id] = nil
                     self?.jobs[id]?.cancel()
-                    self?.refreshSleepPrevention()
                 }
             default: break
             }
@@ -271,8 +264,8 @@ import SystemConfiguration
     private func admitPaired(_ id: UUID) -> Bool {
         guard connections[id] != nil, connections.values.count(where: \.isPaired) < Self.maximumConnections else { return false }
         connections[id]?.isPaired = true
-        refreshSleepPrevention()
         sleepPreventer.recordActivity()
+        refreshSleepPrevention()
         return true
     }
 
@@ -348,6 +341,7 @@ import SystemConfiguration
                 _ = store.sessions.runningAgents
             } onChange: { continuation.yield(()) }
             try await Task.sleep(for: .milliseconds(100))
+            sleepPreventer.recordActivity()
             let workspace = Workspace(folders: store.folders, projects: store.projects, selection: nil, collapsed: [])
             if previousWorkspace != workspace {
                 try await RemoteChannel.push(RemoteEvent.workspace(workspace), on: connection)

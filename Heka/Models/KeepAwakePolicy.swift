@@ -8,16 +8,17 @@ enum KeepAwakePolicy: String, Codable, CaseIterable, Identifiable {
     case twoHours
     case always
 
+    static let standard = Self.oneHour
+
     var id: Self { self }
 
     var idleLimit: Duration? {
         switch self {
-        case .never: .zero
         case .fifteenMinutes: .seconds(15 * 60)
         case .thirtyMinutes: .seconds(30 * 60)
         case .oneHour: .seconds(60 * 60)
         case .twoHours: .seconds(2 * 60 * 60)
-        case .always: nil
+        case .never, .always: nil
         }
     }
 

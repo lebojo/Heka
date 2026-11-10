@@ -1,41 +1,79 @@
 import Foundation
-import IOKit.pwr_mgt
 import Observation
 
 @MainActor @Observable final class SleepPreventer {
     private(set) var isPreventingSleep = false
-    @ObservationIgnored private var assertion: IOPMAssertionID = 0
+    @ObservationIgnored private var activity: NSObjectProtocol?
     @ObservationIgnored private var expiry: Task<Void, Never>?
     @ObservationIgnored private var lastActivity = ContinuousClock.now
+    @ObservationIgnored private var lastDisconnection = ContinuousClock.now
     @ObservationIgnored private var isConnected = false
-    @ObservationIgnored private var policy = KeepAwakePolicy.oneHour
+    @ObservationIgnored private weak var settings: SettingsStore?
 
-    func update(isConnected: Bool, policy: KeepAwakePolicy) {
+    static let reconnectionGrace = Duration.seconds(60)
+
+    func configure(settings: SettingsStore) {
+        self.settings = settings
+        observePolicy()
+    }
+
+    func update(isConnected: Bool) {
+        guard isConnected != self.isConnected else { return }
+        if !isConnected { lastDisconnection = .now }
         self.isConnected = isConnected
-        self.policy = policy
         refresh()
     }
 
     func recordActivity() {
         lastActivity = .now
-        refresh()
+        if !isPreventingSleep { refresh() }
     }
 
     func release() {
         isConnected = false
+        lastDisconnection = .now - Self.reconnectionGrace
         refresh()
     }
 
+    private func observePolicy() {
+        withObservationTracking {
+            _ = settings?.keepAwake
+        } onChange: {
+            Task { @MainActor [weak self] in
+                self?.refresh()
+                self?.observePolicy()
+            }
+        }
+    }
+
+    private var deadline: ContinuousClock.Instant? {
+        guard let policy = settings?.keepAwake, policy != .never else { return .now }
+        let activityDeadline = policy.idleLimit.map { lastActivity + $0 }
+        guard !isConnected else { return activityDeadline }
+        let graceDeadline = lastDisconnection + Self.reconnectionGrace
+        return activityDeadline.map { min($0, graceDeadline) } ?? graceDeadline
+    }
+
     private func refresh() {
-        expiry?.cancel()
-        expiry = nil
-        guard isConnected else { setPreventing(false); return }
-        guard let limit = policy.idleLimit else { setPreventing(true); return }
-        let remaining = limit - (ContinuousClock.now - lastActivity)
-        guard remaining > .zero else { setPreventing(false); return }
+        guard let deadline else {
+            expiry?.cancel()
+            expiry = nil
+            setPreventing(true)
+            return
+        }
+        guard deadline > .now else {
+            expiry?.cancel()
+            expiry = nil
+            setPreventing(false)
+            return
+        }
         setPreventing(true)
+        guard expiry == nil else { return }
         expiry = Task { [weak self] in
-            do { try await Task.sleep(for: remaining) } catch { return }
+            while let self, let deadline = self.deadline, deadline > .now {
+                do { try await Task.sleep(until: deadline) } catch { return }
+            }
+            self?.expiry = nil
             self?.refresh()
         }
     }
@@ -43,18 +81,13 @@ import Observation
     private func setPreventing(_ prevent: Bool) {
         guard prevent != isPreventingSleep else { return }
         if prevent {
-            var id: IOPMAssertionID = 0
-            let result = IOPMAssertionCreateWithName(
-                kIOPMAssertionTypePreventUserIdleSystemSleep as CFString,
-                IOPMAssertionLevel(kIOPMAssertionLevelOn),
-                "Heka keeps the Mac awake while a mobile device is connected" as CFString,
-                &id
+            activity = ProcessInfo.processInfo.beginActivity(
+                options: .idleSystemSleepDisabled,
+                reason: "Heka keeps the Mac awake while a mobile device is connected"
             )
-            guard result == kIOReturnSuccess else { return }
-            assertion = id
-        } else {
-            IOPMAssertionRelease(assertion)
-            assertion = 0
+        } else if let activity {
+            ProcessInfo.processInfo.endActivity(activity)
+            self.activity = nil
         }
         isPreventingSleep = prevent
     }
