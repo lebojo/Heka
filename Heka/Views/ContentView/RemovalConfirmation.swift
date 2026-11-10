@@ -34,20 +34,9 @@ struct RemovalConfirmation: View {
     }
 
     private func present(_ removal: Removal) async {
-        let store = store
-        let (lookups, continuation) = AsyncStream.makeStream(of: String?.self)
-        let lookup = Task { continuation.yield(await store.deletableBranch(for: removal)) }
-        let deadline = Task {
-            try? await Task.sleep(for: Removal.branchLookupDeadline)
-            continuation.yield(nil)
-        }
-        var iterator = lookups.makeAsyncIterator()
-        let first = await iterator.next()
-        lookup.cancel()
-        deadline.cancel()
-        continuation.finish()
-        guard !Task.isCancelled, let first else { return }
-        prompt = Prompt(removal: removal, deletableBranch: first)
+        let branch = await store.deletableBranchBeforeDeadline(for: removal)
+        guard !Task.isCancelled else { return }
+        prompt = Prompt(removal: removal, deletableBranch: branch)
     }
 
     private func dialog(allowingSkip: Bool) -> some View {

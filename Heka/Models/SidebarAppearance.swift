@@ -1,6 +1,6 @@
 import Foundation
 
-enum SidebarItemKind: Sendable {
+enum SidebarItemKind: Codable, Sendable {
     case folder, project
 
     var defaultSymbol: SidebarSymbol {
@@ -11,7 +11,7 @@ enum SidebarItemKind: Sendable {
     }
 }
 
-struct SidebarAppearance: Equatable, Sendable {
+struct SidebarAppearance: Codable, Equatable, Sendable {
     let kind: SidebarItemKind
     var symbol: SidebarSymbol?
     var tint: SidebarTint?

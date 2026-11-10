@@ -45,7 +45,7 @@ enum WorktreeBranch: Equatable, Sendable {
     }
 }
 
-enum BranchRemoval: Equatable, Sendable {
+enum BranchRemoval: Codable, Equatable, Sendable {
     case keep, merged(confirmed: String?), force
 
     var confirmedBranch: String? {

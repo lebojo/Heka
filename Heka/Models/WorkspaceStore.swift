@@ -446,10 +446,6 @@ import Observation
         save()
     }
 
-    func isBusy(_ removal: Removal) -> Bool {
-        removal.projectID.map(busyProjects.contains) ?? false
-    }
-
     func deletableBranch(for removal: Removal) async -> String? {
         guard case .worktree(let projectID, let worktreeID, _) = removal,
               let project = projects.first(where: { $0.id == projectID }),
@@ -460,23 +456,34 @@ import Observation
 
     func remove(_ removal: Removal, branch: BranchRemoval = .keep) {
         guard !isBusy(removal) else {
-            errorMessage = String(localized: "A Git operation is in progress on this project. Try again when it’s finished.")
+            errorMessage = Self.busyRemovalMessage
             return
         }
+        Task {
+            do { try await performRemoval(removal, branch: branch) }
+            catch let error as UnmergedBranchError { unmergedRemoval = UnmergedRemoval(removal: removal, error: error) }
+            catch { errorMessage = error.localizedDescription }
+        }
+    }
+
+    func isBusy(_ removal: Removal) -> Bool {
+        removal.projectID.map(busyProjects.contains) ?? false
+    }
+
+    func performRemoval(_ removal: Removal, branch: BranchRemoval) async throws {
+        guard !isBusy(removal) else { throw WorkspaceError(message: Self.busyRemovalMessage) }
         switch removal {
         case .project(let id): removeProject(id)
         case .terminal(let id): closeTerminal(id)
         case .worktree(let projectID, let worktreeID, _):
-            Task {
-                do {
-                    let cleanup = try await deleteWorktree(projectID: projectID, worktreeID: worktreeID, branch: branch)
-                    if let failure = cleanup.failure { errorMessage = failure }
-                } catch let error as UnmergedBranchError {
-                    unmergedRemoval = UnmergedRemoval(removal: removal, error: error)
-                } catch { errorMessage = error.localizedDescription }
-            }
+            let cleanup = try await deleteWorktree(projectID: projectID, worktreeID: worktreeID, branch: branch)
+            if let failure = cleanup.failure { throw WorkspaceError(message: failure) }
         case .orphanWorktree(let path, _): trashOrphanWorktree(at: path)
         }
+    }
+
+    private static var busyRemovalMessage: String {
+        String(localized: "A Git operation is in progress on this project. Try again when it’s finished.")
     }
 
     @discardableResult func addTerminal(projectID: UUID, worktreeID: UUID, name: String = TerminalRecord.defaultName, command: [String] = [], select: Bool = true) throws -> TerminalContext {

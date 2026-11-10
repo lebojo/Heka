@@ -3,6 +3,7 @@ import SwiftUI
 struct MobileSidebar: View {
     @State private var search = ""
     @State private var filtered = SidebarFilterResult()
+    @State private var presentation = WorkspacePresentation()
 
     @Bindable var store: MobileWorkspaceStore
 
@@ -21,7 +22,12 @@ struct MobileSidebar: View {
                 ForEach(filtered.ungrouped) { project in MobileProjectRow(project: project) }
             }
         }
+        .modifier(MobileRemovalConfirmation())
         .environment(store)
+        .environment(presentation)
+        .sheet(item: $presentation.sheet) { item in
+            WorkspaceEditor(store: store, sheet: item, defaultLaunch: store.agentLaunch, agents: store.installedAgents)
+        }
         .listStyle(.sidebar)
         .searchable(text: $search, prompt: "Filter projects and terminals")
         .onChange(of: SidebarFilterInput(folders: store.workspace.folders, projects: store.workspace.projects, query: search), initial: true) { _, input in
@@ -49,6 +55,10 @@ struct MobileSidebar: View {
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button("Settings", systemImage: "gearshape", action: showSettings)
+            }
+            ToolbarItem(placement: .primaryAction) {
+                Button("New Virtual Folder…", systemImage: "folder.badge.plus") { presentation.sheet = .folder(parentID: nil) }
+                    .disabled(!store.isConnected)
             }
         }
     }

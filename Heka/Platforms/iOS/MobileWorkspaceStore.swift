@@ -32,6 +32,8 @@ import Observation
     private(set) var conversationRevision = 0
     private(set) var installedAgents: [ConversationAgent] = []
     private(set) var terminalAgents: [UUID: ConversationAgent] = [:]
+    private(set) var agentLaunch = AgentLaunch()
+    private(set) var busyProjects: Set<UUID> = []
     var selection: UUID? {
         didSet { if selection != oldValue { session = nil } }
     }
@@ -148,6 +150,7 @@ import Observation
     private func resetWorkspace() {
         workspace = Workspace()
         installedAgents = []
+        agentLaunch = AgentLaunch()
         terminalAgents = [:]
         selection = nil
     }
@@ -256,6 +259,7 @@ import Observation
                     case .conversationsChanged: conversationRevision += 1
                     case .installedAgents(let agents): installedAgents = agents
                     case .terminalAgents(let agents): if terminalAgents != agents { terminalAgents = agents }
+                    case .agentLaunch(let launch): agentLaunch = launch
                     }
                 }
             } onCancel: { connection.cancel() }
@@ -365,9 +369,20 @@ import Observation
         } catch { self.error = error.localizedDescription }
     }
 
+    func busy<Value>(_ projectID: UUID, _ operation: () async throws -> Value) async throws -> Value {
+        guard !busyProjects.contains(projectID) else { throw RemoteError(message: String(localized: "A Git operation is already in progress on this project.")) }
+        busyProjects.insert(projectID)
+        defer { busyProjects.remove(projectID) }
+        return try await operation()
+    }
+
     func newTerminal(in context: TerminalContext) async {
+        await newTerminal(projectID: context.project.id, worktreeID: context.worktree.id)
+    }
+
+    func newTerminal(projectID: UUID, worktreeID: UUID) async {
         do {
-            let id: UUID = try await RemoteChannel.call(.newTerminal(project: context.project.id, worktree: context.worktree.id),
+            let id: UUID = try await RemoteChannel.call(.newTerminal(project: projectID, worktree: worktreeID),
                                                         host: host, key: try await requiredPairingKey())
             selection = id
         } catch { self.error = error.localizedDescription }

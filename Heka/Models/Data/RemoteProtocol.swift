@@ -11,7 +11,7 @@ enum RemoteProtocol {
         #endif
         return 52741
     }
-    static let version = 7
+    static let version = 8
     static let maximumFrame = 4 * 1024 * 1024
     static let maximumPayload = maximumFrame / 4 * 3 - 4096
 
@@ -103,17 +103,30 @@ enum RemoteRequest: Codable, Sendable {
     case conversations(terminal: UUID, fresh: Bool)
     case resume(terminal: UUID, conversation: AgentConversation)
     case launchAgent(terminal: UUID, agent: ConversationAgent)
+    case addFolder(name: String, parent: UUID?, appearance: SidebarAppearance?)
+    case rename(id: UUID, name: String, appearance: SidebarAppearance?)
+    case moveProject(project: UUID, folder: UUID?)
+    case addWorktreeGroup(name: String, project: UUID, worktree: UUID?)
+    case createWorktree(project: UUID, branch: String, remote: String?, agent: ConversationAgent?)
+    case projectBranches(project: UUID)
+    case fetchRemotes(project: UUID)
+    case refreshWorktrees(project: UUID)
+    case deletableBranch(removal: Removal)
+    case remove(removal: Removal, branch: BranchRemoval)
 
     var waitsForInspectorSlot: Bool {
         switch self {
-        case .newTerminal, .launchAgent, .resume, .input: false
+        case .newTerminal, .launchAgent, .resume, .input, .addFolder, .rename, .moveProject,
+             .addWorktreeGroup, .createWorktree, .projectBranches, .fetchRemotes, .refreshWorktrees, .deletableBranch, .remove: false
         default: true
         }
     }
 
     var timeout: Duration {
         switch self {
-        case .git, .github, .diff, .branches, .comparison, .comparisonDiff, .conversations, .resume: .seconds(60)
+        case .git, .github, .diff, .branches, .comparison, .comparisonDiff, .conversations, .resume,
+             .projectBranches, .refreshWorktrees: .seconds(60)
+        case .createWorktree, .fetchRemotes, .remove: .seconds(150)
         default: .seconds(15)
         }
     }
@@ -156,6 +169,7 @@ enum RemoteEvent: Codable, Sendable {
     case conversationsChanged
     case installedAgents([ConversationAgent])
     case terminalAgents([UUID: ConversationAgent])
+    case agentLaunch(AgentLaunch)
 }
 
 struct RemoteRejection: Encodable, Sendable {

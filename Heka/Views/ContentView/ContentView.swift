@@ -55,7 +55,7 @@ struct ContentView: View {
         .frame(minWidth: Dimension.Window.minWidth, minHeight: Dimension.Window.minHeight)
         .modifier(WorkspaceMonitors(store: store, gitActionQueues: gitActionQueues))
         .sheet(item: Bindable(presentation).sheet) { item in
-            WorkspaceEditor(store: store, sheet: item)
+            WorkspaceEditor(store: store, sheet: item, defaultLaunch: settings.agentLaunch, agents: ConversationAgent.allCases)
         }
         .sheet(isPresented: Bindable(floating).isPresented) {
             FloatingTerminalView()

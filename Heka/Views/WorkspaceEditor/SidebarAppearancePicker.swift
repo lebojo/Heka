@@ -3,7 +3,11 @@ import SwiftUI
 struct SidebarAppearancePicker: View {
     @Binding var appearance: SidebarAppearance
 
+    #if os(macOS)
     private let columns = Array(repeating: GridItem(.fixed(IconSize.xl), spacing: Spacing.s), count: 11)
+    #else
+    private let columns = [GridItem(.adaptive(minimum: IconSize.xl), spacing: Spacing.s)]
+    #endif
 
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.xl) {
@@ -21,7 +25,7 @@ struct SidebarAppearancePicker: View {
             }
             VStack(alignment: .leading, spacing: Spacing.m) {
                 Text("Color").font(Typography.label)
-                HStack(spacing: Spacing.xs) {
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: IconSize.m + Spacing.xxs * 2), spacing: Spacing.xs)], alignment: .leading, spacing: Spacing.xs) {
                     Button { appearance.tint = nil } label: {
                         TintSwatch(color: appearance.kind.defaultColor, isAutomatic: true, isSelected: appearance.tint == nil)
                     }

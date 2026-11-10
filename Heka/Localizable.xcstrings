@@ -14,6 +14,16 @@
     " M " : {
       "shouldTranslate" : false
     },
+    "%@ isn’t installed on the Mac." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ n’est pas installé sur le Mac."
+          }
+        }
+      }
+    },
     "%@ must be a number of seconds greater than 0 and at most %lld." : {
       "localizations" : {
         "fr" : {
@@ -4006,6 +4016,16 @@
         }
       }
     },
+    "Invalid name." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nom invalide."
+          }
+        }
+      }
+    },
     "Invalid request." : {
       "localizations" : {
         "fr" : {
@@ -6513,6 +6533,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ce QR code ne vient pas de Heka. Scanne le code affiché sur le Mac dans Réglages → Accès local."
+          }
+        }
+      }
+    },
+    "This remote branch isn’t available on the Mac." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cette branche distante n’est pas disponible sur le Mac."
           }
         }
       }

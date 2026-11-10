@@ -12,8 +12,8 @@ struct GitBranch: Codable, Equatable, Sendable {
 }
 
 
-struct BranchSuggestion: Identifiable, Hashable, Sendable {
-    enum Origin: Hashable, Sendable {
+struct BranchSuggestion: Identifiable, Codable, Hashable, Sendable {
+    enum Origin: Codable, Hashable, Sendable {
         case local
         case remote(String)
     }

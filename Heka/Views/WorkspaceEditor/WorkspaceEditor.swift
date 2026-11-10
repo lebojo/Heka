@@ -17,7 +17,6 @@ enum WorkspaceSheet: Identifiable, Equatable {
 
 struct WorkspaceEditor: View {
     @Environment(\.dismiss) private var dismiss
-    @Environment(SettingsStore.self) private var settings
 
     @State private var name = ""
     @State private var submitting = false
@@ -30,8 +29,10 @@ struct WorkspaceEditor: View {
 
     @FocusState private var focused: Bool
 
-    let store: WorkspaceStore
+    let store: any WorkspaceEditing
     let sheet: WorkspaceSheet
+    let defaultLaunch: AgentLaunch
+    let agents: [ConversationAgent]
 
     private var isWorktree: Bool { worktreeProject != nil }
     private var worktreeProject: UUID? { if case .worktree(let id, _) = sheet { id } else { nil } }
@@ -106,7 +107,7 @@ struct WorkspaceEditor: View {
                 }
             }
             if isWorktree {
-                WorktreeLaunchPicker(launch: $launch).disabled(submitting)
+                WorktreeLaunchPicker(launch: $launch, agents: agents).disabled(submitting)
             }
             if let appearance = Binding($appearance) {
                 SidebarAppearancePicker(appearance: appearance)
@@ -116,17 +117,20 @@ struct WorkspaceEditor: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
             HStack {
-                if submitting { ProgressView().controlSize(.small); Text("Creating worktree…").font(Typography.caption).foregroundStyle(Palette.textSecondary) }
+                if submitting {
+                    ProgressView().controlSize(.small)
+                    if isWorktree { Text("Creating worktree…").font(Typography.caption).foregroundStyle(Palette.textSecondary) }
+                }
                 Spacer()
                 Button(submitting ? "Stop" : "Cancel") {
                     if submitting { submission?.cancel() } else { dismiss() }
                 }.keyboardShortcut(.cancelAction)
                 Button(isWorktree ? "Create Worktree" : "Save") { submit() }
                     .keyboardShortcut(.defaultAction).buttonStyle(.borderedProminent)
-                    .disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || submitting || fetching)
+                    .disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || submitting || fetching || store.isReadOnly)
             }
         }
-        .padding(Spacing.xxl).frame(width: Dimension.Sheet.width)
+        .padding(Spacing.xxl).modifier(EditorSheetFrame())
         .interactiveDismissDisabled(submitting)
         .onAppear {
             switch sheet {
@@ -135,7 +139,7 @@ struct WorkspaceEditor: View {
                 name = current
                 appearance = store.appearance(of: id)
             case .worktree:
-                launch = settings.agentLaunch
+                launch = defaultLaunch
             case .worktreeGroup: break
             }
             focused = true
@@ -148,30 +152,29 @@ struct WorkspaceEditor: View {
 
     private func submit() {
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty, !submitting, !fetching else { return }
+        guard !trimmed.isEmpty, !submitting, !fetching, !store.isReadOnly else { return }
+        submitting = true
+        error = nil
+        submission = Task {
+            do { try await save(trimmed); dismiss() }
+            catch is CancellationError { self.error = String(localized: "Creation cancelled.") }
+            catch { self.error = error.localizedDescription }
+            submitting = false
+            submission = nil
+        }
+    }
+
+    private func save(_ name: String) async throws {
         switch sheet {
         case .folder(let parentID):
-            let id = store.addFolder(trimmed, parentID: parentID)
-            if let appearance { store.setAppearance(appearance, for: id) }
-            dismiss()
+            try await store.addFolder(name, parentID: parentID, appearance: appearance)
         case .rename(let id, _):
-            store.rename(id, to: trimmed)
-            if let appearance { store.setAppearance(appearance, for: id) }
-            dismiss()
+            try await store.rename(id, to: name, appearance: appearance)
         case .worktreeGroup(let project, let worktree):
-            store.addWorktreeGroup(trimmed, projectID: project, moving: worktree)
-            dismiss()
+            _ = try await store.addWorktreeGroup(name, projectID: project, moving: worktree)
         case .worktree(let project, _):
-            let remote = branches.first { $0.name == trimmed }?.remote
-            submitting = true
-            error = nil
-            submission = Task {
-                do { _ = try await store.createWorktree(projectID: project, branch: trimmed, remote: remote, command: launch.command(on: .newWorktree)); dismiss() }
-                catch is CancellationError { self.error = String(localized: "Creation cancelled.") }
-                catch { self.error = error.localizedDescription }
-                submitting = false
-                submission = nil
-            }
+            let remote = branches.first { $0.name == name }?.remote
+            try await store.openWorktree(projectID: project, branch: name, remote: remote, launch: launch)
         }
     }
 
@@ -184,5 +187,15 @@ struct WorkspaceEditor: View {
             branches = await store.availableBranches(projectID: project)
             fetching = false
         }
+    }
+}
+
+private struct EditorSheetFrame: ViewModifier {
+    func body(content: Content) -> some View {
+        #if os(macOS)
+        content.frame(width: Dimension.Sheet.width)
+        #else
+        ScrollView { content }.presentationDetents([.medium, .large])
+        #endif
     }
 }

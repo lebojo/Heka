@@ -278,6 +278,7 @@ import SystemConfiguration
         defer { notifications.cancel() }
         var previousAgents: [ConversationAgent]?
         var previousTerminalAgents: [UUID: ConversationAgent]?
+        var previousLaunch: AgentLaunch?
         var previousWorkspace: Workspace?
         var streamed = StreamedSession()
         var watchedChat: TerminalSession?
@@ -327,6 +328,7 @@ import SystemConfiguration
                 _ = session?.hasExited
                 _ = session?.agent
                 _ = installedAgents?.agents
+                _ = settings?.agentLaunch
                 _ = store.sessions.runningAgents
             } onChange: { continuation.yield(()) }
             try await Task.sleep(for: .milliseconds(100))
@@ -344,6 +346,11 @@ import SystemConfiguration
             if previousTerminalAgents != terminalAgents {
                 try await RemoteChannel.push(RemoteEvent.terminalAgents(terminalAgents), on: connection)
                 previousTerminalAgents = terminalAgents
+            }
+            let launch = settings?.agentLaunch ?? AgentLaunch()
+            if previousLaunch != launch {
+                try await RemoteChannel.push(RemoteEvent.agentLaunch(launch), on: connection)
+                previousLaunch = launch
             }
             if let terminal, store.context(for: terminal) == nil {
                 try await RemoteChannel.push(RemoteEvent.terminalClosed, on: connection)
@@ -461,10 +468,78 @@ import SystemConfiguration
             }
             let resumed = try store.resume(actual, projectID: context.project.id, worktreeID: context.worktree.id, select: false)
             return try .success(resumed.terminal.id)
+        case .addFolder(let name, let parent, let appearance):
+            try requireWritable()
+            try await store.addFolder(try validatedName(name), parentID: parent, appearance: appearance)
+            return try .success(true)
+        case .rename(let id, let name, let appearance):
+            try requireWritable()
+            try await store.rename(id, to: try validatedName(name), appearance: appearance)
+            return try .success(true)
+        case .moveProject(let project, let folder):
+            try requireWritable()
+            store.moveProject(project, to: folder)
+            return try .success(true)
+        case .addWorktreeGroup(let name, let project, let worktree):
+            try requireWritable()
+            return try .success(store.addWorktreeGroup(try validatedName(name), projectID: project, moving: worktree))
+        case .createWorktree(let project, let branch, let remote, let agent):
+            try requireWritable()
+            let branch = try validatedName(branch)
+            let remote = try await validatedRemote(remote, of: branch, in: project)
+            let launch = try launch(agent)
+            let created = try await Task {
+                try await store.createWorktree(projectID: project, branch: branch, remote: remote, command: launch.command(on: .newWorktree), select: false)
+            }.value
+            return try .success(created.terminal.id)
+        case .projectBranches(let project):
+            return try .fitting(await store.availableBranches(projectID: project)) { branches, _ in branches }
+        case .fetchRemotes(let project):
+            try requireWritable()
+            try await store.fetchRemotes(projectID: project)
+            return try .success(true)
+        case .refreshWorktrees(let project):
+            try requireWritable()
+            await store.refreshWorktrees(project)
+            return try .success(true)
+        case .deletableBranch(let removal):
+            return try .success(await store.deletableBranch(for: removal))
+        case .remove(.orphanWorktree, _):
+            throw RemoteError(message: String(localized: "Invalid request."))
+        case .remove(let removal, let branch):
+            try requireWritable()
+            try await Task { try await store.performRemoval(removal, branch: branch) }.value
+            return try .success(true)
         }
     }
 
     private var isWritable: Bool { store?.isReadOnly != true }
+
+    private func validatedRemote(_ remote: String?, of branch: String, in project: UUID) async throws -> String? {
+        guard let remote else { return nil }
+        let known = await store?.availableBranches(projectID: project) ?? []
+        guard known.contains(where: { $0.name == branch && $0.remote == remote }) else {
+            throw RemoteError(message: String(localized: "This remote branch isn’t available on the Mac."))
+        }
+        return remote
+    }
+
+    private func launch(_ agent: ConversationAgent?) throws -> AgentLaunch {
+        var launch = settings?.agentLaunch ?? AgentLaunch()
+        launch.onNewWorktree = agent != nil
+        guard let agent else { return launch }
+        guard installedAgents?.agents.contains(agent) == true else {
+            throw RemoteError(message: String(localized: "\(agent.title) isn’t installed on the Mac."))
+        }
+        launch.agent = agent
+        return launch
+    }
+
+    private func validatedName(_ name: String) throws -> String {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty, trimmed.utf8.count <= 1_024 else { throw RemoteError(message: String(localized: "Invalid name.")) }
+        return trimmed
+    }
 
     private func requireWritable() throws {
         guard isWritable else { throw RemoteError(message: String(localized: "The Mac’s organization is read-only.")) }
