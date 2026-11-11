@@ -1,0 +1,151 @@
+# Heka guide
+
+Everything about using Heka in detail. Back to the [README](../README.md).
+
+## iPhone and iPad companion
+
+Select an iPhone or iPad destination with the same **Heka** scheme to build the companion (iOS/iPadOS 17+).
+On the Mac, enable **Settings → Accès local**. On the mobile device, open **Réglages**, tap **Scanner un QR code** and point the camera at the code shown on the Mac. You can also enter the Mac's local IP address and pairing code by hand. The mobile app saves every paired Mac: tap one in **Réglages** to switch to it, swipe to forget it. If a Mac has several local addresses, the app tries each one and remembers the address that works. Keep the Mac awake with Heka running. Both apps must be built from compatible sources.
+
+The companion shares the Mac's projects and running sessions. **Settings → Affichage des sessions** chooses Chat or Terminal for every session on that device; the same preference is available on macOS under **Settings → Affichage**. Changing it preserves the process and mounts only the chosen renderer. The inspector button stays in the detail toolbar: SwiftUI presents a sheet on iPhone and a trailing inspector when the iPad has room. Files, conversations, Git diffs and checks use the shared inspector views.
+
+The local transport uses TCP port **52741** with TLS 1.2 (`TLS_ECDHE_PSK_WITH_CHACHA20_POLY1305_SHA256`). The pre-shared key is derived from the pairing code with PBKDF2-SHA256, and the ephemeral key exchange keeps recorded sessions private even if the code leaks later. Devices without the code cannot connect, and traffic is encrypted. Both devices keep the code in the Keychain. **Générer un nouveau code** on the Mac revokes every paired device. Sharing is off by default. Do not forward the port to the internet.
+
+For Claude Code, Chat follows the native JSONL transcript of the exact process running in the terminal. User messages, Markdown replies and collapsible tool results are distinct; terminal menus, spinners and shell echoes are not assistant messages. Association uses Claude's live session registry and process ancestry rather than choosing the latest conversation in the worktree. This requires a Claude version publishing the `sessions/<pid>.json` registry (the installed CLI supports it). Chat reads a custom `CLAUDE_CONFIG_DIR` from the running Claude process. The conversation list and usage only honour it when Heka itself sees it (for example through `launchctl setenv`), because macOS does not expose a value exported only in a shell profile. Codex and Copilot follow their own session journals. When Codex no longer holds its rollout open, Chat resolves it through its thread database (including a custom `CODEX_HOME`). OpenCode reads its SQLite conversation tables, including both legacy and v2 sessions, respecting `XDG_DATA_HOME` and `OPENCODE_DB`. Database association uses an explicit resume ID or a single new root session in the process directory; ambiguous matches retain the labelled terminal-output fallback. User prompts appear in trailing bubbles; assistant replies sit directly on the conversation background in a centered reading column. MarkdownUI renders headings, lists, task lists, quotations, tables, links and fenced code, with syntax colours for supported code languages. Tool rows show the command or file before expanding. The composer starts at three lines and grows to eight; on Mac, Return sends and Option-Return inserts a newline. On iPhone and iPad, Return inserts a newline. The Send button and Command-Return also submit. Ordinary shells retain the terminal-output fallback. Authentication, approvals and interactive agent menus remain available in Terminal; this is not a full structured-agent RPC adapter.
+
+JSONL transcript reads are incremental and file-event driven; OpenCode reads a bounded database snapshot every second to follow WAL updates. Readers are shared between local and remote Chat viewers and released when unused. The first JSONL read is bounded to 2 MiB; displayed history to 200 rows / 256 KiB. Multiline prompts use bracketed paste followed by a separate submit key. While the companion shows a terminal, it asks the Mac to resize the PTY to the grid that fits its screen at the text size chosen in its settings (20–400 columns, 5–200 rows); the emulator itself only follows the grid the Mac reports, and pinch zoom remains available. The Mac hosts its terminal view at the frame that holds exactly that grid, clipped by the pane, so SwiftTerm sizes the emulator and the PTY (cells and pixels) itself: resizing the Mac pane meanwhile neither reflows the buffer nor signals the foreground process. The pane shows a “Sized for Mobile” badge, in Terminal and Chat display modes, since a taller or wider grid than the pane is clipped there. The Mac returns to its own grid when the companion leaves the terminal, switches to Chat or disconnects, when Use Mac Size is chosen, or as soon as any input from the Mac reaches the PTY (typing, pasting, mouse reporting, dictation, a Chat message or an agent launch; terminal replies, focus reports and the companion's own input don't count). From then on the companion's new sizes (rotation, keyboard, text size, reconnection) are remembered but not applied until someone types on the phone again. A read-only Mac ignores resize requests. The phone keeps its grid while a keyboard-dismiss drag is in progress and requests a new one when the drag ends.
+
+The workspace and session use a persistent, bidirectional connection. Changes are coalesced at most ten times per second, unchanged workspaces aren't transmitted, Chat doesn't transfer raw terminal bytes, and Terminal doesn't transfer chat messages. The Mac interprets terminal output once: the companion receives changed screen rows and keyboard modes, with a complete checkpoint on reconnect. Scrollback checkpoints retain at most 200 lines / 16,384 cells; Chat history is capped at 256 KiB. Only an explicit grid request from a watching companion changes the Mac’s terminal grid. The terminal mirror carries styled text and input modes; inline terminal images and OSC hyperlink metadata are not transported. Backgrounding the mobile app cancels its connection and inspector queries; the Mac's processes continue running.
+
+The navigation shell, inspector, diff views and Chat UI are shared. Platform adapters live under `Heka/Platforms`; SDK-specific source exclusions in the Xcode target keep AppKit and UIKit out of shared views.
+
+To validate the local protocol against an isolated Debug Mac app (the fixture binds only to loopback):
+
+```sh
+bash Tests/run.sh
+python3 Tests/remote-integration.py /path/to/Heka.app/Contents/MacOS/Heka
+```
+
+## Organization
+
+- **+ in the project list header**: add projects, import a folder, create a virtual folder.
+- **Add Project** also recognizes a folder containing several repositories and groups them automatically. **Import Folder** only looks for Git repositories and creates a virtual folder named after the chosen folder. Reimporting that folder keeps existing projects, their names and their terminals.
+- Discovery walks subfolders, stops at each repository and skips hidden folders, macOS packages and common dependency directories (`node_modules`, `Pods`, `Carthage`, `DerivedData`, `venv`). Submodules inside a repository stay in that project. An inaccessible folder is reported without blocking the import of other repositories.
+- **Right-click a project → Move To**, or drag and drop onto a virtual folder: group projects without moving files.
+- **+ next to a project**: create a new Git branch from its HEAD in a separate worktree, then open a terminal in it. The repository must have at least one commit and the branch must not already exist. While creating, **Stop** interrupts Git and its hooks. Creation has a 90-second limit; a partial creation stays on disk and is reconciled in the list without opening a terminal. The message shows the branch and path to check before retrying.
+- **Right-click a worktree → Group**, or drag it onto a group: gather worktrees of the same project under a named group. Right-click a project → **New Worktree Group…** creates an empty one. Renaming or dissolving a group never touches the worktrees, their folders or their branches.
+- Terminals of the main folder appear directly under the project. Additional worktrees hold their own terminals. Existing worktrees are discovered when a project is added, then via **Refresh Worktrees**.
+- Every worktree in the creation folder (`~/.heka` by default) and in the **Other Worktree Folders** listed in Settings › General is shown: a worktree whose main repository is a project joins it automatically, the others appear under **Orphans**. Right-click an orphan to add its repository as a project, show it in Finder or move it to the Trash (after confirmation). Regular clones in these folders are ignored.
+- A **green badge** shows the current branch next to each Git terminal and in its header. A branch change is picked up as soon as Git writes it (FSEvents on the repository metadata), and the shell directory is read every two seconds, without spawning any Git process. Outside a repository it disappears; on a detached HEAD, a neutral badge shows the abbreviated commit.
+- Each terminal row shows two lines: the terminal name, then its current branch (or worktree). When an agent runs in it, the row shows the agent's logo and a status chip: yellow **Working**, green **Ready** or orange **Waiting input**; plain terminals show no chip. Claude's status comes from its session file (`~/.claude/sessions`); for Codex, Copilot and OpenCode, an approval prompt on screen means waiting for input, output in the last two seconds means working, otherwise ready. Statuses refresh every second.
+- A terminal is named after the agent conversation running in it (Claude, Codex, Copilot or OpenCode, the same titles as the **Agents** tab), otherwise **Terminal**. Heka finds the agent among the terminal's processes and its session (`~/.claude/sessions`, the Codex rollout or Copilot session it has open), and falls back to the conversation of that agent updated in the same folder since it started. The name follows the conversation every five seconds and is kept after the agent exits.
+- The context menu lets you rename and close a terminal, rename or remove a project, and dissolve a virtual folder. A renamed terminal keeps its name; **Use the conversation name** gives it back its automatic name.
+
+## Agent usage
+
+The bottom of the project list shows, for each signed-in agent, the 5-hour and weekly windows with a countdown to the next reset. The chevron collapses it to each agent's logo and session percentage (remembered across launches). Click it for a sheet with every window (including per-model weekly limits), extra usage credits and a Refresh button.
+
+Usage comes from the agents' own sign-in, like Orca: Claude reads the `Claude Code-credentials` Keychain item (or `~/.claude/.credentials.json`) and queries `api.anthropic.com/api/oauth/usage`; Codex reads `~/.codex/auth.json` (or `$CODEX_HOME`) and queries `chatgpt.com/backend-api/wham/usage`. Tokens are only sent to their own provider and never stored or refreshed by Heka. Data refreshes every five minutes while the window is visible. In the sheet, **Sign In** next to a signed-out agent opens a Heka terminal running `claude` or `codex login` in the selected worktree (or the first project), then checks every five seconds for up to ten minutes until the usage appears. When no agent is signed in, the bar shows a single sign-in link; otherwise signed-out agents stay out of the bar. An expired session is reported until the agent runs again and renews it.
+
+## Shortcuts
+
+| Shortcut | Action |
+| --- | --- |
+| ⌘T | Open a terminal in the selected worktree (same as **+ Terminal**) |
+| ⌘D | Split the selected terminal to the right |
+| ⇧⌘D | Split the selected terminal below |
+| ⌘W | Close the selected terminal and stop its process; with no terminal selected, close the window |
+
+Split panes are regular terminals of the same worktree: they also appear in the sidebar, and selecting any of them shows the whole split. Dragging a terminal row or a pane title onto a pane highlights the half where it will land (left, right, top or bottom) and moves it there, out of any other split. Clicking a pane focuses it; its × button (or ⌘W) closes it, and the last remaining pane takes the whole space again. The layout is restored on relaunch.
+
+After ⌘W, the selection moves to the neighbouring pane of a split, otherwise to another terminal in the same worktree, then in the same project if any remain. Closing a project's last terminal keeps the project and its worktrees: its name turns secondary with a moon icon, and clicking it reopens a terminal in its main worktree.
+
+## Inspector
+
+The right panel button in the toolbar shows or hides the SwiftUI inspector. Visibility and the last tab are remembered. Its context is the selected terminal's worktree, even if the shell later changes directory.
+
+| Tab | Content |
+| --- | --- |
+| **Files** | Folders load on expansion, folders before files, `.git` and `.DS_Store` hidden. Symlinks and packages are not traversed. Read-only preview of UTF-8 text files, limited to 128 KiB. Open in the default app or in Finder. |
+| **Agents** | Claude, Codex, Copilot and OpenCode conversations recorded on disk for the worktree, most recent first: `~/.claude/projects`, `~/.codex/sessions`, `~/.copilot/session-state` and the `session` table of `~/.local/share/opencode/opencode.db` (OpenCode subagent and archived sessions are left out). **Play** resumes one in a new terminal (`claude --resume` / `codex resume` / `copilot --resume` / `opencode --session`). Claude sessions already running (from `claude agents --json`) are marked and cannot be opened twice. |
+| **Git** | Branch, then Staged Changes and Changes grouped by folder, each file with a diff preview. Stage or unstage a file or a whole section, write a commit title and description, Commit, then Push (or Publish a branch that has no remote branch yet). When the remote branch was deleted, Push is never offered; if its work isn't known to be merged, **Publish Again** recreates it. **Generate Commits with AI** opens the default agent with the commit prompt from Settings → Prompts. When the branch is ahead of its base and has no pull or merge request, **Create Pull Request** (or Merge Request) asks the agent to open it with the editable prompt and the base chosen in the branch comparison, or opens the provider's page in the browser. Links to the GitHub or GitLab repository and the branch's pull or merge request. |
+| **Checks** | Pull request checks (or the jobs of the merge request's pipeline) and up to ten GitHub Actions runs or GitLab pipelines for the local HEAD commit. A message flags checks that refer to a different commit. |
+
+GitHub data goes through `gh`, GitLab data through `glab api` (gitlab.com and self-hosted instances). The repository is treated as GitLab when the host of its `origin` remote (or its first remote) contains `gitlab`, and as GitHub otherwise. The UI separately reports a missing CLI, access errors, no PR/MR and no runs; local features remain usable without GitHub or GitLab. Write actions (stage, unstage, commit, push) run Git like a terminal would, with your configuration and hooks, one at a time in click order; they are only available on the Mac. Pull or merge requests are never merged from the app.
+
+Git/Checks reread local state when a file of the worktree or its Git metadata changes (FSEvents, coalesced over one second), independently of GitHub requests; nothing runs while the repository is idle. `git config` is only listed again when a configuration file, one of its include targets or HEAD changes. Remote data is refreshed every sixty seconds, on branch or commit change, and via the Refresh button (⌘R). The Agents tab follows the agents' session folders the same way. Every background refresh pauses while the window is hidden or fully covered. Read commands are cancellable, non-interactive, with a twenty-second limit per command and output limits. A diff is limited to 512 KiB per staged/unstaged part; oversized output is reported.
+
+## Agent commands
+
+Every terminal gets the native `heka` command in its PATH, along with `HEKA_PROJECT_ID` and `HEKA_WORKTREE_ID`. If a shell configuration replaces PATH entirely, use `"$HEKA_CLI"`.
+
+```sh
+heka --help
+heka list
+
+# New terminal in the same worktree, with a child agent
+heka terminal create --name "Review" -- claude "Review the changes"
+
+# New worktree and child agent on a new branch
+heka worktree create --branch feature/tests --name "Tests" -- codex "Add the tests"
+
+# Plain terminal, without starting an agent
+heka terminal create --name "Shell"
+
+# Explicitly target another context (IDs returned by heka list)
+heka terminal create --project UUID --worktree UUID --name "Review"
+
+# Delete a worktree (IDs returned by heka list); --force also erases uncommitted changes
+heka worktree delete --worktree UUID
+
+# Delete a worktree and its branch if it is merged into the main branch (with --force-branch, even if it is not)
+heka worktree delete --worktree UUID --delete-branch
+
+# Talk to another terminal (terminalID returned at creation or by heka list)
+heka terminal send --terminal UUID --enter -- "Fix the findings of your review"
+heka terminal wait --terminal UUID --idle 10
+heka terminal read --terminal UUID --reply
+heka terminal send --terminal UUID --key escape
+heka terminal close --terminal UUID
+```
+
+Commands return JSON with `ok`, `projectID`, `worktreeID`, `terminalID` and `path`. A failure returns a non-zero exit code. Programs after `--` receive their arguments verbatim, without shell interpolation. Creations requested by an agent do not change the terminal selected on screen.
+
+`terminal send` types text into another terminal, as if on its keyboard, from the arguments after `--` or with `--stdin`; with `--enter` it is submitted as one message, multi-line text included (bracketed paste when the program supports it), and `--enter` alone presses Return. `--key` presses keys in order instead (`enter`, `escape`, `tab`, `shift-tab`, `backspace`, `delete`, `space`, arrows, `home`, `end`, `page-up`, `page-down`, `ctrl-a` … `ctrl-z`), following the terminal's cursor mode. `terminal read` returns the last `--lines` lines (50 by default, 10,000 at most) in `output`; for Claude, Codex, Copilot and OpenCode, `--reply` returns instead the agent's answer to the last message, read from its conversation on disk like the chat view, and `--messages N` its last N messages. `terminal close` stops a terminal's processes and removes it, and refuses while its agent is working unless `--force` is given. `terminal wait` returns once the terminal has printed nothing for `--idle` seconds (5 by default) or, with `--exit`, once its command has exited, and gives up after `--timeout` seconds (120 by default, 3,600 at most) with `ok: false`. Their replies add `running`, `exitCode` and, for a recognized agent, `agent` and `status` (`working`, `ready` or `waitingForInput`). A terminal can't send to or wait for itself. A message submitted to an agent this way appears in its chat view like one typed in the app.
+
+`worktree delete` closes the worktree's terminals and removes its folder, like **Delete Worktree…** in the sidebar; by default, the branch and its commits stay in the repository. It always needs an explicit `--worktree`, refuses the project's main folder, and keeps a worktree with uncommitted changes or untracked files unless `--force` is given. Run from a terminal of the worktree itself (`--worktree "$HEKA_WORKTREE_ID"`), for example by an agent asked to merge its work and delete its worktree, it checks everything first, replies `ok: true` with `closesCaller: true`, waits for the CLI to read the reply, then closes the terminal and deletes the worktree; a refusal leaves the terminal running. From another folder inside the worktree, outside its terminals, it's refused. `terminal close` on the calling terminal works the same way.
+
+With `--delete-branch`, the branch is deleted too, but only if it is merged into the repository's main branch, locally or in its fetched remote-tracking branch, regardless of what the project's folder has checked out. A branch that was only pushed, with its pull request still open, isn't merged, and a branch can't be checked when no main branch can be found: in both cases the command returns `ok: false` before removing anything, and suggests adding `--force-branch` or leaving out `--delete-branch`. Adding `--force-branch` uses `git branch -D` and deletes it even if it is not merged; `--force` only discards the worktree's uncommitted changes and never deletes an unmerged branch. The repository's main branch (`main`, `master` or the branch a remote's `HEAD` points to) and a branch checked out in another worktree or in the project's folder are never deleted, nor is a branch whose state can't be checked: the command fails before removing anything. Once the worktree's folder is erased, the reply is `ok: true` with `removed: true`, `branch` and `branchDeleted`; `ok: false` always means nothing was removed. The merge check runs before the worktree's terminals are closed, so a refusal leaves running agents untouched, and the branch is deleted only if it still points to the commit that was checked (`git update-ref -d` with the checked commit): if a commit landed on it in between, the branch is kept, `branchDeleted` is `false` and `message` says why. The worktree leaves the sidebar as soon as its folder is erased, then the branch is deleted. In the sidebar, the **Delete Worktree…** confirmation appears once the branch has been checked, after 300 ms at most, and offers **Delete Worktree and Branch** when the branch shown in the sidebar could be deleted (if the check takes longer, the dialog only offers to delete the worktree); the same rules are then checked again, without `--force`, before anything is removed. Only the branch shown in the dialog is deleted: if the worktree has since switched to another branch, the worktree is deleted and its branches are kept. If the branch isn't merged, nothing is removed and an alert offers **Delete Worktree Only**, which keeps the branch.
+
+The CLI waits for the save before reporting success. If the write fails after creation, it returns `ok: false` with the identifiers already created: retry the save in the app, without recreating the terminal. Claude, Codex, Copilot, OpenCode and other tools must already be installed and authenticated on the Mac. Commands run through your interactive login shell, so a tool installed via npm, nvm, bun or any PATH set in `~/.zshrc` is found like in a regular terminal.
+
+To use `heka` from any terminal, click **Install** next to **Command in PATH** in **Settings → Agents**: it links `~/.local/bin/heka` to the app, so add that folder to your PATH if needed. Outside Heka terminals, the CLI reaches the most recently launched Heka that is still running, registered in `~/Library/Application Support/Heka/Instances`, and the project and worktree come from the current directory when it belongs to a project open in Heka (otherwise pass `--project`).
+
+To teach agents when and how to use these commands, install the `heka` skill from **Settings → Agents → heka command**. It is written to `~/.agents/skills/heka` (read by Codex) and linked from `~/.claude/skills/heka` (read by Claude Code, and by Copilot and OpenCode). Agents use it in Heka terminals (`HEKA_INSTANCE` set), and elsewhere only when you ask them to drive Heka.
+
+The skill lives in [`skills/heka`](../skills/heka/SKILL.md), so it can also be installed and updated without a new app release:
+
+```sh
+npx skills add LeBojo/Heka --skill heka --global
+npx skills update
+```
+
+The app bundles the same file and compares the `metadata.version` field: Settings offers an update only when the bundled version is newer, and never replaces a newer skill installed from GitHub.
+
+Communication uses a request mailbox private to the app instance, with no network port and no Node/Python dependency. The command runs the same native executable, in CLI mode.
+
+## Data and lifetime
+
+| Data | Location |
+| --- | --- |
+| Organization (projects, folders, terminals) | `~/Library/Application Support/Heka/workspace.json` |
+| Worktrees created by the app | `~/.heka/<project>-<branch>/` (configurable in Settings › General) |
+
+The app was called AgentUI before. On first launch, Heka asks to quit AgentUI if it is open, takes over its settings without replacing Heka's own, and moves the content of `~/Library/Application Support/AgentUI` into its own folder; an item Heka already has stays in the AgentUI folder and is listed in a message. Worktrees in `~/.agentui` stay where they are and appear under **Other Worktree Folders**. The former `agentui` command and skill are not migrated: install `heka` and its skill from **Settings → Agents**, and pair companion devices again.
+
+Saves are coalesced during interactions, then written off the UI thread. A banner reports unsaved changes and offers a retry. Quitting waits for the last write; a save failure cancels the quit to keep changes in memory. Removing a project from the UI deletes no files, branches or worktrees.
+
+Sessions stay alive when switching terminals; their content stays in memory. Quitting the app stops the processes, after confirmation. On relaunch, names and the hierarchy come back; shells restart on selection, without automatically replaying previous agent commands.
+
+The macOS sandbox is disabled so the real shell can reach developer tools and repositories, like a regular terminal. The UI grants no extra permissions to agents. Git commands started by the app, including those run by `gh`, ignore the repository's `core.fsmonitor` setting. The inspector's automatic reads (`git status`, `git diff`) also disable the filter drivers configured by the repository and skip submodule work trees, so displaying an untrusted repository does not run the programs it configures. Actions you start yourself, such as creating a worktree, behave like Git in a terminal: hooks and filters such as Git LFS still run.
+

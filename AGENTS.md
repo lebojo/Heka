@@ -26,7 +26,7 @@ The app was renamed from AgentUI to Heka in November 2026. The migration code on
 - `Heka/Services/AgentUIMigration.swift`, its call in `Heka/MyApp.swift`, its entry in the iOS `EXCLUDED_SOURCE_FILE_NAMES` of `Heka.xcodeproj/project.pbxproj` and in `Tests/run.sh`, and its strings in `Heka/Localizable.xcstrings` (“Quit AgentUI…”, “Quit Heka” (not “Quit Heka?”), “AgentUI is still open…”, “Heka takes over…”, “Some AgentUI data stayed behind”, “Heka already had its own copy…”);
 - in `WorkspaceDisk`: `legacyApplicationDirectory`, `isLegacyWorktreesDirectory`, and the scan of the former worktree folders (`legacyWorktreesDirectories`, `legacyWorktreesDirectory(named:)`, `scanLegacyWorktreesDirectories` and `scanLegacyWorktreesDirectory`, with their call in `SettingsStore`). Folders found by the scan are already saved under Other Worktree Folders, so they stay listed;
 - the matching tests in `Tests/SettingsTests.swift`: the former `~/agentui` folder scan and the “PASS AgentUI migration” block;
-- the paragraph about AgentUI in the “Data and lifetime” section of `README.md`;
+- the paragraph about AgentUI in the “Data and lifetime” section of `docs/GUIDE.md`;
 - then this section.
 
 Also remind the user that they can delete by hand, once Heka holds everything: AgentUI.app, `~/Library/Application Support/AgentUI` (only instance registrations or items listed by the migration message are left there), the `ch.jordanchap.agentui` defaults (`defaults delete ch.jordanchap.agentui`), the `ch.jordanchap.agentui.pairing` keychain item, and the `~/agentui` and `~/.agentui` folders once their worktrees are no longer needed.
