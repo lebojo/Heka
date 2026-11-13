@@ -6,13 +6,13 @@ struct LocalSessionChat: View {
     let session: TerminalSession
 
     private var commandScope: String {
-        session.transcript.source.rawValue + "\u{0}" + session.path
+        [session.transcript.source.rawValue, session.path, session.agent?.configDirectory?.path ?? ""].joined(separator: "\u{0}")
     }
 
     var body: some View {
         SessionChatView(messages: session.transcript.messages, source: session.transcript.source,
                         options: session.transcript.options, commands: commands, isEnabled: !session.hasExited,
-                        isBusy: session.agentStatus == .working) { text in
+                        status: session.agentStatus) { text in
             try await session.send(Data((text + "\r").utf8), message: text, from: .local)
         } control: { data in
             try await session.send(data, from: .local)
@@ -28,7 +28,10 @@ struct LocalSessionChat: View {
         .task(id: commandScope) {
             let source = session.transcript.source
             commands = source.slashCommands
-            commands = await SlashCommandDiscovery.commands(for: source, directory: session.path)
+            let discovered = await SlashCommandDiscovery.commands(for: source, directory: session.path,
+                                                                 configDirectory: session.agent?.configDirectory)
+            guard !Task.isCancelled else { return }
+            commands = discovered
         }
     }
 }

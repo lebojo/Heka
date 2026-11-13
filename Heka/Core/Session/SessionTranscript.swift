@@ -54,7 +54,8 @@ import Observation
     func useJournal(_ journal: ChatJournalRead, from source: SessionChatSource) {
         if self.source != source { self.source = source }
         if messages != journal.messages { messages = journal.messages }
-        if options != journal.options { options = journal.options }
+        let resolved = journal.options.resolved(defaults: journal.defaults)
+        if options != resolved { options = resolved }
     }
 
     func useTerminal() {

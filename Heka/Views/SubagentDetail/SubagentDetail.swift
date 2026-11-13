@@ -11,7 +11,7 @@ struct SubagentDetail: View {
 
             Divider()
 
-            SubagentTranscript(journal: subagent.journal)
+            SubagentTranscript(journal: subagent.journal, status: subagent.status)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
 
             Divider()

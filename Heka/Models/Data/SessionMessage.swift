@@ -105,7 +105,8 @@ struct SessionTranscriptDelta: Sendable {
 
 struct ChatJournalRead: Sendable {
     var messages: [SessionMessage]
-    var options = AgentOptions()
+    var options = AgentOptionsReport()
+    var defaults = AgentOptionsReport()
 }
 
 enum SessionChatSource: String, Codable, Sendable {

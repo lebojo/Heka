@@ -1,9 +1,8 @@
 import Foundation
 
 enum SlashCommandDiscovery {
-    static func commands(for source: SessionChatSource, directory: String?) async -> [SlashCommand] {
-        let custom = await customCommands(for: source, directory: directory,
-                                          home: URL.homeDirectory)
+    static func commands(for source: SessionChatSource, directory: String?, configDirectory: URL?) async -> [SlashCommand] {
+        let custom = await customCommands(for: source, directory: directory, home: URL.homeDirectory, configDirectory: configDirectory)
         return merged(source.slashCommands, custom)
     }
 
@@ -12,15 +11,17 @@ enum SlashCommandDiscovery {
         return builtIn + custom.filter { names.insert($0.name).inserted }
     }
 
-    @concurrent static func customCommands(for source: SessionChatSource, directory: String?, home: URL) async -> [SlashCommand] {
+    @concurrent static func customCommands(for source: SessionChatSource, directory: String?, home: URL,
+                                          configDirectory: URL? = nil) async -> [SlashCommand] {
         let project = directory.map { URL(fileURLWithPath: $0) }
         switch source {
         case .claude:
-            let roots = [project, home].compactMap { $0?.appendingPathComponent(".claude") }
+            let roots = [project?.appendingPathComponent(".claude"), configDirectory ?? home.appendingPathComponent(".claude")].compactMap(\.self)
             return roots.flatMap { commandFiles(in: $0.appendingPathComponent("commands")) }
                 + roots.flatMap { skills(in: $0.appendingPathComponent("skills")) }
         case .codex:
-            return commandFiles(in: home.appendingPathComponent(".codex/prompts"), prefix: "prompts:")
+            let codex = configDirectory ?? home.appendingPathComponent(".codex")
+            return commandFiles(in: codex.appendingPathComponent("prompts"), prefix: "prompts:")
         case .terminal, .copilot, .openCode:
             return []
         }
@@ -52,19 +53,40 @@ enum SlashCommandDiscovery {
         }
     }
 
+    private static func rawLines(of markdown: String) -> [String] {
+        markdown.replacingOccurrences(of: "\r\n", with: "\n").components(separatedBy: .newlines)
+    }
+
+    private static func lines(of markdown: String) -> [String] {
+        rawLines(of: markdown).map { $0.trimmingCharacters(in: .whitespaces) }
+    }
+
     private static func frontMatter(of markdown: String) -> [String: String] {
-        let lines = markdown.split(separator: "\n", omittingEmptySubsequences: false).map { $0.trimmingCharacters(in: .whitespaces) }
+        let raw = rawLines(of: markdown)
+        let lines = lines(of: markdown)
         guard lines.first == "---", let end = lines.dropFirst().firstIndex(of: "---") else { return [:] }
-        return lines[1..<end].reduce(into: [:]) { metadata, line in
-            guard let colon = line.firstIndex(of: ":") else { return }
+        var metadata: [String: String] = [:]
+        var index = 1
+        while index < end {
+            let line = lines[index]
+            index += 1
+            guard !raw[index - 1].hasPrefix(" "), let colon = line.firstIndex(of: ":") else { continue }
             let key = line[..<colon].trimmingCharacters(in: .whitespaces)
-            let value = line[line.index(after: colon)...].trimmingCharacters(in: .whitespaces.union(CharacterSet(charactersIn: "\"'")))
+            var value = line[line.index(after: colon)...].trimmingCharacters(in: .whitespaces)
+            if value.hasPrefix(">") || value.hasPrefix("|") {
+                let block = raw[index..<end].prefix { $0.isEmpty || $0.first?.isWhitespace == true }
+                index += block.count
+                let parts = block.map { $0.trimmingCharacters(in: .whitespaces) }
+                value = value.hasPrefix(">") ? parts.filter { !$0.isEmpty }.joined(separator: " ") : parts.joined(separator: "\n")
+            }
+            value = value.trimmingCharacters(in: .whitespacesAndNewlines.union(CharacterSet(charactersIn: "\"'")))
             if !value.isEmpty { metadata[key] = value }
         }
+        return metadata
     }
 
     private static func firstBodyLine(of markdown: String) -> String? {
-        let lines = markdown.split(separator: "\n").map { $0.trimmingCharacters(in: .whitespaces) }
+        let lines = lines(of: markdown)
         let body = lines.first == "---" ? Array(lines.drop { $0 != "---" }.dropFirst().drop { $0 != "---" }.dropFirst()) : lines
         return body.first { !$0.isEmpty && !$0.hasPrefix("#") }.map { String($0.prefix(80)) }
     }

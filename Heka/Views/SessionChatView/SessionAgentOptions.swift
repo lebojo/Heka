@@ -6,7 +6,7 @@ struct SessionAgentOptions: View {
     let source: SessionChatSource
     let reported: AgentOptions
     let isBusy: Bool
-    let run: (AgentCommand) -> Void
+    let run: (AgentCommand) async -> Bool
 
     private var modelLabel: String {
         String(localized: "Model", comment: "Menu that picks the agent's model in the chat composer")
@@ -22,11 +22,7 @@ struct SessionAgentOptions: View {
 
     private var model: Binding<AgentModel> {
         Binding { shown.model } set: { model in
-            var options = shown
-            options.model = model
-            if !model.efforts.contains(options.effort) { options.effort = .automatic }
-            requested = options
-            run(model.command)
+            request(shown.switching(to: model, efforts: source.efforts(for: model)), with: model.command)
         }
     }
 
@@ -34,8 +30,7 @@ struct SessionAgentOptions: View {
         Binding { shown.effort } set: { effort in
             var options = shown
             options.effort = effort
-            requested = options
-            run(effort.command)
+            request(options, with: effort.command)
         }
     }
 
@@ -46,14 +41,15 @@ struct SessionAgentOptions: View {
             Text(modelLabel)
         }
         .help(modelLabel)
-        if !efforts.isEmpty {
-            Picker(selection: effort) {
-                ForEach(efforts) { Text($0.title).tag($0) }
-            } label: {
-                Text(effortLabel)
+        Picker(selection: effort) {
+            ForEach(AgentEffort.allCases) { level in
+                Text(level.title).tag(level).disabled(!efforts.contains(level))
             }
-            .help(effortLabel)
+        } label: {
+            Text(effortLabel)
         }
+        .help(effortLabel)
+        .disabled(efforts.isEmpty)
     }
 
     var body: some View {
@@ -66,5 +62,12 @@ struct SessionAgentOptions: View {
         .font(Typography.caption)
         .disabled(isBusy)
         .onChange(of: reported) { requested = nil }
+    }
+
+    private func request(_ options: AgentOptions, with command: AgentCommand) {
+        requested = options
+        Task {
+            if await !run(command), requested == options { requested = nil }
+        }
     }
 }

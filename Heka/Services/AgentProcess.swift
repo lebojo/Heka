@@ -9,16 +9,26 @@ struct AgentProcess: Equatable, Sendable {
     var transcriptPath: String? = nil
     var claudeStatus: String? = nil
     var skipsPermissions = false
+    var launchOptions = AgentOptionsReport()
 
     var resume: AgentResume? {
         guard let sessionID, AgentConversation.isValidSessionID(sessionID) else { return nil }
         return AgentResume(agent: agent, sessionID: sessionID, skipsPermissions: skipsPermissions)
     }
 
+    var configDirectory: URL? {
+        guard let transcriptPath else { return nil }
+        let transcript = URL(fileURLWithPath: transcriptPath)
+        return switch agent {
+        case .claude: ClaudeTranscript.configDirectory(ofJournal: transcript)
+        case .codex: (0..<5).reduce(transcript) { url, _ in url.deletingLastPathComponent() }
+        case .copilot, .openCode: nil
+        }
+    }
+
     var transcriptTitle: String? {
-        guard agent == .codex, let transcriptPath, let sessionID else { return nil }
+        guard agent == .codex, let sessionID, let home = configDirectory, let transcriptPath else { return nil }
         let rollout = URL(fileURLWithPath: transcriptPath)
-        let home = (0..<4).reduce(rollout.deletingLastPathComponent()) { url, _ in url.deletingLastPathComponent() }
         let title = CodexRollout.titles(in: home.appendingPathComponent("session_index.jsonl"))[sessionID] ?? CodexRollout.read(rollout)?.firstPrompt
         return title.map { AgentConversation(agent: agent, sessionID: sessionID, title: $0, updatedAt: .now).shortTitle }
     }
@@ -28,7 +38,7 @@ struct AgentProcess: Equatable, Sendable {
               sessionID == nil || sessionID == previous.sessionID else { return self }
         return AgentProcess(agent: agent, startedAt: startedAt, directory: directory, sessionID: previous.sessionID,
                             transcriptPath: previous.transcriptPath, claudeStatus: claudeStatus ?? previous.claudeStatus,
-                            skipsPermissions: skipsPermissions)
+                            skipsPermissions: skipsPermissions, launchOptions: launchOptions)
     }
 
     static func find(under shellPID: Int32, fallbackDirectory: String, previous: AgentProcess? = nil,
@@ -48,7 +58,8 @@ struct AgentProcess: Equatable, Sendable {
                                              arguments: arguments, directory: directory, startedAt: startedAt)
                 return AgentProcess(agent: agent, startedAt: startedAt, directory: directory,
                                     sessionID: session.id, transcriptPath: session.path, claudeStatus: session.status,
-                                    skipsPermissions: agent.skipsPermissions(in: arguments))
+                                    skipsPermissions: agent.skipsPermissions(in: arguments),
+                                    launchOptions: agent == .claude ? AgentOptionsReport(launchArguments: arguments) : AgentOptionsReport())
             }
             pending += children(of: pid)
         }

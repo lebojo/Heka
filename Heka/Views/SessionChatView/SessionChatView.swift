@@ -3,6 +3,7 @@ import SwiftUI
 struct SessionChatView: View {
     @State private var draft = ""
     @State private var sending = false
+    @State private var awaitsAgent = false
     @State private var error: String?
 
     let messages: [SessionMessage]
@@ -10,17 +11,24 @@ struct SessionChatView: View {
     let options: AgentOptions
     let commands: [SlashCommand]
     let isEnabled: Bool
-    let isBusy: Bool
+    let status: AgentStatus?
     let send: (String) async throws -> Void
     let control: (Data) async throws -> Void
     let run: (AgentCommand) async throws -> Void
 
     var body: some View {
-        SessionTranscriptList(messages: messages, source: source)
+        SessionTranscriptList(messages: messages, source: source,
+                              showsTypingIndicator: source.agent != nil && ChatActivity(status: status, isSending: sending || awaitsAgent, isEnabled: isEnabled).showsIndicator)
         .background(Palette.surface)
         .safeAreaInset(edge: .bottom, spacing: 0) {
             SessionComposer(draft: $draft, source: source, options: options, commands: commands, sending: sending, isEnabled: isEnabled,
-                            isBusy: isBusy, submit: submit, control: sendControl, run: runCommand)
+                            isBusy: !(status?.acceptsCommands ?? true), submit: submit, control: sendControl, run: runCommand)
+        }
+        .onChange(of: status) { awaitsAgent = false }
+        .task(id: awaitsAgent) {
+            guard awaitsAgent else { return }
+            try? await Task.sleep(for: ChatActivity.agentStartGrace)
+            awaitsAgent = false
         }
         .alert("Couldn’t Send", isPresented: $error.isPresent) {
             Button("OK") { error = nil }
@@ -35,15 +43,19 @@ struct SessionChatView: View {
             defer { sending = false }
             do {
                 try await send(text)
+                awaitsAgent = true
                 if draft == text { draft = "" }
             } catch { self.error = error.localizedDescription }
         }
     }
 
-    private func runCommand(_ command: AgentCommand) {
-        Task {
-            do { try await run(command) }
-            catch { self.error = error.localizedDescription }
+    private func runCommand(_ command: AgentCommand) async -> Bool {
+        do {
+            try await run(command)
+            return true
+        } catch {
+            self.error = error.localizedDescription
+            return false
         }
     }
 

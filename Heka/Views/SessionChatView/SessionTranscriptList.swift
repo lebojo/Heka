@@ -6,6 +6,7 @@ struct SessionTranscriptList: View {
 
     let messages: [SessionMessage]
     let source: SessionChatSource
+    let showsTypingIndicator: Bool
 
     var body: some View {
         GeometryReader { viewport in
@@ -18,9 +19,7 @@ struct SessionTranscriptList: View {
                                                    description: Text(source.agent == nil ? "Write to continue working on the Mac." : "Messages from this session will appear here. Interactive menus are available in Terminal."))
                         }
                         ForEach(messages) { message in SessionMessageRow(message: message, agent: source.agent).equatable() }
-                        if source.agent != nil, messages.last?.kind == .input {
-                            HStack { ProgressView().controlSize(.small); Text("Waiting for a response…").font(Typography.caption) }
-                        }
+                        TypingIndicatorSlot(isVisible: showsTypingIndicator)
                         Color.clear.frame(height: 1).id("latest")
                     }
                     .frame(maxWidth: Dimension.Chat.readableWidth)
@@ -43,6 +42,7 @@ struct SessionTranscriptList: View {
                 .onChange(of: messages) { old, _ in
                     if old.isEmpty || followsLatest { proxy.scrollTo("latest", anchor: .bottom) }
                 }
+                .onChange(of: showsTypingIndicator) { if followsLatest { proxy.scrollTo("latest", anchor: .bottom) } }
                 .onChange(of: viewport.size.height) { if followsLatest { proxy.scrollTo("latest", anchor: .bottom) } }
                 .overlay(alignment: .bottomTrailing) {
                     if !followsLatest {

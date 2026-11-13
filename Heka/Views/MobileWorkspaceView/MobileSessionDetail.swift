@@ -17,7 +17,7 @@ struct MobileSessionDetail: View {
                             SessionChatView(messages: session.messages, source: session.chatSource, options: session.agentOptions,
                                             commands: session.chatSource.slashCommands,
                                             isEnabled: store.isConnected && !session.hasExited,
-                                            isBusy: store.terminalSummary(context.terminal.id)?.status == .working) { text in
+                                            status: store.terminalSummary(context.terminal.id)?.status) { text in
                                 try await store.input(Data((text + "\r").utf8), terminal: context.terminal.id, message: text)
                             } control: { data in
                                 try await store.input(data, terminal: context.terminal.id)

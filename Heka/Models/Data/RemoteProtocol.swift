@@ -11,7 +11,7 @@ enum RemoteProtocol {
         #endif
         return 52741
     }
-    static let version = 9
+    static let version = 10
     static let maximumFrame = 4 * 1024 * 1024
     static let maximumPayload = maximumFrame / 4 * 3 - 4096
 

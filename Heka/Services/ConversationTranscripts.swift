@@ -83,6 +83,10 @@ struct ClaudeTranscript: Equatable, Sendable {
         environment["CLAUDE_CONFIG_DIR"].map { URL(fileURLWithPath: $0) } ?? home.appendingPathComponent(".claude")
     }
 
+    static func configDirectory(ofJournal journal: URL) -> URL {
+        journal.deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+    }
+
     static func directoryName(for path: String) -> String {
         String(path.utf16.map { unit in
             guard let scalar = Unicode.Scalar(unit), scalar.isASCII, CharacterSet.alphanumerics.contains(scalar) else { return "-" }

@@ -10,6 +10,7 @@ import SystemConfiguration
         var screen: TerminalScreen?
         var messages: [SessionMessage] = []
         var source: SessionChatSource?
+        var options: AgentOptions?
         var revision = -1
         var hasExited: Bool?
     }
@@ -333,6 +334,7 @@ import SystemConfiguration
                 if streamsChat(session) {
                     _ = session?.transcript.messages
                     _ = session?.transcript.source
+                    _ = session?.transcript.options
                 } else {
                     _ = session?.outputRevision
                 }
@@ -383,6 +385,7 @@ import SystemConfiguration
             let exitChanged = streamed.hasExited != session.hasExited
             let changed = chat
                 ? exitChanged || streamed.messages != session.transcript.messages || streamed.source != session.transcript.source
+                    || streamed.options != session.transcript.options
                 : exitChanged || streamed.revision != session.outputRevision
             streamed.revision = session.outputRevision
             if changed {
@@ -390,10 +393,15 @@ import SystemConfiguration
                 let snapshot = session.snapshot(previousMessages: streamed.messages, chat: chat, screen: screen, previousScreen: streamed.screen)
                 let messages = session.transcript.messages
                 let source = session.transcript.source
+                let options = session.transcript.options
                 try await RemoteChannel.push(RemoteEvent.terminal(snapshot), on: connection)
                 streamed.screen = screen
                 streamed.hasExited = snapshot.hasExited
-                if chat { streamed.messages = messages; streamed.source = source }
+                if chat {
+                    streamed.messages = messages
+                    streamed.source = source
+                    streamed.options = options
+                }
             }
         }
     }

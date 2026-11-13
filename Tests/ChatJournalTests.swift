@@ -70,8 +70,23 @@ import Foundation
         ]
     }
 
+    static func chatActivity() throws {
+        try require(ChatActivity(status: .working, isSending: false, isEnabled: true).showsIndicator, "working agent shows the indicator")
+        try require(ChatActivity(status: .ready, isSending: true, isEnabled: true).showsIndicator, "sending shows the indicator before the agent reacts")
+        try require(ChatActivity(status: nil, isSending: true, isEnabled: true).showsIndicator, "sending shows the indicator without a known status")
+        try require(!ChatActivity(status: .waitingForInput, isSending: false, isEnabled: true).showsIndicator, "approval prompts hide the indicator")
+        try require(!ChatActivity(status: .ready, isSending: false, isEnabled: true).showsIndicator, "a ready agent hides the indicator")
+        try require(!ChatActivity(status: nil, isSending: false, isEnabled: true).showsIndicator, "an unknown status hides the indicator")
+        try require(!ChatActivity(status: .working, isSending: true, isEnabled: false).showsIndicator, "an ended session hides the indicator")
+        try require(ChatActivity(subagent: .working).showsIndicator, "a working subagent shows the indicator")
+        try require(!ChatActivity(subagent: .done).showsIndicator, "a finished subagent hides the indicator")
+        try require(!ChatActivity(subagent: .stopped).showsIndicator, "a stopped subagent hides the indicator")
+        print("PASS chat activity indicator visibility")
+    }
+
     @MainActor static func main() async throws {
         try await agentChatSupport()
+        try chatActivity()
         var decoder = ClaudeChatDecoder()
         let user = try record("user", "u1", "Bonjour 👋")
         decoder.consume(user, offset: 0)
@@ -95,7 +110,7 @@ import Foundation
         print("PASS Claude roles, stable IDs, tool results, meta filtering and remote metadata deltas")
 
         var optionsDecoder = ClaudeChatDecoder()
-        try require(optionsDecoder.options == AgentOptions(), "A new Claude session shows the default model and effort")
+        try require(optionsDecoder.options.choice == AgentOptionsReport(), "A new Claude session reports no model or effort yet")
         var reply = try JSONSerialization.data(withJSONObject: ["type": "assistant", "uuid": "m1",
                                                                 "message": ["model": "claude-sonnet-4-6", "content": "Hi"]])
         reply.append(10)
@@ -103,8 +118,50 @@ import Foundation
         try require(optionsDecoder.options.model == .sonnet, "The model reported by Claude replies is shown")
         optionsDecoder.consume(try record("user", "c1", "<command-name>/effort</command-name>\n<command-args>high</command-args>"), offset: 1)
         optionsDecoder.consume(try record("user", "c2", "<command-name>/model</command-name>\n<command-args>opus</command-args>"), offset: 2)
-        try require(optionsDecoder.options == AgentOptions(model: .opus, effort: .high), "/model and /effort commands update the options")
-        try require(optionsDecoder.messages.count == 1, "Option commands are not shown as messages")
+        try require(optionsDecoder.options.choice == AgentOptionsReport(model: .sonnet), "Sending /model or /effort doesn't change the options before Claude confirms them")
+        optionsDecoder.consume(try record("user", "c1o", "<local-command-stdout>Set effort level to high (saved as your default for new sessions)</local-command-stdout>"), offset: 1)
+        optionsDecoder.consume(try record("user", "c2o", "<local-command-stdout>Set model to Default (Opus 5.5)</local-command-stdout>"), offset: 2)
+        try require(optionsDecoder.options.choice == AgentOptionsReport(model: .automatic, effort: .high), "Default (Opus …) is read as the default model")
+        optionsDecoder.consume(reply, offset: 2)
+        try require(optionsDecoder.options.model == .automatic, "Replies don't replace a confirmed default model")
+        let launch = AgentOptionsReport(model: .opus)
+        let earlier = AgentOptionsReport(model: .sonnet, modelReportedOffset: 10)
+        try require(earlier.launched(withRecordsFrom: 100, options: launch).model == .opus, "--resume --model replaces a model reported before the process was attached")
+        try require(AgentOptionsReport(model: .automatic, modelReportedOffset: 100).launched(withRecordsFrom: 100, options: launch).model == .automatic,
+                    "A /model chosen after the process was attached stays")
+        try require(AgentOptionsReport(model: .sonnet).launched(withRecordsFrom: 0, options: launch).model == .opus, "A model of unknown position gives way to --model")
+        try require(earlier.launched(withRecordsFrom: 100, options: AgentOptionsReport()).model == .sonnet, "Without --model the journal's model stays")
+        try require(AgentOptionsReport(model: .haiku).filling(AgentOptionsReport(model: .opus, modelReportedOffset: 3)).modelReportedOffset == nil,
+                    "Filling keeps the position of the model it keeps")
+        var positions = ClaudeChatDecoder()
+        positions.consume(try record("user", "p1", "<local-command-stdout>Set model to Default (Opus 5.5)</local-command-stdout>"), offset: 42)
+        try require(positions.options.modelReportedOffset == 42, "The decoder records where the model was reported")
+        var efforts = ClaudeChatDecoder()
+        for (index, text) in ["Set effort level to xhigh", "Set model to Haiku 4.5", "Set model to Opus 5.5"].enumerated() {
+            efforts.consume(try record("user", "e\(index)", "<local-command-stdout>\(text)</local-command-stdout>"), offset: UInt64(index))
+            if index == 1 { try require(efforts.options.resolved(defaults: AgentOptionsReport()).effort == .automatic, "Haiku shows no effort") }
+        }
+        try require(efforts.options.effort == .xhigh, "Switching through Haiku keeps the chosen effort")
+        optionsDecoder.consume(try record("user", "c2a", "<local-command-stdout>Set effort level to \u{1B}[1m**high**\u{1B}[22m</local-command-stdout>"), offset: 2)
+        try require(optionsDecoder.options.effort == .high, "Styled confirmations are read")
+        optionsDecoder.consume(try record("user", "c2p", "<local-command-stdout>Set model to `Opus 5.5` and saved as your default for new sessions</local-command-stdout>"), offset: 2)
+        try require(optionsDecoder.options.choice == AgentOptionsReport(model: .opus, effort: .high), "Confirmations update the options")
+        optionsDecoder.consume(try record("user", "c3", "<local-command-stdout>Set model to `Fable 5.1` and saved as your default for new sessions</local-command-stdout>"), offset: 3)
+        optionsDecoder.consume(try record("user", "c4", "<local-command-stdout>Set effort level to low (saved as your default for new sessions): Quick</local-command-stdout>"), offset: 4)
+        try require(optionsDecoder.options.choice == AgentOptionsReport(model: .fable, effort: .low), "Choices made in Claude's interactive menus are read from their confirmation")
+        optionsDecoder.consume(try record("user", "c5", "Please explain <command-name>/effort</command-name><command-args>max</command-args>"), offset: 5)
+        try require(optionsDecoder.options.effort == .low, "A prompt quoting command tags doesn't change the options")
+        try require(AgentModel(reported: "claude-mythos-5-2") == .mythos && AgentModel(reported: "gpt-9") == .automatic, "Unknown model families are not mistaken for the previous one")
+        try require(AgentOptionsReport(effort: .low).resolved(defaults: AgentOptionsReport(model: .sonnet, effort: .max)) == AgentOptions(model: .sonnet, effort: .low),
+                    "Claude's saved defaults fill unknown options")
+        try require(optionsDecoder.messages.count == 2, "Option commands are not shown as messages, prompts quoting them are")
+        try require(AgentOptionsReport(launchArguments: ["--model", "--resume", "x"]).model == nil, "An option is not read as the model")
+        try require(AgentOptionsReport(launchArguments: ["--", "--model", "opus"]).model == nil, "Arguments after -- are not options")
+        try require(AgentOptionsReport(launchArguments: ["--model", "opus", "--model=sonnet"]).model == .sonnet, "The last --model wins")
+        try require(AgentOptionsReport(model: .sonnet, effort: .xhigh).resolved(defaults: AgentOptionsReport()).effort == .high, "Reported options show the effort Claude applies")
+        try require(AgentOptionsReport(launchArguments: ["--effort=max", "--model", "sonnet"]) == AgentOptionsReport(model: .sonnet, effort: .max), "Launch options are read")
+        try require(AgentEffort.xhigh.applied(within: AgentModel.sonnet.efforts) == .high && AgentEffort.max.applied(within: AgentModel.haiku.efforts) == .automatic,
+                    "The effort shown after a model change is the one Claude applies")
         try require(AgentModel.haiku.efforts.isEmpty && !AgentModel.sonnet.efforts.contains(.xhigh), "Only supported effort levels are offered")
         try require(AgentModel.opus.command.input == Data("\u{15}/model opus\r".utf8), "Commands clear the prompt line before being submitted")
         print("PASS Claude model and effort options")
@@ -287,4 +344,8 @@ import Foundation
         try require(codexTranscript.source == .terminal, "Detaching the agent journal returns to the terminal transcript")
         print("PASS Codex journal monitor follows the live rollout and detaches")
     }
+}
+
+extension AgentOptionsReport {
+    var choice: AgentOptionsReport { AgentOptionsReport(model: model, effort: effort) }
 }

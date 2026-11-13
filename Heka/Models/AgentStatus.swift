@@ -3,6 +3,8 @@ import Foundation
 enum AgentStatus: Codable, Equatable, Sendable {
     case working, ready, waitingForInput
 
+    var acceptsCommands: Bool { self == .ready }
+
     static let outputActivityWindow: TimeInterval = 2
     static let attentionOrder: [AgentStatus] = [.waitingForInput, .working, .ready]
 

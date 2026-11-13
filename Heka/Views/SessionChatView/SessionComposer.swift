@@ -19,7 +19,7 @@ struct SessionComposer: View {
     let isBusy: Bool
     let submit: () -> Void
     let control: (Data) -> Void
-    let run: (AgentCommand) -> Void
+    let run: (AgentCommand) async -> Bool
 
     private var prompt: String {
         source.agent.map { String(localized: "Message \($0.title)") } ?? String(localized: "Message or command")
