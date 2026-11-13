@@ -11,7 +11,7 @@ struct AgentShortcutBar: View {
                     Label {
                         Text(agent.title)
                     } icon: {
-                        agent.logo.resizable().scaledToFit().frame(width: IconSize.xs, height: IconSize.xs)
+                        AgentLogo(agent: agent, size: IconSize.xs)
                     }
                 }
                 .accessibilityLabel("Launch \(agent.title)")

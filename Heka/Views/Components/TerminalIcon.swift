@@ -6,7 +6,7 @@ struct TerminalIcon: View {
     var body: some View {
         Group {
             if let agent {
-                agent.logo.resizable().scaledToFit().frame(width: IconSize.s, height: IconSize.s)
+                AgentLogo(agent: agent, size: IconSize.s)
             } else {
                 Image(systemName: "terminal").font(Typography.m).foregroundStyle(Palette.textSecondary)
             }

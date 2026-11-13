@@ -20,8 +20,7 @@ struct SessionMessageRow: View, Equatable {
             }
         case .assistant:
             VStack(alignment: .leading, spacing: Spacing.m) {
-                Text(verbatim: agent?.title ?? "Agent")
-                    .font(Typography.caption).foregroundStyle(Palette.textSecondary)
+                SessionAgentHeader(agent: agent)
                 SessionMarkdown(text: message.text)
             }
             .frame(maxWidth: .infinity, alignment: .leading)

@@ -11,10 +11,7 @@ struct AgentConversationRow: View {
 
     var body: some View {
         HStack(spacing: Spacing.m) {
-            conversation.agent.logo
-                .resizable()
-                .scaledToFit()
-                .frame(width: IconSize.s, height: IconSize.s)
+            AgentLogo(agent: conversation.agent, size: IconSize.s)
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: Spacing.xxs) {
                 Text(conversation.title).lineLimit(2)

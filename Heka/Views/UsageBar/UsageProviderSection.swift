@@ -51,7 +51,7 @@ struct UsageProviderSection: View {
             .padding(Spacing.m)
         } label: {
             HStack(spacing: Spacing.s) {
-                UsageProviderLogo(provider: provider, size: IconSize.s)
+                AgentLogo(agent: provider.agent, size: IconSize.s).foregroundStyle(Palette.textPrimary).accessibilityHidden(true)
                 Text(provider.title).font(Typography.headline)
                 if let plan = state.usage?.plan {
                     Text(plan).font(Typography.caption).foregroundStyle(Palette.textSecondary)

@@ -24,7 +24,7 @@ struct UsageBarRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.xs) {
             HStack(spacing: Spacing.xs) {
-                UsageProviderLogo(provider: provider, size: IconSize.xs)
+                AgentLogo(agent: provider.agent, size: IconSize.xs).foregroundStyle(Palette.textPrimary).accessibilityHidden(true)
                 Text(provider.title).fontWeight(.medium)
                 if state.error != nil {
                     Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(Palette.warning)

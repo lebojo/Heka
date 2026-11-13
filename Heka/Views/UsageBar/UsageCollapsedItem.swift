@@ -8,7 +8,7 @@ struct UsageCollapsedItem: View {
 
     var body: some View {
         HStack(spacing: Spacing.xs) {
-            UsageProviderLogo(provider: provider, size: IconSize.xs)
+            AgentLogo(agent: provider.agent, size: IconSize.xs).foregroundStyle(Palette.textPrimary).accessibilityHidden(true)
             if let window {
                 Text(window.percentText)
                     .monospacedDigit()
