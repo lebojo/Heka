@@ -3,9 +3,14 @@ import Foundation
 protocol ChatJournalDecoder: Sendable {
     init()
     var messages: [SessionMessage] { get }
+    var options: AgentOptions { get }
     mutating func consume(_ line: Data, offset: UInt64)
     mutating func consumeOversized(_ head: Data)
     mutating func trim()
+}
+
+extension ChatJournalDecoder {
+    var options: AgentOptions { AgentOptions() }
 }
 
 struct ChatMessageLog: Sendable {

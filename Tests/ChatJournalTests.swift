@@ -94,6 +94,21 @@ import Foundation
         try require(decoder.messages.count == 3, "Background task notifications are not shown as user messages")
         print("PASS Claude roles, stable IDs, tool results, meta filtering and remote metadata deltas")
 
+        var optionsDecoder = ClaudeChatDecoder()
+        try require(optionsDecoder.options == AgentOptions(), "A new Claude session shows the default model and effort")
+        var reply = try JSONSerialization.data(withJSONObject: ["type": "assistant", "uuid": "m1",
+                                                                "message": ["model": "claude-sonnet-4-6", "content": "Hi"]])
+        reply.append(10)
+        optionsDecoder.consume(reply, offset: 0)
+        try require(optionsDecoder.options.model == .sonnet, "The model reported by Claude replies is shown")
+        optionsDecoder.consume(try record("user", "c1", "<command-name>/effort</command-name>\n<command-args>high</command-args>"), offset: 1)
+        optionsDecoder.consume(try record("user", "c2", "<command-name>/model</command-name>\n<command-args>opus</command-args>"), offset: 2)
+        try require(optionsDecoder.options == AgentOptions(model: .opus, effort: .high), "/model and /effort commands update the options")
+        try require(optionsDecoder.messages.count == 1, "Option commands are not shown as messages")
+        try require(AgentModel.haiku.efforts.isEmpty && !AgentModel.sonnet.efforts.contains(.xhigh), "Only supported effort levels are offered")
+        try require(AgentModel.opus.command.input == Data("\u{15}/model opus\r".utf8), "Commands clear the prompt line before being submitted")
+        print("PASS Claude model and effort options")
+
         var questions = ClaudeChatDecoder()
         let questionInput = try JSONSerialization.jsonObject(with: Data(#"""
 {"questions":[{"question":"Où tournent les jobs : en local d'abord avec débordement vers le cloud, ou tout dans le cloud ?","header":"Mode","multiSelect":false,"options":[{"label":"Local + débordement (Recommandé)","description":"On garde les 2 slots du VPS (pas de démarrage à attendre, gratuit), et une VM est créée seulement quand ils sont pleins."},{"label":"Tout dans le cloud","description":"Chaque job a sa VM. Le VPS ne fait plus que le web, mais chaque job attend 1 à 2 minutes de démarrage."}]},{"question":"Combien de VM simultanées au maximum, pour plafonner la facture ?","header":"Plafond","multiSelect":false,"options":[{"label":"10","description":"Plafond prudent pour démarrer, modifiable par variable d'env."},{"label":"25","description":"Plus de marge."},{"label":"Illimité","description":"Aucun garde-fou sur le coût."}]},{"question":"As-tu déjà un projet Public Cloud Infomaniak avec ses identifiants OpenStack (fichier openrc / application credential) ?","header":"Accès","multiSelect":false,"options":[{"label":"Oui","description":"Je les mets dans .env. Tu codes avec des variables OS_* et on testera ensuite."},{"label":"Pas encore","description":"Code-le quand même, je créerai le projet plus tard."}]}]}

@@ -103,6 +103,11 @@ struct SessionTranscriptDelta: Sendable {
     }
 }
 
+struct ChatJournalRead: Sendable {
+    var messages: [SessionMessage]
+    var options = AgentOptions()
+}
+
 enum SessionChatSource: String, Codable, Sendable {
     case terminal, claude, codex, copilot
     case openCode = "opencode"

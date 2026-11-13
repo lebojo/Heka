@@ -7,6 +7,7 @@ import Observation
     let isChat: Bool
     private(set) var messages: [SessionMessage] = []
     private(set) var chatSource: SessionChatSource = .terminal
+    private(set) var agentOptions = AgentOptions()
     private(set) var hasExited = false
     private(set) var exitCode: Int32?
     private(set) var canvasSize = CGSize.zero
@@ -42,6 +43,8 @@ import Observation
         if hasExited != snapshot.hasExited { hasExited = snapshot.hasExited }
         if exitCode != snapshot.exitCode { exitCode = snapshot.exitCode }
         if chatSource != snapshot.chatSource { chatSource = snapshot.chatSource }
+        let options = snapshot.agentOptions ?? AgentOptions()
+        if agentOptions != options { agentOptions = options }
         guard (0...messages.count).contains(snapshot.transcriptDropped),
               (0...(messages.count - snapshot.transcriptDropped)).contains(snapshot.transcriptStart) else { return false }
         let changesTranscript = snapshot.transcriptDropped > 0 || snapshot.transcriptStart < messages.count - snapshot.transcriptDropped

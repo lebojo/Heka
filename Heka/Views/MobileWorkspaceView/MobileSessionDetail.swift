@@ -14,10 +14,14 @@ struct MobileSessionDetail: View {
                     Divider()
                     if let session = store.session {
                         if session.isChat {
-                            SessionChatView(messages: session.messages, source: session.chatSource, isEnabled: store.isConnected && !session.hasExited) { text in
+                            SessionChatView(messages: session.messages, source: session.chatSource, options: session.agentOptions,
+                                            isEnabled: store.isConnected && !session.hasExited,
+                                            isBusy: store.terminalSummary(context.terminal.id)?.status == .working) { text in
                                 try await store.input(Data((text + "\r").utf8), terminal: context.terminal.id, message: text)
                             } control: { data in
                                 try await store.input(data, terminal: context.terminal.id)
+                            } run: { command in
+                                try await store.input(command.input, terminal: context.terminal.id, message: command.text)
                             }
                             .id(context.terminal.id)
                         } else {

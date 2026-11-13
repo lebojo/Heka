@@ -11,6 +11,39 @@
         }
       }
     },
+    "Default Effort" : {
+      "comment" : "Reasoning effort menu option that keeps the agent's default effort",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Effort par défaut"
+          }
+        }
+      }
+    },
+    "Default Model" : {
+      "comment" : "Model menu option that keeps the agent's default model",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modèle par défaut"
+          }
+        }
+      }
+    },
+    "Extra High" : {
+      "comment" : "Reasoning effort level",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Très élevé"
+          }
+        }
+      }
+    },
     "For 1 hour after the last activity" : {
       "localizations" : {
         "fr" : {
@@ -51,12 +84,67 @@
         }
       }
     },
+    "High" : {
+      "comment" : "Reasoning effort level",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Élevé"
+          }
+        }
+      }
+    },
     "Keep Mac Awake While a Device Is Connected" : {
       "localizations" : {
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Garder le Mac éveillé quand un appareil est connecté"
+          }
+        }
+      }
+    },
+    "Low" : {
+      "comment" : "Reasoning effort level",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Faible"
+          }
+        }
+      }
+    },
+    "Max" : {
+      "comment" : "Reasoning effort level, the highest one",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maximum"
+          }
+        }
+      }
+    },
+    "Medium" : {
+      "comment" : "Reasoning effort level",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Moyen"
+          }
+        }
+      }
+    },
+    "Model" : {
+      "comment" : "Menu that picks the agent's model in the chat composer",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modèle"
           }
         }
       }
@@ -71,12 +159,33 @@
         }
       }
     },
+    "No agent is running in this terminal." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucun agent ne tourne dans ce terminal."
+          }
+        }
+      }
+    },
     "Prevents the Mac from sleeping so the mobile app can still reach it. The display can still turn off." : {
       "localizations" : {
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Empêche le Mac de se mettre en veille pour que l’app mobile puisse toujours le joindre. L’écran peut quand même s’éteindre."
+          }
+        }
+      }
+    },
+    "Reasoning Effort" : {
+      "comment" : "Menu that picks how much the agent reasons before answering",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Effort de réflexion"
           }
         }
       }

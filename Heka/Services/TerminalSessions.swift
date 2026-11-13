@@ -167,12 +167,17 @@ import Observation
         guard let journal = agent?.journal else {
             throw WorkspaceError(message: String(localized: "No agent conversation found in this terminal. Read its screen instead, without --reply or --messages."))
         }
-        return await journal.makeReader()(journal.url)
+        return await journal.makeReader()(journal.url).messages
     }
 
     private func pasted(_ text: String) -> Data {
         guard text.contains(where: \.isNewline), view.getTerminal().bracketedPasteMode else { return Data(text.utf8) }
         return Data(("\u{1b}[200~" + text + "\u{1b}[201~").utf8)
+    }
+
+    func run(_ command: AgentCommand, from origin: InputOrigin) async throws {
+        guard agent != nil else { throw WorkspaceError(message: String(localized: "No agent is running in this terminal.")) }
+        try await send(command.input, message: command.text, from: origin)
     }
 
     func launch(_ agent: ConversationAgent, skippingPermissions: Bool, from origin: InputOrigin) async throws {
@@ -204,6 +209,11 @@ import Observation
             return
         }
         guard !isShellInForeground else { throw WorkspaceError(message: String(localized: "The agent stopped: the message wasn’t sent to the shell.")) }
+        var data = data
+        if data.first == 21 {
+            deliver([21][...], from: origin)
+            data.removeFirst()
+        }
         updateTranscript()
         let sentID = transcript.sent(message)
         guard data.last == 13, view.getTerminal().bracketedPasteMode else {
@@ -254,7 +264,8 @@ import Observation
                                       columns: terminal.cols, rows: terminal.rows,
                                       transcript: delta.messages, transcriptDropped: delta.dropped, transcriptStart: delta.start,
                                       transcriptAppend: delta.append,
-                                      hasExited: hasExited, exitCode: exitCode, chatSource: transcript.source)
+                                      hasExited: hasExited, exitCode: exitCode, chatSource: transcript.source,
+                                      agentOptions: transcript.options)
     }
 
     func sizeChanged(source: LocalProcessTerminalView, newCols: Int, newRows: Int) {

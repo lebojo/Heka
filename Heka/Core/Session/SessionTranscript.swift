@@ -4,6 +4,7 @@ import Observation
 @MainActor @Observable final class SessionTranscript {
     private(set) var source: SessionChatSource = .terminal
     private(set) var messages: [SessionMessage] = []
+    private(set) var options = AgentOptions()
     @ObservationIgnored private var anchor = ""
     @ObservationIgnored private var anchorEnd = 0
     @ObservationIgnored private var latest = ""
@@ -50,15 +51,17 @@ import Observation
         return beforeSend.reversed().firstRange(of: anchor.utf8.reversed())?.lowerBound.base
     }
 
-    func useJournal(_ messages: [SessionMessage], from source: SessionChatSource) {
+    func useJournal(_ journal: ChatJournalRead, from source: SessionChatSource) {
         if self.source != source { self.source = source }
-        if self.messages != messages { self.messages = messages }
+        if messages != journal.messages { messages = journal.messages }
+        if options != journal.options { options = journal.options }
     }
 
     func useTerminal() {
         guard source != .terminal else { return }
         source = .terminal
         messages = []
+        options = AgentOptions()
         anchor = ""
         anchorEnd = 0
         latest = ""

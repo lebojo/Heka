@@ -6,7 +6,7 @@ struct AgentJournal: Equatable, Sendable {
     var isSubagent = false
     var sessionID: String? = nil
 
-    func makeReader() -> @Sendable (URL) async -> [SessionMessage] {
+    func makeReader() -> @Sendable (URL) async -> ChatJournalRead {
         switch source {
         case .claude where isSubagent: Self.reader(decoding: ClaudeSubagentChatDecoder.self)
         case .claude: Self.reader(decoding: ClaudeChatDecoder.self)
@@ -14,25 +14,28 @@ struct AgentJournal: Equatable, Sendable {
         case .copilot: Self.reader(decoding: CopilotChatDecoder.self)
         case .openCode:
             Self.openCodeReader(sessionID: sessionID ?? "")
-        case .terminal: { _ in [] }
+        case .terminal: { _ in ChatJournalRead(messages: []) }
         }
     }
 
-    private static func openCodeReader(sessionID: String) -> @Sendable (URL) async -> [SessionMessage] {
+    private static func openCodeReader(sessionID: String) -> @Sendable (URL) async -> ChatJournalRead {
         let reader = OpenCodeChatReader(sessionID: sessionID)
-        return { await reader.read($0) }
+        return { ChatJournalRead(messages: await reader.read($0)) }
     }
 
-    private static func reader<Decoder: ChatJournalDecoder>(decoding: Decoder.Type) -> @Sendable (URL) async -> [SessionMessage] {
+    private static func reader<Decoder: ChatJournalDecoder>(decoding: Decoder.Type) -> @Sendable (URL) async -> ChatJournalRead {
         let reader = ChatJournalReader<Decoder>()
-        return { await reader.read($0) }
+        return { url in
+            let messages = await reader.read(url)
+            return ChatJournalRead(messages: messages, options: await reader.options)
+        }
     }
 }
 
 @MainActor final class AgentJournalMonitor {
     private let transcript: SessionTranscript
     private var attached: AgentJournal?
-    private var read: (@Sendable (URL) async -> [SessionMessage])?
+    private var read: (@Sendable (URL) async -> ChatJournalRead)?
     private var fileWatch: FileSystemWatcher?
     private var watchRetry: Task<Void, Never>?
     private var databaseRefresh: Task<Void, Never>?
@@ -137,10 +140,10 @@ struct AgentJournal: Equatable, Sendable {
         let token = generation
         reading = Task { [weak self] in
             do { try await Task.sleep(for: .milliseconds(100)) } catch { return }
-            let messages = await read(attached.url)
+            let journal = await read(attached.url)
             guard let self, !Task.isCancelled, generation == token else { return }
             reading = nil
-            transcript.useJournal(messages, from: attached.source)
+            transcript.useJournal(journal, from: attached.source)
             if readAgain { readAgain = false; scheduleRead() }
         }
     }

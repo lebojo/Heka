@@ -7,16 +7,19 @@ struct SessionChatView: View {
 
     let messages: [SessionMessage]
     let source: SessionChatSource
+    let options: AgentOptions
     let isEnabled: Bool
+    let isBusy: Bool
     let send: (String) async throws -> Void
     let control: (Data) async throws -> Void
+    let run: (AgentCommand) async throws -> Void
 
     var body: some View {
         SessionTranscriptList(messages: messages, source: source)
         .background(Palette.surface)
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            SessionComposer(draft: $draft, source: source, sending: sending, isEnabled: isEnabled,
-                            submit: submit, control: sendControl)
+            SessionComposer(draft: $draft, source: source, options: options, sending: sending, isEnabled: isEnabled,
+                            isBusy: isBusy, submit: submit, control: sendControl, run: runCommand)
         }
         .alert("Couldn’t Send", isPresented: $error.isPresent) {
             Button("OK") { error = nil }
@@ -33,6 +36,13 @@ struct SessionChatView: View {
                 try await send(text)
                 if draft == text { draft = "" }
             } catch { self.error = error.localizedDescription }
+        }
+    }
+
+    private func runCommand(_ command: AgentCommand) {
+        Task {
+            do { try await run(command) }
+            catch { self.error = error.localizedDescription }
         }
     }
 

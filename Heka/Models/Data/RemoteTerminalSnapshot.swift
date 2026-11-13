@@ -13,5 +13,6 @@ struct RemoteTerminalSnapshot: Codable, Sendable {
     let hasExited: Bool
     let exitCode: Int32?
     var chatSource: SessionChatSource = .terminal
+    var agentOptions: AgentOptions?
 }
 

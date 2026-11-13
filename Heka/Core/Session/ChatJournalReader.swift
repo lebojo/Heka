@@ -9,6 +9,8 @@ actor ChatJournalReader<Decoder: ChatJournalDecoder> {
     private let initialLimit: UInt64 = 2_097_152
     private let recordLimit = 16_777_216
 
+    var options: AgentOptions { decoder.options }
+
     func read(_ url: URL) -> [SessionMessage] {
         guard let attributes = try? FileManager.default.attributesOfItem(atPath: url.path),
               let size = attributes[.size] as? UInt64, let inode = attributes[.systemFileNumber] as? UInt64,

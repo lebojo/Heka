@@ -6,10 +6,13 @@ struct SessionComposer: View {
     @Binding var draft: String
 
     let source: SessionChatSource
+    let options: AgentOptions
     let sending: Bool
     let isEnabled: Bool
+    let isBusy: Bool
     let submit: () -> Void
     let control: (Data) -> Void
+    let run: (AgentCommand) -> Void
 
     private var prompt: String {
         source.agent.map { String(localized: "Message \($0.title)") } ?? String(localized: "Message or command")
@@ -26,6 +29,10 @@ struct SessionComposer: View {
                 .focused($isFocused)
                 .accessibilityLabel(prompt)
                 .padding(.horizontal, Spacing.xs)
+
+            if source.supportsAgentOptions {
+                SessionAgentOptions(source: source, reported: options, isBusy: isBusy, run: run)
+            }
 
             HStack(spacing: Spacing.m) {
                 SessionComposerControls(source: source, control: control)
