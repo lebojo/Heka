@@ -7,6 +7,8 @@ struct BridgeRequest: Codable, Sendable {
     var worktreeID: UUID?
     var name: String?
     var branch: String?
+    var group: String?
+    var worktreeIDs: [UUID]?
     var path: String?
     var directory: String?
     var callerTerminalID: UUID?
@@ -48,6 +50,7 @@ struct BridgeResponse: Codable, Sendable {
     var projectID: UUID?
     var worktreeID: UUID?
     var terminalID: UUID?
+    var groupID: UUID?
     var path: String?
     var workspace: Workspace?
     var removed: Bool?

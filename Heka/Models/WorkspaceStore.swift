@@ -712,27 +712,45 @@ import Observation
     }
 
     @discardableResult func addWorktreeGroup(_ name: String, projectID: UUID, moving worktreeID: UUID? = nil) -> UUID? {
+        addWorktreeGroup(name, projectID: projectID, moving: worktreeID.map { [$0] } ?? [])
+    }
+
+    @discardableResult func addWorktreeGroup(_ name: String, projectID: UUID, moving worktreeIDs: [UUID]) -> UUID? {
         let name = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !name.isEmpty, let index = projects.firstIndex(where: { $0.id == projectID }) else { return nil }
+        guard !name.isEmpty, let index = projects.firstIndex(where: { $0.id == projectID }),
+              worktreeIDs.allSatisfy({ id in projects[index].worktrees.contains { $0.id == id && !$0.isPrimary } }) else { return nil }
         let group = WorktreeGroup(name: name)
         projects[index].worktreeGroups.append(group)
-        if let worktreeID { moveWorktree(worktreeID, to: group.id) }
+        placeWorktrees(worktreeIDs, in: index, to: group.id)
         collapsed.remove(group.id)
         save()
         return group.id
     }
 
     @discardableResult func moveWorktree(_ worktreeID: UUID, to groupID: UUID?) -> Bool {
-        guard let p = projects.firstIndex(where: { $0.worktrees.contains { $0.id == worktreeID && !$0.isPrimary } }),
-              groupID == nil || projects[p].worktreeGroups.contains(where: { $0.id == groupID }),
-              let w = projects[p].worktrees.firstIndex(where: { $0.id == worktreeID }) else { return false }
-        guard projects[p].worktrees[w].groupID != groupID else { return true }
-        var worktree = projects[p].worktrees[w]
-        worktree.groupID = groupID
-        projects[p].worktrees = projects[p].worktrees.removingAndAppending(at: w, worktree)
+        moveWorktrees([worktreeID], to: groupID)
+    }
+
+    @discardableResult func moveWorktrees(_ worktreeIDs: [UUID], to groupID: UUID?) -> Bool {
+        guard let first = worktreeIDs.first,
+              let p = projects.firstIndex(where: { $0.worktrees.contains { $0.id == first } }),
+              worktreeIDs.allSatisfy({ id in projects[p].worktrees.contains { $0.id == id && !$0.isPrimary } }),
+              groupID == nil || projects[p].worktreeGroups.contains(where: { $0.id == groupID }) else { return false }
+        let moved = worktreeIDs.filter { id in projects[p].worktrees.contains { $0.id == id && $0.groupID != groupID } }
+        guard !moved.isEmpty else { return true }
+        placeWorktrees(moved, in: p, to: groupID)
         if let groupID { collapsed.remove(groupID) }
         save()
         return true
+    }
+
+    private func placeWorktrees(_ worktreeIDs: [UUID], in p: Int, to groupID: UUID?) {
+        for id in worktreeIDs {
+            guard let w = projects[p].worktrees.firstIndex(where: { $0.id == id }) else { continue }
+            var worktree = projects[p].worktrees[w]
+            worktree.groupID = groupID
+            projects[p].worktrees = projects[p].worktrees.removingAndAppending(at: w, worktree)
+        }
     }
 
     func reorderFolders(_ visible: [UUID], from source: IndexSet, to destination: Int) {

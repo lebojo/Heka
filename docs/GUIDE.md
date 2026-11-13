@@ -95,6 +95,11 @@ heka terminal create --name "Shell"
 # Explicitly target another context (IDs returned by heka list)
 heka terminal create --project UUID --worktree UUID --name "Review"
 
+# Group worktrees in the sidebar: a group given by name is created if needed, then reused
+heka worktree create --branch stack/part-1 --group "Stack"
+heka group add --group "Stack" --worktree UUID
+heka group delete --group "Stack"
+
 # Delete a worktree (IDs returned by heka list); --force also erases uncommitted changes
 heka worktree delete --worktree UUID
 

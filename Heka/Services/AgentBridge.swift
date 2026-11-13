@@ -120,6 +120,7 @@ import AppKit
         if request.action == "terminal.close" { return try await closeTerminal(request) }
         let location = location(of: request.directory)
         if request.action == "worktree.delete" { return try await deleteWorktree(request, currentLocation: location) }
+        if request.action.hasPrefix("group.") { return try manageGroup(request, location: location) }
         let request = resolvingContext(of: request, location: location)
         guard let projectID = request.projectID,
               let project = store.projects.first(where: { $0.id == projectID }) else {
@@ -133,13 +134,21 @@ import AppKit
             if let name = request.name { store.rename(context.terminal.id, to: name) }
         case "worktree.create":
             guard let branch = request.branch else { throw WorkspaceError(message: String(localized: "A branch name is required: --branch feature/my-task.")) }
+            if let reference = request.group { _ = try targetGroup(reference, in: project) }
             context = try await store.createWorktree(projectID: projectID, branch: branch, command: request.command, select: false)
             if let name = request.name { store.rename(context.terminal.id, to: name) }
         default:
             throw WorkspaceError(message: String(localized: "Unknown command: \(request.action)"))
         }
-        return BridgeResponse(ok: true, projectID: context.project.id, worktreeID: context.worktree.id,
-                              terminalID: context.terminal.id, path: context.worktree.path)
+        var response = BridgeResponse(ok: true, projectID: context.project.id, worktreeID: context.worktree.id,
+                                      terminalID: context.terminal.id, path: context.worktree.path)
+        if let reference = request.group {
+            response.groupID = place(context.worktree.id, inGroup: reference, of: context.project.id)
+            if response.groupID == nil {
+                response.message = String(localized: "The worktree was created, but it couldn’t be put in the group “\(reference)”. Use heka group add.")
+            }
+        }
+        return response
     }
 
     private func deleteWorktree(_ request: BridgeRequest, currentLocation: (projectID: UUID, worktreeID: UUID)?) async throws -> BridgeResponse {
@@ -171,6 +180,86 @@ import AppKit
             throw WorkspaceError(message: String(localized: "\(error.localizedDescription) Run again with --force-branch to delete it anyway, or without --delete-branch to keep it."))
         }
         return BridgeResponse(deleting: worktree, of: project.id, cleanup: cleanup)
+    }
+
+    private func manageGroup(_ request: BridgeRequest, location: (projectID: UUID, worktreeID: UUID)?) throws -> BridgeResponse {
+        let worktreeIDs = request.worktreeIDs ?? []
+        let worktreesProject = try worktreeIDs.first.map(existingProject(containing:))
+        let projectID = request.projectID ?? worktreesProject?.id ?? location?.projectID
+        let targetProject = projectID.flatMap { id in store.projects.first { $0.id == id } }
+        if request.action == "group.create" {
+            guard let targetProject else {
+                throw WorkspaceError(message: String(localized: "Project not found. Use --project UUID, or run the command from a Heka terminal or from the folder of a project open in Heka."))
+            }
+            try validateGroupable(worktreeIDs, in: targetProject)
+            let name = request.name ?? ""
+            if let existing = try store.state.worktreeGroup(named: name, in: targetProject) {
+                guard store.moveWorktrees(worktreeIDs, to: existing.group.id) || worktreeIDs.isEmpty else { throw groupingFailure }
+                return BridgeResponse(ok: true, message: String(localized: "The group “\(existing.group.name)” already existed: it was reused."),
+                                      projectID: targetProject.id, groupID: existing.group.id)
+            }
+            guard let groupID = store.addWorktreeGroup(name, projectID: targetProject.id, moving: worktreeIDs) else { throw groupingFailure }
+            return BridgeResponse(ok: true, projectID: targetProject.id, groupID: groupID)
+        }
+        guard let found = try group(request.group ?? "", in: targetProject) else {
+            throw WorkspaceError(message: String(localized: "Worktree group not found. Get its UUID with heka list."))
+        }
+        try validateGroupable(worktreeIDs, in: found.project)
+        switch request.action {
+        case "group.add":
+            guard store.moveWorktrees(worktreeIDs, to: found.group.id) else { throw groupingFailure }
+        case "group.remove":
+            let outside = worktreeIDs.filter { id in found.project.worktrees.first { $0.id == id }?.groupID != found.group.id }
+            guard outside.isEmpty else { throw WorkspaceError(message: String(localized: "This worktree isn’t in the group “\(found.group.name)”.")) }
+            guard store.moveWorktrees(worktreeIDs, to: nil) else { throw groupingFailure }
+        case "group.delete":
+            store.removeWorktreeGroup(found.group.id)
+            return BridgeResponse(ok: true, projectID: found.project.id, groupID: found.group.id, removed: true)
+        default:
+            throw WorkspaceError(message: String(localized: "Unknown command: \(request.action)"))
+        }
+        return BridgeResponse(ok: true, projectID: found.project.id, groupID: found.group.id)
+    }
+
+    private var groupingFailure: WorkspaceError {
+        WorkspaceError(message: String(localized: "The worktrees couldn’t be moved. Check them with heka list."))
+    }
+
+    private func targetGroup(_ reference: String, in project: Project) throws -> WorktreeGroup? {
+        guard let found = try group(reference, in: project) else { return nil }
+        guard found.project.id == project.id else {
+            throw WorkspaceError(message: String(localized: "This worktree group belongs to another project."))
+        }
+        return found.group
+    }
+
+    private func place(_ worktreeID: UUID, inGroup reference: String, of projectID: UUID) -> UUID? {
+        guard let project = store.projects.first(where: { $0.id == projectID }),
+              let existing = try? targetGroup(reference, in: project) else {
+            return UUID(uuidString: reference) == nil ? store.addWorktreeGroup(reference, projectID: projectID, moving: [worktreeID]) : nil
+        }
+        return store.moveWorktrees([worktreeID], to: existing.id) ? existing.id : nil
+    }
+
+    private func group(_ reference: String, in project: Project?) throws -> (project: Project, group: WorktreeGroup)? {
+        try store.state.worktreeGroup(reference, in: project)
+    }
+
+    private func existingProject(containing worktreeID: UUID) throws -> Project {
+        guard let project = project(containing: worktreeID) else {
+            throw WorkspaceError(message: String(localized: "Worktree not found. Get its UUID with heka list."))
+        }
+        return project
+    }
+
+    private func validateGroupable(_ worktreeIDs: [UUID], in project: Project) throws {
+        for id in worktreeIDs {
+            guard try existingProject(containing: id).id == project.id,
+                  let worktree = project.worktrees.first(where: { $0.id == id }) else {
+                throw WorkspaceError(message: String(localized: "This worktree doesn’t belong to the group’s project."))
+            }
+            guard !worktree.isPrimary else { throw WorkspaceError(message: String(localized: "A project’s main folder can’t be grouped.")) }
+        }
     }
 
     private static func leavesWorkspaceUnchanged(_ action: String) -> Bool {

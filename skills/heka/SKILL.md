@@ -1,8 +1,8 @@
 ---
 name: heka
-description: Drive the Heka macOS app with the `heka` CLI. Use when the HEKA_INSTANCE environment variable is set (you are in a Heka terminal), or when the user asks to use Heka from another terminal. Use it to start another agent in parallel on its own branch (`heka worktree create`), to ask another agent for a review or a second opinion in the same worktree (`heka terminal create`), to run a long process such as a dev server or watcher in a visible terminal, to send a message or keys to another agent's terminal, read its reply or wait for it to finish (`heka terminal send`, `read`, `wait`), to close a terminal (`heka terminal close`), to add a project to the sidebar, to list projects, worktrees and terminals, or to delete a worktree once its branch is merged into the main branch, including your own worktree when the user asks you to merge your work and delete it. Prefer it over raw `git worktree add`, background jobs or a new shell when Heka is running.
+description: Drive the Heka macOS app with the `heka` CLI. Use when the HEKA_INSTANCE environment variable is set (you are in a Heka terminal), or when the user asks to use Heka from another terminal. Use it to start another agent in parallel on its own branch (`heka worktree create`), to ask another agent for a review or a second opinion in the same worktree (`heka terminal create`), to run a long process such as a dev server or watcher in a visible terminal, to send a message or keys to another agent's terminal, read its reply or wait for it to finish (`heka terminal send`, `read`, `wait`), to close a terminal (`heka terminal close`), to put worktrees in a sidebar group (`heka worktree create --group`, `heka group`), to add a project to the sidebar, to list projects, worktrees and terminals, or to delete a worktree once its branch is merged into the main branch, including your own worktree when the user asks you to merge your work and delete it. Prefer it over raw `git worktree add`, background jobs or a new shell when Heka is running.
 metadata:
-  version: "14"
+  version: "17"
 ---
 
 # Heka CLI
@@ -43,18 +43,23 @@ This skill may be newer or older than the installed app. `heka --help` is the re
 heka list
 heka project add /path/to/project
 heka terminal create [--name NAME] [--project UUID] [--worktree UUID] [-- COMMAND ARGS…]
-heka worktree create --branch BRANCH [--name NAME] [--project UUID] [-- COMMAND ARGS…]
+heka worktree create --branch BRANCH [--name NAME] [--project UUID] [--group UUID|NAME] [-- COMMAND ARGS…]
 heka worktree delete --worktree UUID [--delete-branch [--force-branch]] [--force]
 heka terminal send --terminal UUID [--enter] (-- TEXT… | --stdin)
 heka terminal send --terminal UUID --key KEY [--key KEY…]
 heka terminal read --terminal UUID [--lines N | --reply | --messages N]
 heka terminal wait --terminal UUID [--idle SECONDS | --exit] [--timeout SECONDS]
 heka terminal close --terminal UUID [--force]
+heka group create --name NAME [--project UUID] [--worktree UUID…]
+heka group add --group UUID|NAME --worktree UUID [--worktree UUID…]
+heka group remove --group UUID|NAME --worktree UUID [--worktree UUID…]
+heka group delete --group UUID|NAME
 ```
 
 - Without `--project` or `--worktree`, commands target the current project and worktree. `--project` alone targets that project's main folder; `--worktree` alone finds its project.
-- `heka list` prints the whole workspace as JSON: `projects[].id`, `projects[].path`, `projects[].worktrees[]` with `id`, `name` (the branch), `path`, `isPrimary` and `terminals[]`.
+- `heka list` prints the whole workspace as JSON: `projects[].id`, `projects[].path`, `projects[].worktrees[]` with `id`, `name` (the branch), `path`, `isPrimary`, `groupID` and `terminals[]`, and `projects[].worktreeGroups[]` with `id` and `name`.
 - Every other command prints `{"ok": true, "projectID": …, "worktreeID": …, "terminalID": …, "path": …}`. On failure: `{"ok": false, "message": …}` and a non-zero exit code. Read `message` and fix the call instead of retrying blindly.
+- Worktree groups sort a project's worktrees in the sidebar. `worktree create --group NAME` puts the new worktree in that group, created if needed: use it when the user wants several worktrees (e.g. one per PR of a stack) together. A group given by name is looked up in the project of the given worktrees, or the current one; a UUID works anywhere. The main folder can't be grouped. `group create` reuses a group of the same name in the project instead of making a duplicate; `--name` is always a name, even when it looks like a UUID. Without `--worktree`, `group create` makes an empty group in the project (the current one by default) and moves no worktree, not even the current one: pass `--worktree UUID` to fill it. If `worktree create --group` creates the worktree but can't put it in the group, it still replies `ok: true` with the new worktree and a `message` saying so: check for that `message` and run `heka group add`. `group delete` keeps the worktrees. Group commands reply with `groupID`.
 - If a command times out after 120 seconds (`terminal wait`: its `--timeout` plus 30 seconds), the operation may still finish: run `heka list` before trying again.
 
 ## Starting a child agent

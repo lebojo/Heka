@@ -7,13 +7,17 @@ enum AgentCLI {
     heka list
     heka project add /path/to/project
     heka terminal create [--name NAME] [--project UUID] [--worktree UUID] [-- COMMAND ARGUMENTS…]
-    heka worktree create --branch BRANCH [--name NAME] [--project UUID] [-- COMMAND ARGUMENTS…]
+    heka worktree create --branch BRANCH [--name NAME] [--project UUID] [--group UUID|NAME] [-- COMMAND ARGUMENTS…]
     heka worktree delete --worktree UUID [--delete-branch [--force-branch]] [--force]
     heka terminal send --terminal UUID [--enter] (-- TEXT… | --stdin)
     heka terminal send --terminal UUID --key KEY [--key KEY…]
     heka terminal read --terminal UUID [--lines N | --reply | --messages N]
     heka terminal wait --terminal UUID [--idle SECONDS | --exit] [--timeout SECONDS]
     heka terminal close --terminal UUID [--force]
+    heka group create --name NAME [--project UUID] [--worktree UUID…]
+    heka group add --group UUID|NAME --worktree UUID [--worktree UUID…]
+    heka group remove --group UUID|NAME --worktree UUID [--worktree UUID…]
+    heka group delete --group UUID|NAME
 
     From a Heka terminal, the project and worktree are implicit.
     Elsewhere, they are inferred from the current folder if it belongs to a project open in Heka.
@@ -36,6 +40,10 @@ enum AgentCLI {
     Their replies include running, exitCode and, for a recognized agent, agent and status (working, ready or waitingForInput).
     terminal close stops the terminal’s processes and removes it. Without --force, it refuses while its agent is working. The current terminal closes itself after the reply.
     The current terminal can’t send to or wait for itself.
+    worktree create --group puts the new worktree in that group of its project; a group given by name is created if it doesn’t exist.
+    group create makes a worktree group in the project of --project, of the given worktrees, or the current one, and moves the given worktrees into it. If the project already has a group with that name, it is reused.
+    A group given by name is looked up in the project of the given worktrees, or the current one; a group UUID is found in any project. A project’s main folder can’t be grouped.
+    group delete removes only the group: its worktrees stay, outside any group. Replies include groupID.
     """)
 
     static func run(arguments: [String]) -> Int32 {
@@ -132,6 +140,9 @@ enum AgentCLI {
         if arguments.count >= 2, ["send", "read", "wait", "close"].contains(arguments[1]), arguments[0] == "terminal" {
             return try parseTerminalCommand(arguments, into: request)
         }
+        if arguments.count >= 2, arguments[0] == "group", ["create", "add", "remove", "delete"].contains(arguments[1]) {
+            return try parseGroupCommand(arguments, into: request)
+        }
         let commands = [["terminal", "create"], ["worktree", "create"], ["worktree", "delete"]]
         guard arguments.count >= 2, commands.contains(Array(arguments[0...1])) else {
             throw WorkspaceError(message: String(localized: "Unknown command. See heka --help."))
@@ -154,6 +165,7 @@ enum AgentCLI {
             switch option {
             case "--name": request.name = value
             case "--branch": request.branch = value
+            case "--group" where request.action == "worktree.create": request.group = try groupReference(value)
             case "--project":
                 guard let id = UUID(uuidString: value) else { throw WorkspaceError(message: String(localized: "Invalid project UUID.")) }
                 request.projectID = id
@@ -171,6 +183,50 @@ enum AgentCLI {
             }
         }
         return request
+    }
+
+    private static func parseGroupCommand(_ arguments: [String], into base: BridgeRequest) throws -> BridgeRequest {
+        var request = base
+        request.action = "group." + arguments[1]
+        request.worktreeID = nil
+        var explicitlyTargetsProject = false
+        var index = 2
+        while index < arguments.count {
+            let option = arguments[index]
+            guard index + 1 < arguments.count else { throw WorkspaceError(message: String(localized: "Missing value for \(option).")) }
+            let value = arguments[index + 1]
+            switch (request.action, option) {
+            case ("group.create", "--name"): request.name = value
+            case ("group.create", "--project"):
+                guard let id = UUID(uuidString: value) else { throw WorkspaceError(message: String(localized: "Invalid project UUID.")) }
+                request.projectID = id
+                explicitlyTargetsProject = true
+            case ("group.create", "--worktree"), ("group.add", "--worktree"), ("group.remove", "--worktree"):
+                guard let id = UUID(uuidString: value) else { throw WorkspaceError(message: String(localized: "Invalid worktree UUID.")) }
+                request.worktreeIDs = (request.worktreeIDs ?? []) + [id]
+            case ("group.add", "--group"), ("group.remove", "--group"), ("group.delete", "--group"): request.group = try groupReference(value)
+            default: throw WorkspaceError(message: String(localized: "Unknown option: \(option)"))
+            }
+            index += 2
+        }
+        if request.worktreeIDs != nil, !explicitlyTargetsProject { request.projectID = nil }
+        if request.action == "group.create" {
+            guard !(request.name?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true) else {
+                throw WorkspaceError(message: String(localized: "A group name is required: --name NAME."))
+            }
+        } else if request.group == nil {
+            throw WorkspaceError(message: String(localized: "Specify the group: --group UUID or NAME (see heka list)."))
+        }
+        if ["group.add", "group.remove"].contains(request.action), request.worktreeIDs == nil {
+            throw WorkspaceError(message: String(localized: "Specify the worktrees: --worktree UUID (see heka list)."))
+        }
+        return request
+    }
+
+    private static func groupReference(_ value: String) throws -> String {
+        let reference = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !reference.isEmpty else { throw WorkspaceError(message: String(localized: "--group needs a group UUID or name.")) }
+        return reference
     }
 
     private static func parseTerminalCommand(_ arguments: [String], into base: BridgeRequest) throws -> BridgeRequest {

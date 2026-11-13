@@ -231,3 +231,24 @@ enum WorkspacePath {
         return String(cString: resolved)
     }
 }
+
+extension Workspace {
+    func worktreeGroup(_ reference: String, in project: Project?) throws -> (project: Project, group: WorktreeGroup)? {
+        if let id = UUID(uuidString: reference) {
+            for candidate in projects {
+                if let group = candidate.worktreeGroups.first(where: { $0.id == id }) { return (candidate, group) }
+            }
+            throw WorkspaceError(message: String(localized: "Worktree group not found. Get its UUID with heka list."))
+        }
+        return try worktreeGroup(named: reference, in: project)
+    }
+
+    func worktreeGroup(named reference: String, in project: Project?) throws -> (project: Project, group: WorktreeGroup)? {
+        let name = reference.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !name.isEmpty else { throw WorkspaceError(message: String(localized: "The group name can’t be empty.")) }
+        guard let project else {
+            throw WorkspaceError(message: String(localized: "Project not found. Pass the group’s UUID, or run the command from a Heka terminal or from the folder of a project open in Heka."))
+        }
+        return project.worktreeGroups.first { $0.name == name }.map { (project, $0) }
+    }
+}

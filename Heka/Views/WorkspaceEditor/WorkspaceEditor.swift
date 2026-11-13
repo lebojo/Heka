@@ -171,7 +171,9 @@ struct WorkspaceEditor: View {
         case .rename(let id, _):
             try await store.rename(id, to: name, appearance: appearance)
         case .worktreeGroup(let project, let worktree):
-            _ = try await store.addWorktreeGroup(name, projectID: project, moving: worktree)
+            guard try await store.addWorktreeGroup(name, projectID: project, moving: worktree) != nil else {
+                throw WorkspaceError(message: String(localized: "The group couldn’t be created: the project or worktree no longer exists."))
+            }
         case .worktree(let project, _):
             let remote = branches.first { $0.name == name }?.remote
             try await store.openWorktree(projectID: project, branch: name, remote: remote, launch: launch)

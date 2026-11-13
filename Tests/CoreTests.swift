@@ -106,6 +106,37 @@ import Foundation
         try require(other.worktreeID == nil, "Explicit project doesn't inherit unrelated worktree")
         do { _ = try AgentCLI.parse(["terminal", "create", "--project", "bad"], environment: env); throw WorkspaceError(message: "FAIL: invalid UUID accepted") }
         catch let error as WorkspaceError { try require(error.message.contains("Invalid"), "Reject bad IDs") }
+        let groupedCreation = try AgentCLI.parse(["worktree", "create", "--branch", "stack/a", "--group", "Stack"], environment: env)
+        try require(groupedCreation.group == "Stack" && groupedCreation.projectID == projectID, "worktree create accepts --group")
+        let groupCreation = try AgentCLI.parse(["group", "create", "--name", "Stack", "--worktree", explicitID.uuidString, "--worktree", worktreeID.uuidString], environment: env)
+        try require(groupCreation.action == "group.create" && groupCreation.name == "Stack" && groupCreation.worktreeIDs == [explicitID, worktreeID]
+                    && groupCreation.projectID == nil, "group create collects its worktrees and takes their project")
+        let projectGroup = try AgentCLI.parse(["group", "create", "--name", "Stack", "--project", projectID.uuidString], environment: [:])
+        try require(projectGroup.projectID == projectID && projectGroup.worktreeIDs == nil, "group create targets --project")
+        let groupAddition = try AgentCLI.parse(["group", "add", "--group", "Stack", "--worktree", explicitID.uuidString], environment: env)
+        try require(groupAddition.action == "group.add" && groupAddition.group == "Stack" && groupAddition.worktreeIDs == [explicitID], "Parse group add")
+        let groupDeletion = try AgentCLI.parse(["group", "delete", "--group", explicitID.uuidString], environment: env)
+        try require(groupDeletion.action == "group.delete" && groupDeletion.group == explicitID.uuidString, "Parse group delete")
+        for invalid in [["group", "create"], ["group", "add", "--group", "Stack"], ["group", "delete"], ["group", "delete", "--group", "S", "--worktree", explicitID.uuidString],
+                        ["terminal", "create", "--group", "Stack"]] {
+            do { _ = try AgentCLI.parse(invalid, environment: env); throw WorkspaceError(message: "FAIL: accepted \(invalid)") }
+            catch let error as WorkspaceError { try require(!error.message.hasPrefix("FAIL"), "Reject \(invalid)") }
+        }
+        do { _ = try AgentCLI.parse(["worktree", "create", "--branch", "stack/a", "--group", "  "], environment: env); throw WorkspaceError(message: "FAIL: blank --group accepted") }
+        catch let error as WorkspaceError { try require(error.message.contains("--group") && !error.message.hasPrefix("FAIL"), "A blank --group is refused before creating the worktree") }
+        let stack = WorktreeGroup(name: "Stack")
+        var stackProject = Project(url: URL(fileURLWithPath: "/one"))
+        stackProject.worktreeGroups = [stack]
+        let otherProject = Project(url: URL(fileURLWithPath: "/two"))
+        let groupedWorkspace = Workspace(projects: [otherProject, stackProject])
+        let groupByID = try groupedWorkspace.worktreeGroup(stack.id.uuidString, in: otherProject)
+        try require(groupByID?.project.id == stackProject.id, "A group UUID is found in any project")
+        let groupByName = try groupedWorkspace.worktreeGroup(" Stack ", in: stackProject)
+        try require(groupByName?.group.id == stack.id, "An existing group name is reused instead of creating a duplicate")
+        let groupElsewhere = try groupedWorkspace.worktreeGroup("Stack", in: otherProject)
+        try require(groupElsewhere == nil, "A group name is looked up in its project only")
+        do { _ = try groupedWorkspace.worktreeGroup(UUID().uuidString, in: stackProject); throw WorkspaceError(message: "FAIL: unknown group UUID accepted") }
+        catch let error as WorkspaceError { try require(!error.message.hasPrefix("FAIL"), "An unknown group UUID is refused") }
         let deletion = try AgentCLI.parse(["worktree", "delete", "--force", "--worktree", explicitID.uuidString], environment: env)
         try require(deletion.action == "worktree.delete" && deletion.worktreeID == explicitID && deletion.force == true && deletion.deleteBranch == nil, "Parse worktree deletion")
         let branchDeletion = try AgentCLI.parse(["worktree", "delete", "--worktree", explicitID.uuidString, "--delete-branch"], environment: env)
