@@ -7282,7 +7282,487 @@
     "Version %@" : {
       "shouldTranslate" : false
     },
-    "" : {}
+    "" : {},
+    "Add a working directory" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajouter un dossier de travail"
+          }
+        }
+      }
+    },
+    "Manage subagents" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gérer les sous-agents"
+          }
+        }
+      }
+    },
+    "Clear the conversation" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Effacer la conversation"
+          }
+        }
+      }
+    },
+    "Summarize the conversation" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Résumer la conversation"
+          }
+        }
+      }
+    },
+    "Open the settings" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ouvrir les réglages"
+          }
+        }
+      }
+    },
+    "Show the context usage" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afficher l’utilisation du contexte"
+          }
+        }
+      }
+    },
+    "Show the session cost" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afficher le coût de la session"
+          }
+        }
+      }
+    },
+    "Check the installation" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vérifier l’installation"
+          }
+        }
+      }
+    },
+    "Export the conversation" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exporter la conversation"
+          }
+        }
+      }
+    },
+    "Show the help" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afficher l’aide"
+          }
+        }
+      }
+    },
+    "Manage hooks" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gérer les hooks"
+          }
+        }
+      }
+    },
+    "Create an AGENTS.md or CLAUDE.md file" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Créer un fichier AGENTS.md ou CLAUDE.md"
+          }
+        }
+      }
+    },
+    "Manage MCP servers" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gérer les serveurs MCP"
+          }
+        }
+      }
+    },
+    "Edit the memory files" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modifier les fichiers de mémoire"
+          }
+        }
+      }
+    },
+    "Change the model" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Changer de modèle"
+          }
+        }
+      }
+    },
+    "Manage permissions" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gérer les autorisations"
+          }
+        }
+      }
+    },
+    "Show the pull request comments" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afficher les commentaires de la pull request"
+          }
+        }
+      }
+    },
+    "Resume a conversation" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reprendre une conversation"
+          }
+        }
+      }
+    },
+    "Review the changes" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relire les modifications"
+          }
+        }
+      }
+    },
+    "Go back to an earlier point" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Revenir à un point antérieur"
+          }
+        }
+      }
+    },
+    "Review the changes for security issues" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relire les modifications pour la sécurité"
+          }
+        }
+      }
+    },
+    "Show the status" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afficher l’état"
+          }
+        }
+      }
+    },
+    "Show the plan usage" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afficher l’utilisation du forfait"
+          }
+        }
+      }
+    },
+    "Choose what runs without approval" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choisir ce qui s’exécute sans validation"
+          }
+        }
+      }
+    },
+    "Show the Git diff" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afficher le diff Git"
+          }
+        }
+      }
+    },
+    "Create an AGENTS.md file" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Créer un fichier AGENTS.md"
+          }
+        }
+      }
+    },
+    "List MCP tools" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lister les outils MCP"
+          }
+        }
+      }
+    },
+    "Mention a file" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mentionner un fichier"
+          }
+        }
+      }
+    },
+    "Start a new conversation" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Démarrer une nouvelle conversation"
+          }
+        }
+      }
+    },
+    "Undo the last turn" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Annuler le dernier tour"
+          }
+        }
+      }
+    },
+    "Choose an agent" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choisir un agent"
+          }
+        }
+      }
+    },
+    "Change the working directory" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Changer de dossier de travail"
+          }
+        }
+      }
+    },
+    "Show the session" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afficher la session"
+          }
+        }
+      }
+    },
+    "Share the conversation" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Partager la conversation"
+          }
+        }
+      }
+    },
+    "Show the usage" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afficher l’utilisation"
+          }
+        }
+      }
+    },
+    "Toggle tool details" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afficher ou masquer le détail des outils"
+          }
+        }
+      }
+    },
+    "Redo the last undone message" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rétablir le dernier message annulé"
+          }
+        }
+      }
+    },
+    "Switch session" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Changer de session"
+          }
+        }
+      }
+    },
+    "Undo the last message" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Annuler le dernier message"
+          }
+        }
+      }
+    },
+    "path" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "chemin"
+          }
+        }
+      }
+    },
+    "instructions" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "instructions"
+          }
+        }
+      }
+    },
+    "model" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "modèle"
+          }
+        }
+      }
+    },
+    "session" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "session"
+          }
+        }
+      }
+    },
+    "file" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "fichier"
+          }
+        }
+      }
+    },
+    "Commands" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Commandes"
+          }
+        }
+      }
+    },
+    "Add %@" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajouter : %@"
+          }
+        }
+      }
+    },
+    "<%@>" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "<%@>"
+          }
+        }
+      }
+    },
+    "Custom command" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Commande personnalisée"
+          }
+        }
+      }
+    }
   },
   "version" : "1.0"
 }

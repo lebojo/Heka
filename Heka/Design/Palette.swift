@@ -13,6 +13,7 @@ enum Palette {
     static let bar = Material.bar
     static let searchFieldFill = fill.opacity(0.6)
 
+    static let popupShadow = Color.black.opacity(0.15)
     static let selectionFill = accent.opacity(0.18)
     static let focusedPaneFill = accent.opacity(0.12)
     static let dropTargetFill = accent.opacity(0.2)

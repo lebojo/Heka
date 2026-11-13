@@ -10,7 +10,46 @@ extension ChatJournalTests {
 
     static func quoted(_ text: String) -> String { "'" + text.replacingOccurrences(of: "'", with: "''") + "'" }
 
+    static func slashCommandCompletion() throws {
+        let commands = SessionChatSource.claude.slashCommands
+        try require(SlashCommandMatcher.query(in: "/rv") == "rv" && SlashCommandMatcher.query(in: "/model x") == nil
+                    && SlashCommandMatcher.query(in: "hi /x") == nil, "Completion only runs on a leading /word")
+        try require(SessionChatSource.terminal.slashCommands.isEmpty, "Terminal sessions have no slash commands")
+        let fuzzy = SlashCommandMatcher.matches(for: "rv", in: commands, recent: [])
+        try require(fuzzy.first?.command.name == "review" && fuzzy.first?.matchedOffsets == [0, 2], "/rv matches /review first")
+        let prefix = SlashCommandMatcher.matches(for: "co", in: commands, recent: [])
+        try require(prefix.prefix(4).allSatisfy { $0.command.name.hasPrefix("co") }, "Prefix matches rank first")
+        let recent = SlashCommandMatcher.matches(for: "co", in: commands, recent: ["cost"])
+        try require(recent.first?.command.name == "cost", "Recently used commands rank higher among equal matches")
+        try require(SlashCommandMatcher.matches(for: "zzz", in: commands, recent: []).isEmpty, "Non-matching queries list nothing")
+        guard let model = commands.first(where: { $0.name == "model" }) else { throw NSError(domain: "Claude has /model", code: 1) }
+        try require(SlashCommandMatcher.insertion(for: model) == "/model " && model.argument == "model", "Accepting inserts the command and its argument hint")
+        try require(SlashCommandMatcher.remembering(model, in: ["cost", "model"]) == ["model", "cost"], "Recent commands move to the front without duplicates")
+        let clear = SlashCommandMatcher.matches(for: "cr", in: commands, recent: [])
+        try require(clear.count > 1 && SlashCommandMatcher.commandToAcceptOnReturn(draft: "/cr", matches: clear, selection: 0, isNavigated: false) == nil,
+                    "Return sends an ambiguous unknown command instead of replacing it")
+        try require(SlashCommandMatcher.commandToAcceptOnReturn(draft: "/cr", matches: clear, selection: 1, isNavigated: true) == clear[1].command,
+                    "Return accepts a row chosen with the arrows")
+        let single = SlashCommandMatcher.matches(for: "secur", in: commands, recent: [])
+        try require(SlashCommandMatcher.commandToAcceptOnReturn(draft: "/secur", matches: single, selection: 0, isNavigated: false)?.name == "security-review",
+                    "Return accepts an unambiguous match")
+        let exact = SlashCommandMatcher.matches(for: "review", in: commands, recent: [])
+        try require(SlashCommandMatcher.commandToAcceptOnReturn(draft: "/review", matches: exact, selection: 0, isNavigated: true) == nil,
+                    "Return sends a draft that already is the selected command")
+        let recentLonger = SlashCommandMatcher.matches(for: "review", in: commands, recent: ["security-review"])
+        try require(recentLonger.first?.command.name == "review", "An exact match ranks first")
+        let recentPrefix = SlashCommandMatcher.matches(for: "model", in: SessionChatSource.openCode.slashCommands + [SlashCommand("model", "Change the model")], recent: ["models"])
+        try require(recentPrefix.first?.command.name == "model", "An exact match beats a recent longer prefix")
+        let custom = SlashCommandDiscovery.command(name: "deploy", markdown: "---\ndescription: \"Ship it\"\nargument-hint: [env]\n---\nBody")
+        try require(custom?.summary == "Ship it" && custom?.argument == "[env]", "Custom command front matter gives the summary and argument")
+        try require(SlashCommandDiscovery.command(name: "x", markdown: "---\nuser-invocable: false\n---\n") == nil, "Non-invocable skills are skipped")
+        try require(SlashCommandDiscovery.merged(commands, [SlashCommand("review", "Other"), SlashCommand("deploy", "Ship")]).filter { $0.name == "review" }.count == 1,
+                    "Custom commands never duplicate built-in ones")
+        print("PASS Slash command fuzzy completion, Return handling and custom commands")
+    }
+
     @MainActor static func agentChatSupport() async throws {
+        try slashCommandCompletion()
         let root = FileManager.default.temporaryDirectory.appendingPathComponent("heka-chat-support-\(UUID())")
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: root) }

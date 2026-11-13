@@ -15,6 +15,7 @@ struct MobileSessionDetail: View {
                     if let session = store.session {
                         if session.isChat {
                             SessionChatView(messages: session.messages, source: session.chatSource, options: session.agentOptions,
+                                            commands: session.chatSource.slashCommands,
                                             isEnabled: store.isConnected && !session.hasExited,
                                             isBusy: store.terminalSummary(context.terminal.id)?.status == .working) { text in
                                 try await store.input(Data((text + "\r").utf8), terminal: context.terminal.id, message: text)

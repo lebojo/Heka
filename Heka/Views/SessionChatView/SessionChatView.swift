@@ -8,6 +8,7 @@ struct SessionChatView: View {
     let messages: [SessionMessage]
     let source: SessionChatSource
     let options: AgentOptions
+    let commands: [SlashCommand]
     let isEnabled: Bool
     let isBusy: Bool
     let send: (String) async throws -> Void
@@ -18,7 +19,7 @@ struct SessionChatView: View {
         SessionTranscriptList(messages: messages, source: source)
         .background(Palette.surface)
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            SessionComposer(draft: $draft, source: source, options: options, sending: sending, isEnabled: isEnabled,
+            SessionComposer(draft: $draft, source: source, options: options, commands: commands, sending: sending, isEnabled: isEnabled,
                             isBusy: isBusy, submit: submit, control: sendControl, run: runCommand)
         }
         .alert("Couldn’t Send", isPresented: $error.isPresent) {
