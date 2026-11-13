@@ -21,6 +21,6 @@ struct TextPreviewSheet: View {
                 Text(preview.text).font(Typography.code)
                     .textSelection(.enabled).frame(maxWidth: .infinity, alignment: .topLeading).padding()
             }.background(Palette.surface)
-        }.previewSheetFrame(idealWidth: Dimension.PreviewSheet.idealWidth, idealHeight: Dimension.PreviewSheet.idealHeight)
+        }.previewSheetFrame(.text)
     }
 }

@@ -869,6 +869,14 @@ enum InspectorTests {
                         == "https://gitlab.com/me/app/-/merge_requests/new?merge_request%5Bsource_branch%5D=x&merge_request%5Btarget_branch%5D=main",
                     "A merge request opens on the source project with the base branch without its remote")
         print("PASS change request pages for GitHub and GitLab remotes")
+
+        try require(PreviewSheetKind.diff.restoredSize(width: 0, height: 0, fitting: nil) == PreviewSheetKind.diff.defaultSize, "Sheets without a saved size use their default size")
+        try require(PreviewSheetKind.floatingTerminal.restoredSize(width: 1200, height: 700, fitting: CGSize(width: 2000, height: 1200)) == CGSize(width: 1200, height: 700), "Saved sheet sizes are restored")
+        try require(PreviewSheetKind.diff.restoredSize(width: 3000, height: 100, fitting: CGSize(width: 1440, height: 900)) == CGSize(width: 1440, height: PreviewSheetKind.minimumSize.height), "Restored sheet sizes fit the screen and the minimum size")
+        try require(PreviewSheetKind.text.restoredSize(width: .nan, height: .infinity, fitting: nil) == PreviewSheetKind.text.defaultSize, "Invalid saved sheet sizes fall back to the default size")
+        try require(PreviewSheetKind.text.restoredSize(width: 1e9, height: 600, fitting: nil) == PreviewSheetKind.text.defaultSize, "Aberrant saved sheet sizes fall back to the default size")
+        try require(PreviewSheetKind.diff.widthKey != PreviewSheetKind.floatingTerminal.widthKey, "Each sheet keeps its own size")
+        print("PASS remembered sheet sizes")
     }
 }
 

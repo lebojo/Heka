@@ -20,7 +20,7 @@ struct FloatingTerminalView: View {
         }
         .background(Palette.surface)
         .background { FloatingTerminalWindowReader() }
-        .previewSheetFrame(idealWidth: Dimension.FloatingTerminal.idealWidth, idealHeight: Dimension.FloatingTerminal.idealHeight)
+        .previewSheetFrame(.floatingTerminal)
         .onAppear { floating.prepare() }
     }
 }
