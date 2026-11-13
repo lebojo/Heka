@@ -70,19 +70,36 @@ extension ChatJournalTests {
         try execute("""
             CREATE TABLE session_v2(id TEXT PRIMARY KEY, directory TEXT, time_created INTEGER, parent_id TEXT, time_archived INTEGER);
             CREATE TABLE session_message(id TEXT PRIMARY KEY, session_id TEXT, type TEXT, seq INTEGER, data TEXT);
-            CREATE TABLE session_part(message_id TEXT, session_id TEXT, ordinal INTEGER, data TEXT);
+            CREATE TABLE session_part(message_id TEXT, session_id TEXT, ordinal INTEGER, data TEXT, call_id TEXT);
             INSERT INTO session_v2 VALUES('ses_new', '/modern', 1001000, NULL, NULL);
             INSERT INTO session_message VALUES('u', 'ses_new', 'user', 1, '{"text":"Corrige"}');
             INSERT INTO session_message VALUES('a', 'ses_new', 'assistant', 2, '{}');
             INSERT INTO session_message VALUES('s', 'ses_new', 'system', 3, '{"text":"PRIVATE"}');
-            INSERT INTO session_part VALUES('a', 'ses_new', 0, '{"type":"text","text":"Voici"}');
-            INSERT INTO session_part VALUES('a', 'ses_new', 1, '{"type":"tool","name":"bash","state":{"status":"error","input":{"command":"false"},"error":{"message":"Failed"}}}');
-            INSERT INTO session_part VALUES('a', 'ses_new', 2, '{"type":"tool","name":"read","state":{"status":"completed","input":{"path":"main.swift"},"content":[{"type":"text","text":"let x = 1"}]}}');
+            INSERT INTO session_part(message_id, session_id, ordinal, data) VALUES('a', 'ses_new', 0, '{"type":"text","text":"Voici"}');
+            INSERT INTO session_part(message_id, session_id, ordinal, data) VALUES('a', 'ses_new', 1, '{"type":"tool","name":"bash","state":{"status":"error","input":{"command":"false"},"error":{"message":"Failed"}}}');
+            INSERT INTO session_part(message_id, session_id, ordinal, data) VALUES('a', 'ses_new', 2, '{"type":"tool","name":"read","state":{"status":"completed","input":{"path":"main.swift"},"content":[{"type":"text","text":"let x = 1"}]}}');
             """, in: database)
         let modern = await OpenCodeChatReader(sessionID: "ses_new").read(url)
         try require(modern.map(\.kind) == [.input, .assistant, .tool, .tool], "OpenCode v2 reads user text and ordered assistant parts")
         try require(modern[2].toolState == .failed && modern[2].text == "Failed" && modern[3].text == "let x = 1",
                     "OpenCode v2 tool errors and content arrays")
+        let big = String(repeating: "x", count: 1_100_000)
+        try execute("""
+            INSERT INTO session_v2 VALUES('ses_inline', '/modern', 1002000, NULL, NULL);
+            INSERT INTO session_message VALUES('iu', 'ses_inline', 'user', 1, '{"text":"Salut","content":[{"type":"text","text":"DUPLICATE"}]}');
+            INSERT INTO session_message VALUES('ia', 'ses_inline', 'assistant', 2, '{"content":[{"type":"reasoning","text":"PRIVATE"},{"type":"text","text":"Bonjour inline"},{"type":"tool","id":"c1","name":"bash","state":{"status":"running","input":{"command":"ls"},"metadata":{}}},{"type":"tool","id":"c2","name":"read","state":{"status":"completed","input":{"path":"a.swift"},"content":[{"type":"text","text":"let a = 1"}]}},{"type":"tool","id":"c3","name":"bash","state":{"status":"error","input":{"command":"false"},"error":{"message":"Boom"}}},{"type":"tool","id":"c4","name":"bash","state":{"status":"completed","input":{"command":"dup"},"content":[{"type":"text","text":"DUP"}]}}]}');
+            INSERT INTO session_part(message_id, session_id, ordinal, data, call_id) VALUES('ia', 'ses_inline', 0, '{"type":"tool","id":"c4","name":"bash","state":{"status":"completed","input":{"command":"dup"},"content":[{"type":"text","text":"From part"}]}}', 'c4');
+            INSERT INTO session_message VALUES('ib', 'ses_inline', 'assistant', 3, '{"content":[{"type":"text","text":"\(big)"}]}');
+            """, in: database)
+        let inline = await OpenCodeChatReader(sessionID: "ses_inline").read(url)
+        try require(inline.map(\.kind) == [.input, .tool, .assistant, .tool, .tool, .tool, .notice],
+                    "OpenCode v2 reads inline assistant content once, after its part rows, without duplicating user input")
+        try require(inline[0].text == "Salut" && inline[1].text == "From part" && inline[2].text == "Bonjour inline",
+                    "OpenCode v2 inline user and text content")
+        try require(inline[3].toolState == .running && inline[4].text == "let a = 1"
+                    && inline[5].toolState == .failed && inline[5].text == "Boom", "OpenCode v2 inline tool states")
+        try require(inline[3].id == "tool:ia:inline:c1" && inline[6].text == String(localized: "Result too large to display."),
+                    "OpenCode v2 inline tools keep their own ids and oversized content shows a notice")
         let oldAfterMigration = await oldReader.read(url)
         try require(oldAfterMigration == completed, "An existing v2 table must not hide an unmigrated legacy session")
 
