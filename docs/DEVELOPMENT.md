@@ -17,7 +17,7 @@ Xcode resolves the Swift Package Manager dependencies on first launch:
 | Dependency | Version |
 | --- | --- |
 | [SwiftTerm](https://github.com/migueldeicaza/SwiftTerm) | 1.20.0 (pinned) |
-| [MarkdownUI](https://github.com/gonzalezreal/swift-markdown-ui) | 2.4.1 (pinned) |
+| [Textual](https://github.com/gonzalezreal/textual) | 0.5.0 (pinned) |
 | [swift-argument-parser](https://github.com/apple/swift-argument-parser) | 1.8.2 |
 
 Xcode may ask you to enable the `SwiftTermBuildInfoPlugin` plugin, which generates SwiftTerm's version information.

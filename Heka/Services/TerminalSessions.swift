@@ -569,6 +569,7 @@ import Observation
 private extension AgentProcess {
     var journal: AgentJournal? {
         guard let source = SessionChatSource(agent: agent), let transcriptPath else { return nil }
-        return AgentJournal(source: source, url: URL(fileURLWithPath: transcriptPath), sessionID: sessionID)
+        return AgentJournal(source: source, url: URL(fileURLWithPath: transcriptPath), sessionID: sessionID,
+                            directory: directory, launchOptions: launchOptions, launchedAt: startedAt)
     }
 }

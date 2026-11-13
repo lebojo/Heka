@@ -5,13 +5,9 @@ struct BranchSuggestions: ViewModifier {
 
     func body(content: Content) -> some View {
         #if os(macOS)
-        if #available(macOS 15, *) {
-            content.textInputSuggestions(suggestions) { suggestion in
-                BranchSuggestionRow(suggestion: suggestion)
-                    .textInputCompletion(suggestion.name)
-            }
-        } else {
-            content
+        content.textInputSuggestions(suggestions) { suggestion in
+            BranchSuggestionRow(suggestion: suggestion)
+                .textInputCompletion(suggestion.name)
         }
         #else
         content

@@ -14,13 +14,13 @@
   <a href="https://github.com/lebojo/Heka/releases/latest/download/Heka.zip"><b>⬇ Download for macOS</b></a>
   &nbsp;&nbsp;|&nbsp;&nbsp;
   <a href="https://testflight.apple.com/join/DsVPEUqk"><b>📱 TestFlight for iOS</b></a><br>
-  <sub>macOS 14+ · Apple silicon &amp; Intel · Signed &amp; notarized &nbsp;—&nbsp; iPhone &amp; iPad, iOS 17+</sub>
+  <sub>macOS 15+ · Apple silicon &amp; Intel · Signed &amp; notarized &nbsp;—&nbsp; iPhone &amp; iPad, iOS 18+</sub>
 </p>
 
 <p align="center">
   <a href="https://github.com/lebojo/Heka/actions/workflows/ci.yml"><img src="https://github.com/lebojo/Heka/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="https://github.com/lebojo/Heka/releases/latest"><img src="https://img.shields.io/github/v/release/lebojo/Heka" alt="Latest release"></a>
-  <img src="https://img.shields.io/badge/platform-macOS%2014%2B-lightgrey?logo=apple" alt="macOS 14+">
+  <img src="https://img.shields.io/badge/platform-macOS%2015%2B-lightgrey?logo=apple" alt="macOS 15+">
   <img src="https://img.shields.io/badge/Swift-6.4-F05138?logo=swift&logoColor=white" alt="Swift 6.4">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPLv3-blue" alt="GPLv3"></a>
 </p>
@@ -85,7 +85,7 @@ Fully native: a SwiftUI sidebar, a native inspector and an AppKit [SwiftTerm](ht
 
 ## Requirements
 
-- macOS 14 or later
+- macOS 15 or later
 - Xcode 27.1 (Swift 6.4)
 - Optional: [`gh`](https://cli.github.com) installed and authenticated (`gh auth login`) for GitHub data in the inspector
 - Optional: [`glab`](https://gitlab.com/gitlab-org/cli) installed and authenticated (`glab auth login`) for GitLab data in the inspector
@@ -94,7 +94,7 @@ Fully native: a SwiftUI sidebar, a native inspector and an AppKit [SwiftTerm](ht
 
 Download `Heka.zip` from the [latest release](https://github.com/lebojo/Heka/releases/latest), unzip it and move `Heka.app` to `/Applications`. The app is a universal build (Apple silicon and Intel), signed with a Developer ID and notarized by Apple.
 
-For iPhone and iPad (iOS 17+), [join the Heka Mobile beta on TestFlight](https://testflight.apple.com/join/DsVPEUqk). The same link is available in Settings → TestFlight on Mac and iOS. The companion connects to Heka running on your Mac.
+For iPhone and iPad (iOS 18+), [join the Heka Mobile beta on TestFlight](https://testflight.apple.com/join/DsVPEUqk). The same link is available in Settings → TestFlight on Mac and iOS. The companion connects to Heka running on your Mac.
 
 
 To build from source, see [DEVELOPMENT.md](docs/DEVELOPMENT.md).

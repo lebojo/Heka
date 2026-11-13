@@ -90,6 +90,7 @@ struct HekaApplication: App {
     var body: some Scene {
         Window("Heka", id: "workspace") {
             ContentView(store: store, gitActionQueues: gitActionQueues)
+                .modifier(SheetSpaceProvider())
                 .environment(store)
                 .environment(floating)
                 .environment(usage)

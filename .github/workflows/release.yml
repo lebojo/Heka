@@ -149,7 +149,7 @@ jobs:
           cat > dist/notes.md <<'EOF'
           ## Requirements
 
-          - macOS 14 or later
+          - macOS 15 or later
           - Universal build: runs natively on Apple silicon and Intel Macs
           - Optional: [`gh`](https://cli.github.com) installed and authenticated (`gh auth login`) for GitHub data in the inspector
 

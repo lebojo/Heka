@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		A30000000000000000000001 /* MarkdownUI in Frameworks */ = {isa = PBXBuildFile; productRef = A30000000000000000000002 /* MarkdownUI */; };
+		A30000000000000000000001 /* Textual in Frameworks */ = {isa = PBXBuildFile; productRef = A30000000000000000000002 /* Textual */; };
 		A10000000000000000000001 /* SwiftTerm in Frameworks */ = {isa = PBXBuildFile; productRef = A10000000000000000000002 /* SwiftTerm */; };
 		A20000000000000000000001 /* SKILL.md in Resources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000002 /* SKILL.md */; };
 /* End PBXBuildFile section */
@@ -30,7 +30,7 @@
 			isa = PBXFrameworksBuildPhase;
 			files = (
 				A10000000000000000000001 /* SwiftTerm in Frameworks */,
-				A30000000000000000000001 /* MarkdownUI in Frameworks */,
+				A30000000000000000000001 /* Textual in Frameworks */,
 			);
 		};
 /* End PBXFrameworksBuildPhase section */
@@ -80,7 +80,7 @@
 			name = Heka;
 			packageProductDependencies = (
 				A10000000000000000000002 /* SwiftTerm */,
-				A30000000000000000000002 /* MarkdownUI */,
+				A30000000000000000000002 /* Textual */,
 			);
 			productName = MyApp;
 			productReference = 000000000000000000000120 /* Heka.app */;
@@ -113,7 +113,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				A10000000000000000000003 /* XCRemoteSwiftPackageReference "SwiftTerm" */,
-				A30000000000000000000003 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */,
+				A30000000000000000000003 /* XCRemoteSwiftPackageReference "textual" */,
 			);
 			preferredProjectObjectVersion = 90;
 			productRefGroup = 000000000000000000000020 /* Products */;
@@ -199,7 +199,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -263,7 +263,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PROJECT_UNIQUE_VALUE = M38DIJ7D;
@@ -432,7 +432,7 @@
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MARKETING_VERSION = 0.7.0;
@@ -609,7 +609,7 @@
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MARKETING_VERSION = 0.7.0;
@@ -651,10 +651,10 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		A30000000000000000000003 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */ = {
+		A30000000000000000000003 /* XCRemoteSwiftPackageReference "textual" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/gonzalezreal/swift-markdown-ui";
-			requirement = { kind = exactVersion; version = 2.4.1; };
+			repositoryURL = "https://github.com/gonzalezreal/textual";
+			requirement = { kind = exactVersion; version = 0.5.0; };
 		};
 		A10000000000000000000003 /* XCRemoteSwiftPackageReference "SwiftTerm" */ = {
 			isa = XCRemoteSwiftPackageReference;
@@ -667,10 +667,10 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		A30000000000000000000002 /* MarkdownUI */ = {
+		A30000000000000000000002 /* Textual */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = A30000000000000000000003 /* XCRemoteSwiftPackageReference "swift-markdown-ui" */;
-			productName = MarkdownUI;
+			package = A30000000000000000000003 /* XCRemoteSwiftPackageReference "textual" */;
+			productName = Textual;
 		};
 		A10000000000000000000002 /* SwiftTerm */ = {
 			isa = XCSwiftPackageProductDependency;

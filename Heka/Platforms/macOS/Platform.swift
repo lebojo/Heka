@@ -22,8 +22,8 @@ extension View {
         onSubmit(submit)
     }
 
-    @ViewBuilder func previewSheetFrame(_ kind: PreviewSheetKind) -> some View {
-        let framed = modifier(RememberedSheetSize(kind: kind))
-        if #available(macOS 15, *) { framed.presentationSizing(.fitted) } else { framed }
+    func previewSheetFrame(_ kind: PreviewSheetKind) -> some View {
+        modifier(RememberedSheetSize(kind: kind))
+            .presentationSizing(.fitted)
     }
 }

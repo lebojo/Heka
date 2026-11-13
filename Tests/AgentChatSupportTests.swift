@@ -43,6 +43,35 @@ extension ChatJournalTests {
         let custom = SlashCommandDiscovery.command(name: "deploy", markdown: "---\ndescription: \"Ship it\"\nargument-hint: [env]\n---\nBody")
         try require(custom?.summary == "Ship it" && custom?.argument == "[env]", "Custom command front matter gives the summary and argument")
         try require(SlashCommandDiscovery.command(name: "x", markdown: "---\nuser-invocable: false\n---\n") == nil, "Non-invocable skills are skipped")
+        try require(SlashCommandDiscovery.command(name: "x", markdown: "---\r\nuser-invocable: false\r\n---\r\n") == nil, "CRLF front matter is read")
+        let folded = SlashCommandDiscovery.command(name: "orca", markdown: "---\ndescription: >-\n  Operate Orca\n  worktrees.\nname: orca-cli\n---\nBody")
+        try require(folded?.summary == "Operate Orca worktrees." && folded?.name == "orca-cli", "Block scalar descriptions are read whole")
+        let tasks = SessionTaskList.replacingCheckboxes(in: "- [x] Done\n- [ ] Todo\n```\n- [ ] code\n```")
+        let fenced = SessionTaskList.replacingCheckboxes(in: "````\n```\n- [ ] a\n````\n\n    - [ ] b\n\n- [ ] c\n    - [ ] d")
+        try require(fenced == "````\n```\n- [ ] a\n````\n\n    - [ ] b\n\n- ☐ c\n    - ☐ d", "Long fences and indented code keep their brackets, nested items don't")
+        let continued = SessionTaskList.replacingCheckboxes(in: "Text\n\n    code\n    - [ ] literal\n\n- [ ] item")
+        try require(continued == "Text\n\n    code\n    - [ ] literal\n\n- ☐ item", "Every line of an indented code block keeps its brackets")
+        let listFence = SessionTaskList.replacingCheckboxes(in: "- ```\n  - [ ] a\n  ```\n- [ ] b")
+        try require(listFence == "- ```\n  - [ ] a\n  ```\n- ☐ b", "A fence opened in a list item keeps its brackets")
+        let tabFence = SessionTaskList.replacingCheckboxes(in: "```\n- [ ] a\n\t```\n- [ ] b")
+        try require(tabFence == "```\n- [ ] a\n\t```\n- [ ] b", "A tab counts as four columns when closing a fence")
+        let listCode = SessionTaskList.replacingCheckboxes(in: "- [ ] a\n\n        - [ ] code\n\n- [ ] b")
+        try require(listCode == "- ☐ a\n\n        - [ ] code\n\n- ☐ b", "Code indented inside a list item keeps its brackets")
+        let unclosed = SessionTaskList.replacingCheckboxes(in: "- ```\n  - [ ] a\n- [ ] b")
+        try require(unclosed == "- ```\n  - [ ] a\n- ☐ b", "A fence left open closes with its list item")
+        let continuation = SessionTaskList.replacingCheckboxes(in: "1. a\n\n   text\n\n       - [ ] code\n\n   - [ ] b")
+        try require(continuation == "1. a\n\n   text\n\n       - [ ] code\n\n   - ☐ b", "Continuation paragraphs keep their list item's indentation")
+        let containerFence = SessionTaskList.replacingCheckboxes(in: "   ```\n- [ ] a\n      ```\n- [ ] b\n```\n- [ ] c")
+        try require(containerFence == "   ```\n- [ ] a\n      ```\n- [ ] b\n```\n- ☐ c", "A closing fence is measured from its container, not its opening")
+        let inline = SessionTaskList.replacingCheckboxes(in: "```npm install```\n- [ ] a")
+        try require(inline == "```npm install```\n- ☐ a", "Backticks in the info string don't open a fence")
+        let afterItem = SessionTaskList.replacingCheckboxes(in: "- [ ] a\n  ```\n  x\n  ```\ntext\n\n    - [ ] code")
+        try require(afterItem == "- ☐ a\n  ```\n  x\n  ```\ntext\n\n    - [ ] code", "A line after the end of an item leaves the list")
+        let breaks = SessionTaskList.replacingCheckboxes(in: "- [ ] a\n* * *\n#123 fixed\n    - [ ] b")
+        try require(breaks == "- ☐ a\n* * *\n#123 fixed\n    - [ ] b", "A thematic break isn't a list item and #123 is paragraph text")
+        let literal = SlashCommandDiscovery.command(name: "x", markdown: "---\r\ndescription: |\r\n  one\r\n  two\r\n---\r\n")
+        try require(literal?.summary == "one\ntwo", "CRLF block scalars keep their lines")
+        try require(tasks == "- ☑ Done\n- ☐ Todo\n```\n- [ ] code\n```", "Task list items get checkboxes outside code blocks")
         try require(SlashCommandDiscovery.merged(commands, [SlashCommand("review", "Other"), SlashCommand("deploy", "Ship")]).filter { $0.name == "review" }.count == 1,
                     "Custom commands never duplicate built-in ones")
         print("PASS Slash command fuzzy completion, Return handling and custom commands")
@@ -189,7 +218,31 @@ extension ChatJournalTests {
         try require(tokens.allSatisfy { Range($0.range, in: code) != nil }, "Highlight ranges respect Unicode boundaries")
         try require(SessionCodeTokens.parse("plain text", language: "unknown").isEmpty, "Unknown languages remain readable")
         try require(SessionCodeTokens.parse("- old\n+ new", language: "diff").map(\.kind) == [.deletion, .addition], "Diff additions and deletions highlighted")
+        try require(SessionCodeTokens.parse("let flag = true", language: "Swift").map(\.kind) == [.keyword, .keyword], "Language names are case-insensitive")
+        try require(SessionCodeTokens.parse("echo hi # note", language: "ZSH").map(\.kind) == [.comment], "zsh is highlighted as a shell")
+        try require(SessionCodeTokens.parse("x = nil ?? null ?? false", language: "swift").map(\.kind) == [.keyword, .keyword, .keyword], "Booleans and nil literals are coloured")
         print("PASS syntax highlighting tokens and Unicode ranges")
+        try codeBlocksReachHekaHighlighter()
+
+    }
+
+    static func codeBlocksReachHekaHighlighter() throws {
+        let markdown = "Intro\n\n```diff\n- old\n+ new\n```\n\n- item\n\n  ```SPARQL\n  SELECT ?x\n  ```\n"
+        let document = SessionCodeBlockHint.embedding(in: try AttributedString(markdown: markdown))
+        let hints = document.runs[\.presentationIntent].compactMap { intent, _ in
+            intent?.components.lazy.compactMap { component -> SessionCodeBlockHint? in
+                guard case .codeBlock(let hint) = component.kind else { return nil }
+                return SessionCodeBlockHint(hint: hint)
+            }.first
+        }
+        try require(hints.first == SessionCodeBlockHint(language: "diff", code: "- old\n+ new"), "A diff block reaches Heka's highlighter with its code")
+        try require(hints.contains(SessionCodeBlockHint(language: "SPARQL", code: "SELECT ?x")), "Nested code blocks keep their language and code")
+        try require(SessionCodeTokens.parse(hints[0].code, language: hints[0].language).map(\.kind) == [.deletion, .addition], "Diff blocks are coloured")
+        let unicode = SessionCodeBlockHint(language: "swift", code: "let é = \"🙂\"")
+        try require(SessionCodeBlockHint(hint: unicode.encoded) == unicode, "A hint carries its own block")
+        try require(SessionCodeBlockHint(hint: "swift heka-%%") == nil && SessionCodeBlockHint(hint: "swift heka-%%") == nil, "Undecodable hints stay rejected once cached")
+        try require(SessionCodeBlockHint(hint: "swift") == nil, "Plain language hints are not mistaken for Heka blocks")
+        print("PASS chat code blocks reach Heka's highlighter")
     }
 
     static func copilotTaskComplete() throws {

@@ -1,5 +1,5 @@
-import MarkdownUI
 import SwiftUI
+import Textual
 
 struct SessionMarkdown: View {
     let text: String
@@ -8,29 +8,21 @@ struct SessionMarkdown: View {
         OpenURLAction { url in ["http", "https"].contains(url.scheme) ? .systemAction : .discarded }
     }
 
+    private var inlineStyle: InlineStyle {
+        InlineStyle()
+            .code(.monospaced, .backgroundColor(Palette.fill.opacity(0.4)))
+            .link(.foregroundColor(Palette.accent))
+    }
+
     var body: some View {
-        Markdown(text)
-            .markdownTextStyle {
-                FontSize(Typography.chatBodySize)
-                ForegroundColor(Palette.textPrimary)
-            }
-            .markdownTextStyle(\.link) { ForegroundColor(Palette.accent) }
-            .markdownTextStyle(\.code) {
-                FontFamilyVariant(.monospaced)
-                BackgroundColor(Palette.fill.opacity(0.4))
-            }
-            .markdownBlockStyle(\.codeBlock) { configuration in
-                SessionCodeBlock(code: configuration.content, language: configuration.language ?? "")
-                    .markdownMargin(top: .em(0.5), bottom: .em(1))
-            }
-            .markdownBlockStyle(\.table) { configuration in
-                ScrollView(.horizontal) {
-                    configuration.label
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-                .markdownMargin(top: .em(0.5), bottom: .em(1))
-            }
-            .textSelection(.enabled)
+        StructuredText(text, parser: SessionMarkdownParser())
+            .font(.system(size: Typography.chatBodySize))
+            .foregroundStyle(Palette.textPrimary)
+            .textual.inlineStyle(inlineStyle)
+            .textual.codeBlockStyle(SessionCodeBlockStyle())
+            .textual.tableStyle(SessionTableStyle())
+            .textual.imageAttachmentLoader(SessionBlockedImageLoader())
+            .textual.textSelection(.enabled)
             .frame(maxWidth: .infinity, alignment: .leading)
             .environment(\.openURL, webLinksOnly)
     }
