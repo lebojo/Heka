@@ -24,13 +24,18 @@ struct ChatMessageLog: Sendable {
     }
 
     mutating func addText(_ text: String, id: String, kind: SessionMessage.Kind) {
-        guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
+        guard !Self.visibleText(text).isEmpty else { return }
         upsert(SessionMessage(id: id, kind: kind, text: Self.bounded(text)))
     }
 
-    mutating func appendText(_ text: String, id: String, kind: SessionMessage.Kind) {
-        let previous = positions[id].map { messages[$0].text } ?? ""
-        addText(previous + text, id: id, kind: kind)
+    mutating func remove(_ id: String) {
+        guard let index = positions.removeValue(forKey: id) else { return }
+        messages.remove(at: index)
+        for (key, position) in positions where position > index { positions[key] = position - 1 }
+    }
+
+    func text(of id: String) -> String {
+        positions[id].map { messages[$0].text } ?? ""
     }
 
     mutating func startTool(_ call: String, name: String, detail: String) {
@@ -74,6 +79,10 @@ struct ChatMessageLog: Sendable {
         let dropped = untrimmed.prefix(untrimmed.count - messages.count)
         trimmedRunningTools.formUnion(dropped.filter { $0.toolState == .running }.map(\.id))
         positions = Dictionary(messages.enumerated().map { ($1.id, $0) }, uniquingKeysWith: { _, last in last })
+    }
+
+    static func visibleText(_ text: String) -> String {
+        text.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     static func bounded(_ text: String) -> String {

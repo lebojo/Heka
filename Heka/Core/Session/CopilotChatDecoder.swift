@@ -3,6 +3,8 @@ import Foundation
 struct CopilotChatDecoder: ChatJournalDecoder {
     private var log = ChatMessageLog()
     private var taskCompleteCalls: Set<String> = []
+    private var turnReplies: [String: String] = [:]
+    private var turnSummaries: [String: String] = [:]
 
     var messages: [SessionMessage] { log.messages }
 
@@ -14,9 +16,10 @@ struct CopilotChatDecoder: ChatJournalDecoder {
         let id = record["id"] as? String ?? "line:\(offset)"
         switch record["type"] as? String {
         case "user.message":
+            startTurn()
             log.addText(ChatMessageLog.text(data["content"]), id: id, kind: .input)
         case "assistant.message":
-            log.addText(ChatMessageLog.text(data["content"]), id: data["messageId"] as? String ?? id, kind: .assistant)
+            addReply(ChatMessageLog.text(data["content"]), id: data["messageId"] as? String ?? id)
             for request in data["toolRequests"] as? [[String: Any]] ?? [] {
                 guard let call = request["toolCallId"] as? String else { continue }
                 startTool(call, name: request["name"] as? String,
@@ -24,13 +27,15 @@ struct CopilotChatDecoder: ChatJournalDecoder {
             }
         case "assistant.message_delta":
             guard let messageID = data["messageId"] as? String else { return }
-            log.appendText(data["deltaContent"] as? String ?? "", id: messageID, kind: .assistant)
+            turnReplies[messageID] = ""
+            log.addText(log.text(of: messageID) + (data["deltaContent"] as? String ?? ""), id: messageID, kind: .assistant)
         case "tool.execution_start":
             guard let call = data["toolCallId"] as? String else { return }
             startTool(call, name: data["toolName"] as? String,
                       arguments: data["arguments"] as? [String: Any] ?? [:])
         case "tool.execution_complete":
-            guard let call = data["toolCallId"] as? String, !taskCompleteCalls.contains(call) else { return }
+            guard let call = data["toolCallId"] as? String else { return }
+            guard !taskCompleteCalls.contains(call) else { return startTurn() }
             let result = data["result"] as? [String: Any] ?? [:]
             let output = ChatMessageLog.text(result["detailedContent"] ?? result["content"])
             let error = (data["error"] as? [String: Any])?["message"] as? String
@@ -45,13 +50,41 @@ struct CopilotChatDecoder: ChatJournalDecoder {
     }
 
     private mutating func startTool(_ call: String, name: String?, arguments: [String: Any]) {
-        // Copilot's task_complete carries the final answer in its arguments. Its
-        // execution result is only an acknowledgement, not the assistant's reply.
         if name == "task_complete" || taskCompleteCalls.contains(call) {
             taskCompleteCalls.insert(call)
-            log.addText(ChatMessageLog.text(arguments["summary"]), id: "tool:\(call)", kind: .assistant)
+            addSummary(ChatMessageLog.text(arguments["summary"]), call: call)
         } else {
             log.startTool(call, name: name ?? String(localized: "Tool"), detail: ChatMessageLog.summary(of: arguments))
         }
+    }
+
+    private mutating func startTurn() {
+        turnReplies = [:]
+        turnSummaries = [:]
+    }
+
+    private mutating func addReply(_ text: String, id: String) {
+        let key = ChatMessageLog.visibleText(text)
+        guard !key.isEmpty else { return }
+        turnReplies[id] = key
+        log.addText(text, id: id, kind: .assistant)
+        for (call, summary) in turnSummaries where summary == key {
+            turnSummaries[call] = nil
+            log.remove("tool:\(call)")
+        }
+    }
+
+    private mutating func addSummary(_ text: String, call: String) {
+        let key = ChatMessageLog.visibleText(text)
+        guard !key.isEmpty, !turnReplyKeys().contains(key) else { return }
+        turnSummaries[call] = key
+        log.addText(text, id: "tool:\(call)", kind: .assistant)
+    }
+
+    private mutating func turnReplyKeys() -> Set<String> {
+        for (id, key) in turnReplies where key.isEmpty {
+            turnReplies[id] = ChatMessageLog.visibleText(log.text(of: id))
+        }
+        return Set(turnReplies.values)
     }
 }

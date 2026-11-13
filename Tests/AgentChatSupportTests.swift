@@ -142,6 +142,7 @@ extension ChatJournalTests {
         try require(boundedTools.count == 3, "Tool commands count toward the remote history byte budget")
         print("PASS Copilot streaming, tool requests, detailed results and remote command metadata")
         try copilotTaskComplete()
+        try copilotRepeatedSummary()
 
         let code = "let café = \"👋 // not a comment\" // comment\nlet number = 42"
         let tokens = SessionCodeTokens.parse(code, language: "swift")
@@ -199,5 +200,45 @@ extension ChatJournalTests {
         }
         try require(decoder.messages.count == 2, "Absent or blank summaries do not create empty replies or acknowledgement tool rows")
         print("PASS Copilot task_complete assistant replies, lifecycle deduplication, oversized results and remote encoding")
+    }
+
+    static func copilotRepeatedSummary() throws {
+        let answer = "Le correctif est prêt."
+        let user = try line(["type": "user.message", "id": "u", "data": ["content": "Fix"]])
+        let reply = { (id: String, content: String) in
+            try line(["type": "assistant.message", "id": id, "data": ["messageId": id, "content": content]])
+        }
+        let delta = { (id: String, content: String) in
+            try line(["type": "assistant.message_delta", "data": ["messageId": id, "deltaContent": content]])
+        }
+        let summary = { (call: String, text: String) in
+            try line(["type": "tool.execution_start", "data": ["toolCallId": call, "toolName": "task_complete", "arguments": ["summary": text]]])
+        }
+        let complete = { (call: String) in
+            try line(["type": "tool.execution_complete", "data": ["toolCallId": call, "success": true, "result": ["content": "Task completed"]]])
+        }
+        let toolsOnly = try line(["type": "assistant.message", "id": "r", "data": ["messageId": "r", "content": "",
+            "toolRequests": [["toolCallId": "bash", "name": "bash", "arguments": ["command": "ls"]]]]])
+        func check(_ events: [Data], _ expected: [String], _ message: String) throws {
+            var decoder = CopilotChatDecoder()
+            for (offset, event) in ([user] + events).enumerated() { decoder.consume(event, offset: UInt64(offset)) }
+            try require(decoder.messages.filter { $0.kind == .assistant }.map(\.text) == expected, message)
+        }
+
+        try check([try reply("r", answer + "\n"), try summary("s", answer)], [answer + "\n"],
+                  "A summary after an identical reply is hidden")
+        try check([try summary("s", answer), try reply("r", answer)], [answer],
+                  "A summary before an identical reply gives way to the reply")
+        try check([try delta("r", "Le correctif "), try delta("r", "est prêt."), try summary("s", answer), toolsOnly], [answer],
+                  "A streamed reply ending with tool requests only keeps its text and hides the summary")
+        try check([try delta("r", answer), try summary("s", answer), try delta("r", " Bonne journée.")], [answer + " Bonne journée."],
+                  "A reply that continues after matching the summary keeps all its text")
+        try check([try reply("a", answer), try reply("b", answer), try summary("s", answer)], [answer, answer],
+                  "Two identical replies in a turn both stay visible")
+        try check([try reply("a", "Avant"), try summary("s", "Résumé"), try reply("b", "Après")], ["Avant", "Résumé", "Après"],
+                  "A different summary stays visible in place")
+        try check([try summary("s", answer), try complete("s"), try reply("next", answer)], [answer, answer],
+                  "An autopilot task's summary never hides a reply of the next task")
+        print("PASS Copilot replies repeated by task_complete are shown once")
     }
 }
