@@ -1,390 +1,11 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "Always while connected" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Toujours pendant la connexion"
-          }
-        }
-      }
-    },
-    "Default Effort" : {
-      "comment" : "Reasoning effort menu option that keeps the agent's default effort",
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Effort par défaut"
-          }
-        }
-      }
-    },
-    "Default Model" : {
-      "comment" : "Model menu option that keeps the agent's default model",
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Modèle par défaut"
-          }
-        }
-      }
-    },
-    "Extra High" : {
-      "comment" : "Reasoning effort level",
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Très élevé"
-          }
-        }
-      }
-    },
-    "For 1 hour after the last activity" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pendant 1 heure après la dernière activité"
-          }
-        }
-      }
-    },
-    "For 15 minutes after the last activity" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pendant 15 minutes après la dernière activité"
-          }
-        }
-      }
-    },
-    "For 2 hours after the last activity" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pendant 2 heures après la dernière activité"
-          }
-        }
-      }
-    },
-    "For 30 minutes after the last activity" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pendant 30 minutes après la dernière activité"
-          }
-        }
-      }
-    },
-    "High" : {
-      "comment" : "Reasoning effort level",
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Élevé"
-          }
-        }
-      }
-    },
-    "Keep Mac Awake While a Device Is Connected" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Garder le Mac éveillé quand un appareil est connecté"
-          }
-        }
-      }
-    },
-    "Low" : {
-      "comment" : "Reasoning effort level",
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Faible"
-          }
-        }
-      }
-    },
-    "Max" : {
-      "comment" : "Reasoning effort level, the highest one",
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Maximum"
-          }
-        }
-      }
-    },
-    "Medium" : {
-      "comment" : "Reasoning effort level",
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Moyen"
-          }
-        }
-      }
-    },
-    "Model" : {
-      "comment" : "Menu that picks the agent's model in the chat composer",
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Modèle"
-          }
-        }
-      }
-    },
-    "Never" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Jamais"
-          }
-        }
-      }
-    },
-    "No agent is running in this terminal." : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aucun agent ne tourne dans ce terminal."
-          }
-        }
-      }
-    },
-    "Prevents the Mac from sleeping so the mobile app can still reach it. The display can still turn off." : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Empêche le Mac de se mettre en veille pour que l’app mobile puisse toujours le joindre. L’écran peut quand même s’éteindre."
-          }
-        }
-      }
-    },
-    "Reasoning Effort" : {
-      "comment" : "Menu that picks how much the agent reasons before answering",
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Effort de réflexion"
-          }
-        }
-      }
-    },
-    "The Mac is kept awake for a connected device" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Le Mac est maintenu éveillé pour un appareil connecté"
-          }
-        }
-      }
-    },
-    "⌥Return for a new line" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "⌥Entrée pour une nouvelle ligne"
-          }
-        }
-      }
+    "" : {
+
     },
     " M " : {
       "shouldTranslate" : false
-    },
-    "%@ isn’t installed on the Mac." : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ n’est pas installé sur le Mac."
-          }
-        }
-      }
-    },
-    "%@ must be a number of seconds greater than 0 and at most %lld." : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ doit être un nombre de secondes supérieur à 0 et au plus %lld."
-          }
-        }
-      }
-    },
-    "%@ Nothing was removed." : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ Rien n’a été supprimé."
-          }
-        }
-      }
-    },
-    "%@ Run again with --force-branch to delete it anyway, or without --delete-branch to keep it." : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ Relancez avec --force-branch pour la supprimer quand même, ou sans --delete-branch pour la conserver."
-          }
-        }
-      }
-    },
-    "%@, %lld terminals" : {
-      "localizations" : {
-        "en" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%1$@, %2$lld terminal"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%1$@, %2$lld terminals"
-                }
-              }
-            }
-          }
-        },
-        "fr" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%1$@, %2$lld terminal"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%1$@, %2$lld terminaux"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "%@: %@" : {
-      "comment" : "Failed Git action; the first variable is its title, the second the Git error.",
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$@ : %2$@"
-          }
-        }
-      }
-    },
-    "%lld more changes aren’t listed." : {
-      "comment" : "Notice under a capped list of changed files; the variable is the number of files not listed.",
-      "localizations" : {
-        "en" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld more change isn’t listed."
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld more changes aren’t listed."
-                }
-              }
-            }
-          }
-        },
-        "fr" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld autre modification n’est pas listée."
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld autres modifications ne sont pas listées."
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "%lld more changes aren’t listed. Stage All and Unstage All also apply to them." : {
-      "comment" : "Notice under a capped list of changed files; the variable is the number of files not listed.",
-      "localizations" : {
-        "en" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld more change isn’t listed. Stage All and Unstage All also apply to it."
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld more changes aren’t listed. Stage All and Unstage All also apply to them."
-                }
-              }
-            }
-          }
-        },
-        "fr" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld autre modification n’est pas listée. Tout indexer et Tout désindexer s’y appliquent aussi."
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld autres modifications ne sont pas listées. Tout indexer et Tout désindexer s’y appliquent aussi."
-                }
-              }
-            }
-          }
-        }
-      }
     },
     "--force-branch only applies with --delete-branch. Add --delete-branch to delete the branch." : {
       "localizations" : {
@@ -392,6 +13,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "--force-branch ne s’applique qu’avec --delete-branch. Ajoutez --delete-branch pour supprimer la branche."
+          }
+        }
+      }
+    },
+    "--group needs a group UUID or name." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "--group attend l’UUID ou le nom d’un groupe."
           }
         }
       }
@@ -426,1203 +57,12 @@
         }
       }
     },
-    "A Git action is still running and will be interrupted." : {
+    "Sidebar Page" : {
       "localizations" : {
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Une action Git est encore en cours et sera interrompue."
-          }
-        }
-      }
-    },
-    "Actions · Local HEAD" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Actions · HEAD local"
-          }
-        }
-      }
-    },
-    "AgentUI is still open. If it asks to confirm quitting, answer it, then try again." : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "AgentUI est toujours ouvert. S’il demande de confirmer la fermeture, réponds-lui, puis réessaie."
-          }
-        }
-      }
-    },
-    "Heka already had its own copy of these items or couldn’t move them. They stay in %@: %@." : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Heka avait déjà ces éléments ou n’a pas pu les déplacer. Ils restent dans %1$@ : %2$@."
-          }
-        }
-      }
-    },
-    "Heka didn’t respond within %lld seconds. The operation may still be running; check heka list before trying again." : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Heka n’a pas répondu sous %lld secondes. L’opération peut continuer ; vérifie heka list avant de réessayer."
-          }
-        }
-      }
-    },
-    "Heka takes over the projects, terminals and settings of AgentUI, which must be closed while they move." : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Heka reprend les projets, terminaux et réglages d’AgentUI, qui doit être fermé pendant le transfert."
-          }
-        }
-      }
-    },
-    "Ask the Agent to Create the MR" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Demander à l’agent de créer la MR"
-          }
-        }
-      }
-    },
-    "Ask the Agent to Create the PR" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Demander à l’agent de créer la PR"
-          }
-        }
-      }
-    },
-    "Ask the Agent to Create the PR/MR" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Demander à l’agent de créer la PR/MR"
-          }
-        }
-      }
-    },
-    "At least %lld more changes aren’t listed." : {
-      "comment" : "Notice under a capped list of changed files; the variable is the minimum number of files not listed.",
-      "localizations" : {
-        "en" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "At least %lld more change isn’t listed."
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "At least %lld more changes aren’t listed."
-                }
-              }
-            }
-          }
-        },
-        "fr" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "Au moins %lld autre modification n’est pas listée."
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "Au moins %lld autres modifications ne sont pas listées."
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "At least %lld more changes aren’t listed. Stage All and Unstage All also apply to them." : {
-      "comment" : "Notice under a capped list of changed files; the variable is the minimum number of files not listed.",
-      "localizations" : {
-        "en" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "At least %lld more change isn’t listed. Stage All and Unstage All also apply to it."
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "At least %lld more changes aren’t listed. Stage All and Unstage All also apply to them."
-                }
-              }
-            }
-          }
-        },
-        "fr" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "Au moins %lld autre modification n’est pas listée. Tout indexer et Tout désindexer s’y appliquent aussi."
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "Au moins %lld autres modifications ne sont pas listées. Tout indexer et Tout désindexer s’y appliquent aussi."
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "Checks for this merge request" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Checks de cette merge request"
-          }
-        }
-      }
-    },
-    "Checks for this pull request" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Checks de cette pull request"
-          }
-        }
-      }
-    },
-    "Commit" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Commit"
-          }
-        }
-      }
-    },
-    "Commit Title" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Titre du commit"
-          }
-        }
-      }
-    },
-    "Commits" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Commits"
-          }
-        }
-      }
-    },
-    "Copied" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Copié"
-          }
-        }
-      }
-    },
-    "Couldn’t commit" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Impossible de faire le commit"
-          }
-        }
-      }
-    },
-    "Couldn’t load Actions" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Impossible de charger les Actions"
-          }
-        }
-      }
-    },
-    "Couldn’t load pipelines" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Impossible de charger les pipelines"
-          }
-        }
-      }
-    },
-    "Couldn’t publish %@" : {
-      "comment" : "Title of a failed Git action; the variable is a branch name.",
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Impossible de publier %@"
-          }
-        }
-      }
-    },
-    "Couldn’t push" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Impossible de faire le push"
-          }
-        }
-      }
-    },
-    "Couldn’t stage %@" : {
-      "comment" : "Title of a failed Git action; the variable is a file name.",
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Impossible d’indexer %@"
-          }
-        }
-      }
-    },
-    "Couldn’t stage all changes" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Impossible de tout indexer"
-          }
-        }
-      }
-    },
-    "Couldn’t unstage %@" : {
-      "comment" : "Title of a failed Git action; the variable is a file name.",
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Impossible de désindexer %@"
-          }
-        }
-      }
-    },
-    "Couldn’t unstage all changes" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Impossible de tout désindexer"
-          }
-        }
-      }
-    },
-    "Create a Pull Request" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Créer une PR/MR"
-          }
-        }
-      }
-    },
-    "Create Merge Request" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Créer une merge request"
-          }
-        }
-      }
-    },
-    "Create PR/MR" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Créer une PR/MR"
-          }
-        }
-      }
-    },
-    "Create Pull Request" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Créer une pull request"
-          }
-        }
-      }
-    },
-    "Delete Worktree and Branch" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Supprimer le worktree et la branche"
-          }
-        }
-      }
-    },
-    "Delete Worktree Only" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Supprimer seulement le worktree"
-          }
-        }
-      }
-    },
-    "Description" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Description"
-          }
-        }
-      }
-    },
-    "Dismiss" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Masquer"
-          }
-        }
-      }
-    },
-    "Everything is checked: this terminal closes now, then the worktree is deleted." : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tout est vérifié : ce terminal se ferme maintenant, puis le worktree est supprimé."
-          }
-        }
-      }
-    },
-    "Generate Commits" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Générer les commits"
-          }
-        }
-      }
-    },
-    "Generate Commits with AI" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Générer les commits avec l’IA"
-          }
-        }
-      }
-    },
-    "Git Action Failed" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Échec de l’action Git"
-          }
-        }
-      }
-    },
-    "Invalid terminal UUID." : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "UUID de terminal invalide."
-          }
-        }
-      }
-    },
-    "Its terminals will be closed and its folder will be erased from disk, including uncommitted changes. This can’t be undone. You can keep the branch “%@” and its commits in the repository, or delete it too if it’s merged into the main branch." : {
-      "comment" : "Message of the worktree deletion dialog; the variable is the branch name.",
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ses terminaux seront fermés et son dossier sera effacé du disque, y compris les modifications non commitées. Cette action est irréversible. Vous pouvez garder la branche « %@ » et ses commits dans le dépôt, ou la supprimer aussi si elle est fusionnée dans la branche principale."
-          }
-        }
-      }
-    },
-    "Keyboard" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Clavier"
-          }
-        }
-      }
-    },
-    "Merge Request" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Merge request"
-          }
-        }
-      }
-    },
-    "Merge request unavailable" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Merge request indisponible"
-          }
-        }
-      }
-    },
-    "No agent conversation found in this terminal. Read its screen instead, without --reply or --messages." : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aucune conversation d’agent trouvée dans ce terminal. Lis plutôt son écran, sans --reply ni --messages."
-          }
-        }
-      }
-    },
-    "No merge request for this branch." : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aucune merge request pour cette branche."
-          }
-        }
-      }
-    },
-    "No pull request for this branch." : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aucune pull request pour cette branche."
-          }
-        }
-      }
-    },
-    "No Staged Changes" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aucune modification indexée"
-          }
-        }
-      }
-    },
-    "No Unstaged Changes" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aucune modification non indexée"
-          }
-        }
-      }
-    },
-    "Nothing to send: add the text after --, --stdin, --enter or --key." : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Rien à envoyer : ajoute le texte après --, --stdin, --enter ou --key."
-          }
-        }
-      }
-    },
-    "Nothing was removed. You can delete the worktree and keep the branch and its commits in the repository." : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Rien n’a été supprimé. Vous pouvez supprimer le worktree et conserver la branche et ses commits dans le dépôt."
-          }
-        }
-      }
-    },
-    "Open a terminal where the default agent commits the changes" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ouvrir un terminal où l’agent par défaut crée les commits"
-          }
-        }
-      }
-    },
-    "Open in Browser" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ouvrir dans le navigateur"
-          }
-        }
-      }
-    },
-    "Pipelines · Local HEAD" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pipelines · HEAD local"
-          }
-        }
-      }
-    },
-    "Prompts" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Prompts"
-          }
-        }
-      }
-    },
-    "Publish" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Publier"
-          }
-        }
-      }
-    },
-    "Publish Again" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Republier"
-          }
-        }
-      }
-    },
-    "Publish the branch first" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Publiez d’abord la branche"
-          }
-        }
-      }
-    },
-    "Pull Request" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pull request"
-          }
-        }
-      }
-    },
-    "Pull request unavailable" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pull request indisponible"
-          }
-        }
-      }
-    },
-    "Push" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Push"
-          }
-        }
-      }
-    },
-    "Push this branch to a new %@/%@ branch and track it" : {
-      "comment" : "Help of the Publish button; the variables are a remote name and a branch name.",
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pousser cette branche vers une nouvelle branche %@/%@ et la suivre"
-          }
-        }
-      }
-    },
-    "Quit AgentUI" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Quitter AgentUI"
-          }
-        }
-      }
-    },
-    "Quit AgentUI to move it into Heka?" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Quitter AgentUI pour le transférer dans Heka ?"
-          }
-        }
-      }
-    },
-    "Quit Heka" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Quitter Heka"
-          }
-        }
-      }
-    },
-    "Recreate the deleted %@/%@ branch from this branch and track it" : {
-      "comment" : "Help of the Publish Again button; the variables are a remote name and a branch name.",
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Recréer la branche supprimée %@/%@ à partir de cette branche et la suivre"
-          }
-        }
-      }
-    },
-    "Restore Default" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Rétablir par défaut"
-          }
-        }
-      }
-    },
-    "Sent to the default agent by “Ask the Agent to Create the PR” (“the MR” on GitLab) in the Git inspector." : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Envoyé à l’agent par défaut par « Demander à l’agent de créer la PR » (« la MR » sur GitLab) dans l’inspecteur Git."
-          }
-        }
-      }
-    },
-    "Sent to the default agent by “Generate Commits with AI” in the Git inspector." : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Envoyé à l’agent par défaut par « Générer les commits avec l’IA » dans l’inspecteur Git."
-          }
-        }
-      }
-    },
-    "Some AgentUI data stayed behind" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Des données d’AgentUI sont restées en place"
-          }
-        }
-      }
-    },
-    "Some local commits aren’t pushed yet" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Certains commits locaux n’ont pas encore été poussés"
-          }
-        }
-      }
-    },
-    "Specify the terminal: --terminal UUID (see heka list)." : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Indique le terminal : --terminal UUID (voir heka list)."
-          }
-        }
-      }
-    },
-    "Split view" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Vue scindée"
-          }
-        }
-      }
-    },
-    "Stage" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Indexer"
-          }
-        }
-      }
-    },
-    "Stage %@" : {
-      "comment" : "Accessibility label of the button that stages one file; the variable is the file name.",
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Indexer %@"
-          }
-        }
-      }
-    },
-    "Stage All" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tout indexer"
-          }
-        }
-      }
-    },
-    "Staged changes aren’t listed." : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Les modifications indexées ne sont pas listées."
-          }
-        }
-      }
-    },
-    "Staged Changes · %lld" : {
-      "comment" : "Section title; the variable is the number of staged files.",
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Modifications indexées · %lld"
-          }
-        }
-      }
-    },
-    "Stop the running Git command and drop the waiting ones" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Arrêter la commande Git en cours et abandonner celles en attente"
-          }
-        }
-      }
-    },
-    "Terminal not found. Get its UUID with heka list." : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Terminal introuvable. Récupère son UUID avec heka list."
-          }
-        }
-      }
-    },
-    "Terminals shown side by side in a split view" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Terminaux affichés côte à côte dans une vue scindée"
-          }
-        }
-      }
-    },
-    "The agent in this terminal is working. Wait for it with heka terminal wait, or run again with --force to stop it." : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "L’agent de ce terminal travaille. Attends-le avec heka terminal wait, ou relance avec --force pour l’arrêter."
-          }
-        }
-      }
-    },
-    "The branch “%@” changed after it was checked." : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "La branche « %@ » a changé après sa vérification."
-          }
-        }
-      }
-    },
-    "The branch “%@” is checked out in another worktree." : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "La branche « %@ » est utilisée par un autre worktree."
-          }
-        }
-      }
-    },
-    "The branch “%@” is the repository’s main branch." : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "La branche « %@ » est la branche principale du dépôt."
-          }
-        }
-      }
-    },
-    "The branch “%@” isn’t merged into the main branch." : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "La branche « %@ » n’est pas fusionnée dans la branche principale."
-          }
-        }
-      }
-    },
-    "The command failed (exit code %d)." : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "La commande a échoué (code de sortie %d)."
-          }
-        }
-      }
-    },
-    "The command was interrupted by signal %d (%@)." : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "La commande a été interrompue par le signal %d (%@)."
-          }
-        }
-      }
-    },
-    "The remote branch was deleted" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "La branche distante a été supprimée"
-          }
-        }
-      }
-    },
-    "The repository’s main branch couldn’t be found, so the branch “%@” can’t be checked." : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "La branche principale du dépôt est introuvable, la branche « %@ » ne peut donc pas être vérifiée."
-          }
-        }
-      }
-    },
-    "The standard input isn’t UTF-8 text." : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "L’entrée standard n’est pas du texte UTF-8."
-          }
-        }
-      }
-    },
-    "The terminal is still printing output after %lld seconds." : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Le terminal affiche encore du texte après %lld secondes."
-          }
-        }
-      }
-    },
-    "The terminal’s command is still running after %lld seconds." : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "La commande du terminal tourne encore après %lld secondes."
-          }
-        }
-      }
-    },
-    "The worktree had left the branch “%@” since you confirmed." : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Le worktree avait quitté la branche « %@ » depuis votre confirmation."
-          }
-        }
-      }
-    },
-    "The worktree was deleted, but its branch couldn’t be checked, so it was kept." : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Le worktree a été supprimé, mais sa branche n’a pas pu être vérifiée : elle a donc été conservée."
-          }
-        }
-      }
-    },
-    "The worktree was deleted, but not its branch. %@" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Le worktree a été supprimé, mais pas sa branche. %@"
-          }
-        }
-      }
-    },
-    "The worktree was deleted. It wasn’t on a branch, so no branch was deleted." : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Le worktree a été supprimé. Il n’était sur aucune branche, aucune branche n’a donc été supprimée."
-          }
-        }
-      }
-    },
-    "The worktree’s branch couldn’t be checked." : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "La branche du worktree n’a pas pu être vérifiée."
-          }
-        }
-      }
-    },
-    "These checks are for the remote commit of the merge request, which differs from the local HEAD." : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ces checks concernent le commit distant de la merge request, différent du HEAD local."
-          }
-        }
-      }
-    },
-    "These checks are for the remote commit of the pull request, which differs from the local HEAD." : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ces checks concernent le commit distant de la pull request, différent du HEAD local."
-          }
-        }
-      }
-    },
-    "This is the current terminal. Pass the UUID of another terminal." : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "C’est le terminal courant. Indique l’UUID d’un autre terminal."
-          }
-        }
-      }
-    },
-    "This terminal is on a different branch from its worktree" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ce terminal est sur une autre branche que son worktree"
-          }
-        }
-      }
-    },
-    "This terminal isn’t running." : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ce terminal n’est pas lancé."
-          }
-        }
-      }
-    },
-    "Too many keys: %lld at most." : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Trop de touches : %lld au maximum."
-          }
-        }
-      }
-    },
-    "Unknown key: %@. Use %@." : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Touche inconnue : %@. Utilise %@."
-          }
-        }
-      }
-    },
-    "Unstage" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Désindexer"
-          }
-        }
-      }
-    },
-    "Unstage %@" : {
-      "comment" : "Accessibility label of the button that unstages one file; the variable is the file name.",
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Désindexer %@"
-          }
-        }
-      }
-    },
-    "Unstage All" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tout désindexer"
-          }
-        }
-      }
-    },
-    "Use either --idle or --exit, not both." : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Utilise soit --idle, soit --exit, pas les deux."
-          }
-        }
-      }
-    },
-    "Use either --stdin or text after --, not both." : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Utilise soit --stdin, soit un texte après --, pas les deux."
-          }
-        }
-      }
-    },
-    "Use only one of --lines, --reply and --messages." : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Utilise une seule option parmi --lines, --reply et --messages."
-          }
-        }
-      }
-    },
-    "Use Option as Meta key" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Utiliser Option comme touche Méta"
-          }
-        }
-      }
-    },
-    "When off, Option types characters such as @, [ or ~. Option with the arrow keys, Delete or Return always acts as Meta." : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Désactivé, Option saisit les caractères comme @, [ ou ~. Option avec les flèches, Supprimer ou Retour agit toujours comme Méta."
-          }
-        }
-      }
-    },
-    "Work in Progress" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Travail en cours"
+            "value" : "Page de la barre latérale"
           }
         }
       }
@@ -1729,6 +169,36 @@
         }
       }
     },
+    "%@ isn’t installed on the Mac." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ n’est pas installé sur le Mac."
+          }
+        }
+      }
+    },
+    "%@ must be a number of seconds greater than 0 and at most %lld." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ doit être un nombre de secondes supérieur à 0 et au plus %lld."
+          }
+        }
+      }
+    },
+    "%@ Nothing was removed." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ Rien n’a été supprimé."
+          }
+        }
+      }
+    },
     "%@ of %@" : {
       "localizations" : {
         "fr" : {
@@ -1745,6 +215,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@ Nouvelle tentative dans 5 secondes…"
+          }
+        }
+      }
+    },
+    "%@ Run again with --force-branch to delete it anyway, or without --delete-branch to keep it." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ Relancez avec --force-branch pour la supprimer quand même, ou sans --delete-branch pour la conserver."
           }
         }
       }
@@ -1795,6 +275,57 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Limite propre à %@, sur 7 jours"
+          }
+        }
+      }
+    },
+    "%@, %lld terminals" : {
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%1$@, %2$lld terminal"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%1$@, %2$lld terminals"
+                }
+              }
+            }
+          }
+        },
+        "fr" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%1$@, %2$lld terminal"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%1$@, %2$lld terminaux"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%@: %@" : {
+      "comment" : "Failed Git action; the first variable is its title, the second the Git error.",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ : %2$@"
           }
         }
       }
@@ -2048,6 +579,88 @@
         }
       }
     },
+    "%lld more changes aren’t listed." : {
+      "comment" : "Notice under a capped list of changed files; the variable is the number of files not listed.",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld more change isn’t listed."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld more changes aren’t listed."
+                }
+              }
+            }
+          }
+        },
+        "fr" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld autre modification n’est pas listée."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld autres modifications ne sont pas listées."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld more changes aren’t listed. Stage All and Unstage All also apply to them." : {
+      "comment" : "Notice under a capped list of changed files; the variable is the number of files not listed.",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld more change isn’t listed. Stage All and Unstage All also apply to it."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld more changes aren’t listed. Stage All and Unstage All also apply to them."
+                }
+              }
+            }
+          }
+        },
+        "fr" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld autre modification n’est pas listée. Tout indexer et Tout désindexer s’y appliquent aussi."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld autres modifications ne sont pas listées. Tout indexer et Tout désindexer s’y appliquent aussi."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "%lld more items not shown on this device" : {
       "localizations" : {
         "en" : {
@@ -2281,6 +894,16 @@
     "+%lld" : {
       "shouldTranslate" : false
     },
+    "<%@>" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "<%@>"
+          }
+        }
+      }
+    },
     "~/heka " : {
       "shouldTranslate" : false
     },
@@ -2303,6 +926,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "⌘T et les boutons « Nouveau terminal » ouvrent l’agent au lieu d’un shell."
+          }
+        }
+      }
+    },
+    "⌥Return for a new line" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "⌥Entrée pour une nouvelle ligne"
           }
         }
       }
@@ -2346,6 +979,16 @@
         }
       }
     },
+    "A Git action is still running and will be interrupted." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Une action Git est encore en cours et sera interrompue."
+          }
+        }
+      }
+    },
     "A Git operation is already in progress on this project." : {
       "localizations" : {
         "fr" : {
@@ -2362,6 +1005,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Une opération Git est en cours sur ce projet. Réessaie quand elle sera terminée."
+          }
+        }
+      }
+    },
+    "A group name is required: --name NAME." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un nom de groupe est requis : --name NOM."
           }
         }
       }
@@ -2386,6 +1039,16 @@
         }
       }
     },
+    "A project’s main folder can’t be grouped." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le dossier principal d’un projet ne peut pas être groupé."
+          }
+        }
+      }
+    },
     "A single “%@” folder, without subfolders." : {
       "localizations" : {
         "fr" : {
@@ -2406,6 +1069,16 @@
         }
       }
     },
+    "Actions · Local HEAD" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Actions · HEAD local"
+          }
+        }
+      }
+    },
     "Add" : {
       "localizations" : {
         "fr" : {
@@ -2422,6 +1095,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ajouter « %@ » comme projet"
+          }
+        }
+      }
+    },
+    "Add %@" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajouter : %@"
           }
         }
       }
@@ -2452,6 +1135,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ajoute un projet pour commencer."
+          }
+        }
+      }
+    },
+    "Add a working directory" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajouter un dossier de travail"
           }
         }
       }
@@ -2556,44 +1249,15 @@
         }
       }
     },
-    "Heka" : {
-      "shouldTranslate" : false
-    },
-    "heka Command" : {
+    "AgentUI is still open. If it asks to confirm quitting, answer it, then try again." : {
       "localizations" : {
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Commande heka"
+            "value" : "AgentUI est toujours ouvert. S’il demande de confirmer la fermeture, réponds-lui, puis réessaie."
           }
         }
       }
-    },
-    "Heka isn’t open. Launch the app, then try again." : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Heka n’est pas ouvert. Lance l’application puis réessaie."
-          }
-        }
-      }
-    },
-    "Heka’s executable is missing." : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "L’exécutable de Heka est introuvable."
-          }
-        }
-      }
-    },
-    "Heka/Views/Settings/" : {
-      "shouldTranslate" : false
-    },
-    "Heka/Views/TerminalDetail.swift" : {
-      "shouldTranslate" : false
     },
     "All models combined, over 7 days" : {
       "localizations" : {
@@ -2635,6 +1299,16 @@
         }
       }
     },
+    "Always while connected" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toujours pendant la connexion"
+          }
+        }
+      }
+    },
     "Another file has this name" : {
       "localizations" : {
         "fr" : {
@@ -2671,6 +1345,118 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Demander confirmation"
+          }
+        }
+      }
+    },
+    "Ask the Agent to Create the MR" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Demander à l’agent de créer la MR"
+          }
+        }
+      }
+    },
+    "Ask the Agent to Create the PR" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Demander à l’agent de créer la PR"
+          }
+        }
+      }
+    },
+    "Ask the Agent to Create the PR/MR" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Demander à l’agent de créer la PR/MR"
+          }
+        }
+      }
+    },
+    "At least %lld more changes aren’t listed." : {
+      "comment" : "Notice under a capped list of changed files; the variable is the minimum number of files not listed.",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "At least %lld more change isn’t listed."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "At least %lld more changes aren’t listed."
+                }
+              }
+            }
+          }
+        },
+        "fr" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Au moins %lld autre modification n’est pas listée."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Au moins %lld autres modifications ne sont pas listées."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "At least %lld more changes aren’t listed. Stage All and Unstage All also apply to them." : {
+      "comment" : "Notice under a capped list of changed files; the variable is the minimum number of files not listed.",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "At least %lld more change isn’t listed. Stage All and Unstage All also apply to it."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "At least %lld more changes aren’t listed. Stage All and Unstage All also apply to them."
+                }
+              }
+            }
+          }
+        },
+        "fr" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Au moins %lld autre modification n’est pas listée. Tout indexer et Tout désindexer s’y appliquent aussi."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Au moins %lld autres modifications ne sont pas listées. Tout indexer et Tout désindexer s’y appliquent aussi."
+                }
+              }
+            }
           }
         }
       }
@@ -2855,6 +1641,26 @@
         }
       }
     },
+    "Change the model" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Changer de modèle"
+          }
+        }
+      }
+    },
+    "Change the working directory" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Changer de dossier de travail"
+          }
+        }
+      }
+    },
     "Changes · %lld" : {
       "comment" : "Section title; the variable is the number of changed files.",
       "localizations" : {
@@ -2872,6 +1678,36 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Chat affiche la conversation de Claude Code. Terminal donne accès à l’affichage complet, aux menus et aux autorisations. Changer de mode conserve la session en cours."
+          }
+        }
+      }
+    },
+    "Check the installation" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vérifier l’installation"
+          }
+        }
+      }
+    },
+    "Checks for this merge request" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Checks de cette merge request"
+          }
+        }
+      }
+    },
+    "Checks for this pull request" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Checks de cette pull request"
           }
         }
       }
@@ -2926,12 +1762,32 @@
         }
       }
     },
+    "Choose an agent" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choisir un agent"
+          }
+        }
+      }
+    },
     "Choose the folder where Heka creates new worktrees." : {
       "localizations" : {
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Choisis le dossier où Heka crée les nouveaux worktrees."
+          }
+        }
+      }
+    },
+    "Choose what runs without approval" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choisir ce qui s’exécute sans validation"
           }
         }
       }
@@ -2969,6 +1825,16 @@
         }
       }
     },
+    "Clear the conversation" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Effacer la conversation"
+          }
+        }
+      }
+    },
     "Close" : {
       "localizations" : {
         "fr" : {
@@ -2985,6 +1851,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Fermer le sous-agent"
+          }
+        }
+      }
+    },
+    "Close Tab" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fermer l’onglet"
+          }
+        }
+      }
+    },
+    "Close tab %@" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fermer l’onglet %@"
           }
         }
       }
@@ -3095,6 +1981,46 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Commande introuvable (127) : vérifie qu’elle est installée et dans le PATH de ton shell"
+          }
+        }
+      }
+    },
+    "Commands" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Commandes"
+          }
+        }
+      }
+    },
+    "Commit" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Commit"
+          }
+        }
+      }
+    },
+    "Commit Title" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Titre du commit"
+          }
+        }
+      }
+    },
+    "Commits" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Commits"
           }
         }
       }
@@ -3229,6 +2155,16 @@
         }
       }
     },
+    "Copied" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copié"
+          }
+        }
+      }
+    },
     "Copilot Conversation" : {
       "localizations" : {
         "fr" : {
@@ -3269,6 +2205,16 @@
         }
       }
     },
+    "Couldn’t commit" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossible de faire le commit"
+          }
+        }
+      }
+    },
     "Couldn’t Complete the Operation" : {
       "localizations" : {
         "fr" : {
@@ -3285,6 +2231,47 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Impossible de suivre la commande. L’opération a été interrompue."
+          }
+        }
+      }
+    },
+    "Couldn’t load Actions" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossible de charger les Actions"
+          }
+        }
+      }
+    },
+    "Couldn’t load pipelines" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossible de charger les pipelines"
+          }
+        }
+      }
+    },
+    "Couldn’t publish %@" : {
+      "comment" : "Title of a failed Git action; the variable is a branch name.",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossible de publier %@"
+          }
+        }
+      }
+    },
+    "Couldn’t push" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossible de faire le push"
           }
         }
       }
@@ -3379,12 +2366,64 @@
         }
       }
     },
+    "Couldn’t stage %@" : {
+      "comment" : "Title of a failed Git action; the variable is a file name.",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossible d’indexer %@"
+          }
+        }
+      }
+    },
+    "Couldn’t stage all changes" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossible de tout indexer"
+          }
+        }
+      }
+    },
     "Couldn’t start the terminal." : {
       "localizations" : {
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Impossible de démarrer le terminal."
+          }
+        }
+      }
+    },
+    "Couldn’t unstage %@" : {
+      "comment" : "Title of a failed Git action; the variable is a file name.",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossible de désindexer %@"
+          }
+        }
+      }
+    },
+    "Couldn’t unstage all changes" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossible de tout désindexer"
+          }
+        }
+      }
+    },
+    "Create a Pull Request" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Créer une PR/MR"
           }
         }
       }
@@ -3405,6 +2444,56 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Créer un worktree pour %@"
+          }
+        }
+      }
+    },
+    "Create an AGENTS.md file" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Créer un fichier AGENTS.md"
+          }
+        }
+      }
+    },
+    "Create an AGENTS.md or CLAUDE.md file" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Créer un fichier AGENTS.md ou CLAUDE.md"
+          }
+        }
+      }
+    },
+    "Create Merge Request" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Créer une merge request"
+          }
+        }
+      }
+    },
+    "Create PR/MR" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Créer une PR/MR"
+          }
+        }
+      }
+    },
+    "Create Pull Request" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Créer une pull request"
           }
         }
       }
@@ -3482,6 +2571,16 @@
         }
       }
     },
+    "Custom command" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Commande personnalisée"
+          }
+        }
+      }
+    },
     "Cyan" : {
       "localizations" : {
         "fr" : {
@@ -3498,6 +2597,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Agent par défaut"
+          }
+        }
+      }
+    },
+    "Default Effort" : {
+      "comment" : "Reasoning effort menu option that keeps the agent's default effort",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Effort par défaut"
+          }
+        }
+      }
+    },
+    "Default Model" : {
+      "comment" : "Model menu option that keeps the agent's default model",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modèle par défaut"
           }
         }
       }
@@ -3532,12 +2653,42 @@
         }
       }
     },
+    "Delete Worktree and Branch" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Supprimer le worktree et la branche"
+          }
+        }
+      }
+    },
+    "Delete Worktree Only" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Supprimer seulement le worktree"
+          }
+        }
+      }
+    },
     "Deleted" : {
       "localizations" : {
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Supprimé"
+          }
+        }
+      }
+    },
+    "Description" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Description"
           }
         }
       }
@@ -3588,6 +2739,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Déconnecté"
+          }
+        }
+      }
+    },
+    "Dismiss" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Masquer"
           }
         }
       }
@@ -3672,6 +2833,16 @@
         }
       }
     },
+    "Edit the memory files" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modifier les fichiers de mémoire"
+          }
+        }
+      }
+    },
     "Empty Folder" : {
       "localizations" : {
         "fr" : {
@@ -3742,12 +2913,43 @@
         }
       }
     },
+    "Everything is checked: this terminal closes now, then the worktree is deleted." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tout est vérifié : ce terminal se ferme maintenant, puis le worktree est supprimé."
+          }
+        }
+      }
+    },
     "Expand Usage" : {
       "localizations" : {
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Développer l’usage"
+          }
+        }
+      }
+    },
+    "Export the conversation" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exporter la conversation"
+          }
+        }
+      }
+    },
+    "Extra High" : {
+      "comment" : "Reasoning effort level",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Très élevé"
           }
         }
       }
@@ -3802,6 +3004,16 @@
         }
       }
     },
+    "file" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "fichier"
+          }
+        }
+      }
+    },
     "Files" : {
       "localizations" : {
         "fr" : {
@@ -3822,12 +3034,42 @@
         }
       }
     },
+    "Filter terminals" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filtrer les terminaux"
+          }
+        }
+      }
+    },
     "Find your projects and sessions in the sidebar." : {
       "localizations" : {
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Retrouve tes projets et tes sessions dans la barre latérale."
+          }
+        }
+      }
+    },
+    "Floating Terminal" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Terminal flottant"
+          }
+        }
+      }
+    },
+    "Floating Terminal (⇧⌘T)" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Terminal flottant (⇧⌘T)"
           }
         }
       }
@@ -3852,6 +3094,46 @@
         }
       }
     },
+    "For 1 hour after the last activity" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pendant 1 heure après la dernière activité"
+          }
+        }
+      }
+    },
+    "For 2 hours after the last activity" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pendant 2 heures après la dernière activité"
+          }
+        }
+      }
+    },
+    "For 15 minutes after the last activity" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pendant 15 minutes après la dernière activité"
+          }
+        }
+      }
+    },
+    "For 30 minutes after the last activity" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pendant 30 minutes après la dernière activité"
+          }
+        }
+      }
+    },
     "Gather projects from different places on your Mac. Their files stay where they are." : {
       "localizations" : {
         "fr" : {
@@ -3872,12 +3154,42 @@
         }
       }
     },
+    "Generate Commits" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Générer les commits"
+          }
+        }
+      }
+    },
+    "Generate Commits with AI" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Générer les commits avec l’IA"
+          }
+        }
+      }
+    },
     "Generate New Code" : {
       "localizations" : {
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Générer un nouveau code"
+          }
+        }
+      }
+    },
+    "Git Action Failed" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Échec de l’action Git"
           }
         }
       }
@@ -3935,6 +3247,16 @@
         }
       }
     },
+    "Go back to an earlier point" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Revenir à un point antérieur"
+          }
+        }
+      }
+    },
     "Gray" : {
       "localizations" : {
         "fr" : {
@@ -3985,12 +3307,102 @@
         }
       }
     },
+    "Heka" : {
+      "shouldTranslate" : false
+    },
+    "heka — organize the terminals and worktrees of the running app\n\nheka list\nheka project add /path/to/project\nheka terminal create [--name NAME] [--project UUID] [--worktree UUID] [-- COMMAND ARGUMENTS…]\nheka worktree create --branch BRANCH [--name NAME] [--project UUID] [--group UUID|NAME] [-- COMMAND ARGUMENTS…]\nheka worktree delete --worktree UUID [--delete-branch [--force-branch]] [--force]\nheka terminal send --terminal UUID [--enter] (-- TEXT… | --stdin)\nheka terminal send --terminal UUID --key KEY [--key KEY…]\nheka terminal read --terminal UUID [--lines N | --reply | --messages N]\nheka terminal wait --terminal UUID [--idle SECONDS | --exit] [--timeout SECONDS]\nheka terminal close --terminal UUID [--force]\nheka group create --name NAME [--project UUID] [--worktree UUID…]\nheka group add --group UUID|NAME --worktree UUID [--worktree UUID…]\nheka group remove --group UUID|NAME --worktree UUID [--worktree UUID…]\nheka group delete --group UUID|NAME\n\nFrom a Heka terminal, the project and worktree are implicit.\nElsewhere, they are inferred from the current folder if it belongs to a project open in Heka.\nChild commands are passed as arguments, without shell interpretation.\nExamples:\n  heka terminal create --name Review -- claude \"Review the changes\"\n  heka worktree create --branch feature/tests -- codex \"Add the tests\"\nEach creation returns the identifiers and path as JSON.\nAn existing branch is opened as is; otherwise it is created from the project’s HEAD.\nworktree delete closes its terminals and erases its folder; by default, the branch and its commits stay in the repository.\nWith --delete-branch, the branch is deleted too if it’s merged into the repository’s main branch; otherwise nothing is removed. Add --force-branch to delete it even if it isn’t, losing its unmerged commits.\nThe repository’s main branch and a branch checked out elsewhere are never deleted.\nWithout --force, a worktree with uncommitted changes or untracked files is kept; --force never deletes an unmerged branch.\nA project’s main folder can’t be deleted. From its own worktree, the command replies once everything is checked, then closes the current terminal and deletes the worktree.\nterminal send types TEXT into another terminal, or the standard input with --stdin. With --enter, the text is submitted as one message, like pressing Return; --enter alone just presses Return.\n--key presses keys one after the other, in order: enter, escape, tab, shift-tab, backspace, delete, space, up, down, left, right, home, end, page-up, page-down, ctrl-a … ctrl-z.\nterminal read prints the last lines of a terminal (50 by default, 10,000 at most) as output.\nFor Claude, Codex, Copilot and OpenCode, --reply prints instead the agent’s answer to the last message as output, and --messages N the last N messages of its conversation (200 at most) as messages.\nterminal wait returns once the terminal has printed nothing for --idle SECONDS (5 by default), or once its command has exited with --exit. It gives up after --timeout SECONDS (120 by default, 3,600 at most) with ok: false.\nTheir replies include running, exitCode and, for a recognized agent, agent and status (working, ready or waitingForInput).\nterminal close stops the terminal’s processes and removes it. Without --force, it refuses while its agent is working. The current terminal closes itself after the reply.\nThe current terminal can’t send to or wait for itself.\nworktree create --group puts the new worktree in that group of its project; a group given by name is created if it doesn’t exist.\ngroup create makes a worktree group in the project of --project, of the given worktrees, or the current one, and moves the given worktrees into it. If the project already has a group with that name, it is reused.\nA group given by name is looked up in the project of the given worktrees, or the current one; a group UUID is found in any project. A project’s main folder can’t be grouped.\ngroup delete removes only the group: its worktrees stay, outside any group. Replies include groupID." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "heka — organiser les terminaux et worktrees de l’application ouverte\n\nheka list\nheka project add /chemin/du/projet\nheka terminal create [--name NOM] [--project UUID] [--worktree UUID] [-- COMMANDE ARGUMENTS…]\nheka worktree create --branch BRANCHE [--name NOM] [--project UUID] [--group UUID|NOM] [-- COMMANDE ARGUMENTS…]\nheka worktree delete --worktree UUID [--delete-branch [--force-branch]] [--force]\nheka terminal send --terminal UUID [--enter] (-- TEXTE… | --stdin)\nheka terminal send --terminal UUID --key TOUCHE [--key TOUCHE…]\nheka terminal read --terminal UUID [--lines N | --reply | --messages N]\nheka terminal wait --terminal UUID [--idle SECONDES | --exit] [--timeout SECONDES]\nheka terminal close --terminal UUID [--force]\nheka group create --name NOM [--project UUID] [--worktree UUID…]\nheka group add --group UUID|NOM --worktree UUID [--worktree UUID…]\nheka group remove --group UUID|NOM --worktree UUID [--worktree UUID…]\nheka group delete --group UUID|NOM\n\nDepuis un terminal Heka, le projet et le worktree sont implicites.\nAilleurs, ils sont déduits du dossier courant s’il appartient à un projet ouvert dans Heka.\nLes commandes enfant sont passées comme arguments, sans interprétation shell.\nExemples :\n  heka terminal create --name Review -- claude \"Relis les modifications\"\n  heka worktree create --branch feature/tests -- codex \"Ajoute les tests\"\nChaque création renvoie les identifiants et le chemin au format JSON.\nUne branche existante est ouverte telle quelle ; sinon elle est créée depuis le HEAD du projet.\nworktree delete ferme ses terminaux et efface son dossier ; par défaut, la branche et ses commits restent dans le dépôt.\nAvec --delete-branch, la branche est aussi supprimée si elle est fusionnée dans la branche principale du dépôt ; sinon, rien n’est supprimé. Ajoutez --force-branch pour la supprimer même si elle ne l’est pas, en perdant ses commits non fusionnés.\nLa branche principale du dépôt et une branche utilisée ailleurs ne sont jamais supprimées.\nSans --force, un worktree avec des modifications non commitées ou des fichiers non suivis est conservé ; --force ne supprime jamais une branche non fusionnée.\nLe dossier principal d’un projet ne peut pas être supprimé. Depuis son propre worktree, la commande répond une fois tout vérifié, puis ferme le terminal courant et supprime le worktree.\nterminal send tape TEXTE dans un autre terminal, ou l’entrée standard avec --stdin. Avec --enter, le texte est envoyé en un seul message, comme avec la touche Retour ; --enter seul appuie juste sur Retour.\n--key appuie sur les touches l’une après l’autre, dans l’ordre : enter, escape, tab, shift-tab, backspace, delete, space, up, down, left, right, home, end, page-up, page-down, ctrl-a … ctrl-z.\nterminal read renvoie dans output les dernières lignes d’un terminal (50 par défaut, 10 000 au maximum).\nPour Claude, Codex, Copilot et OpenCode, --reply renvoie plutôt dans output la réponse de l’agent au dernier message, et --messages N les N derniers messages de sa conversation (200 au maximum) dans messages.\nterminal wait rend la main quand le terminal n’a rien affiché pendant --idle SECONDES (5 par défaut), ou quand sa commande s’est terminée avec --exit. Il abandonne après --timeout SECONDES (120 par défaut, 3 600 au maximum) avec ok: false.\nLeurs réponses incluent running, exitCode et, pour un agent reconnu, agent et status (working, ready ou waitingForInput).\nterminal close arrête les processus du terminal et le retire. Sans --force, il refuse tant que son agent travaille. Le terminal courant se ferme lui-même après la réponse.\nLe terminal courant ne peut ni s’envoyer de texte ni s’attendre lui-même.\nworktree create --group range le nouveau worktree dans ce groupe de son projet ; un groupe donné par son nom est créé s’il n’existe pas.\ngroup create crée un groupe de worktrees dans le projet de --project, des worktrees donnés ou le projet courant, et y range les worktrees donnés. Si le projet a déjà un groupe de ce nom, il est réutilisé.\nUn groupe donné par son nom est cherché dans le projet des worktrees donnés, ou le projet courant ; l’UUID d’un groupe est trouvé dans n’importe quel projet. Le dossier principal d’un projet ne peut pas être groupé.\ngroup delete supprime seulement le groupe : ses worktrees restent, hors de tout groupe. Les réponses incluent groupID."
+          }
+        }
+      }
+    },
+    "Heka already had its own copy of these items or couldn’t move them. They stay in %@: %@." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Heka avait déjà ces éléments ou n’a pas pu les déplacer. Ils restent dans %1$@ : %2$@."
+          }
+        }
+      }
+    },
+    "heka Command" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Commande heka"
+          }
+        }
+      }
+    },
+    "Heka didn’t respond within %lld seconds. The operation may still be running; check heka list before trying again." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Heka n’a pas répondu sous %lld secondes. L’opération peut continuer ; vérifie heka list avant de réessayer."
+          }
+        }
+      }
+    },
+    "Heka isn’t open. Launch the app, then try again." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Heka n’est pas ouvert. Lance l’application puis réessaie."
+          }
+        }
+      }
+    },
+    "Heka takes over the projects, terminals and settings of AgentUI, which must be closed while they move." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Heka reprend les projets, terminaux et réglages d’AgentUI, qui doit être fermé pendant le transfert."
+          }
+        }
+      }
+    },
+    "Heka’s executable is missing." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’exécutable de Heka est introuvable."
+          }
+        }
+      }
+    },
+    "Heka/Views/Settings/" : {
+      "shouldTranslate" : false
+    },
+    "Heka/Views/TerminalDetail.swift" : {
+      "shouldTranslate" : false
+    },
     "Hide Right Panel" : {
       "localizations" : {
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Masquer le panneau de droite"
+          }
+        }
+      }
+    },
+    "High" : {
+      "comment" : "Reasoning effort level",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Élevé"
           }
         }
       }
@@ -4155,6 +3567,16 @@
         }
       }
     },
+    "instructions" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "instructions"
+          }
+        }
+      }
+    },
     "Interactive Terminal" : {
       "localizations" : {
         "fr" : {
@@ -4171,6 +3593,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Interrompre"
+          }
+        }
+      }
+    },
+    "Invalid name." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nom invalide."
           }
         }
       }
@@ -4205,16 +3637,6 @@
         }
       }
     },
-    "Invalid name." : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nom invalide."
-          }
-        }
-      }
-    },
     "Invalid request." : {
       "localizations" : {
         "fr" : {
@@ -4231,6 +3653,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Réponse de Heka invalide."
+          }
+        }
+      }
+    },
+    "Invalid terminal UUID." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "UUID de terminal invalide."
           }
         }
       }
@@ -4275,6 +3707,47 @@
         }
       }
     },
+    "Its terminals will be closed and its folder will be erased from disk, including uncommitted changes. This can’t be undone. You can keep the branch “%@” and its commits in the repository, or delete it too if it’s merged into the main branch." : {
+      "comment" : "Message of the worktree deletion dialog; the variable is the branch name.",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ses terminaux seront fermés et son dossier sera effacé du disque, y compris les modifications non commitées. Cette action est irréversible. Vous pouvez garder la branche « %@ » et ses commits dans le dépôt, ou la supprimer aussi si elle est fusionnée dans la branche principale."
+          }
+        }
+      }
+    },
+    "Join the Heka beta on iPhone and iPad." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rejoignez la bêta de Heka sur iPhone et iPad."
+          }
+        }
+      }
+    },
+    "Keep Mac Awake While a Device Is Connected" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Garder le Mac éveillé quand un appareil est connecté"
+          }
+        }
+      }
+    },
+    "Keyboard" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clavier"
+          }
+        }
+      }
+    },
     "Latest Messages" : {
       "localizations" : {
         "fr" : {
@@ -4315,6 +3788,16 @@
         }
       }
     },
+    "List MCP tools" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lister les outils MCP"
+          }
+        }
+      }
+    },
     "Loading via gh or glab…" : {
       "localizations" : {
         "fr" : {
@@ -4335,22 +3818,23 @@
         }
       }
     },
-    "Mobile Control" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Contrôle mobile"
-          }
-        }
-      }
-    },
     "Local Access off" : {
       "localizations" : {
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Accès local désactivé"
+          }
+        }
+      }
+    },
+    "Low" : {
+      "comment" : "Reasoning effort level",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Faible"
           }
         }
       }
@@ -4408,6 +3892,16 @@
         }
       }
     },
+    "Made with ❤️ by Jordan Chap" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fait avec ❤️ par Jordan Chap"
+          }
+        }
+      }
+    },
     "main" : {
       "shouldTranslate" : false
     },
@@ -4417,6 +3911,98 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Principal"
+          }
+        }
+      }
+    },
+    "Manage hooks" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gérer les hooks"
+          }
+        }
+      }
+    },
+    "Manage MCP servers" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gérer les serveurs MCP"
+          }
+        }
+      }
+    },
+    "Manage permissions" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gérer les autorisations"
+          }
+        }
+      }
+    },
+    "Manage subagents" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gérer les sous-agents"
+          }
+        }
+      }
+    },
+    "Max" : {
+      "comment" : "Reasoning effort level, the highest one",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maximum"
+          }
+        }
+      }
+    },
+    "Medium" : {
+      "comment" : "Reasoning effort level",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Moyen"
+          }
+        }
+      }
+    },
+    "Mention a file" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mentionner un fichier"
+          }
+        }
+      }
+    },
+    "Merge Request" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Merge request"
+          }
+        }
+      }
+    },
+    "Merge request unavailable" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Merge request indisponible"
           }
         }
       }
@@ -4487,6 +4073,37 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Valeur manquante pour %@."
+          }
+        }
+      }
+    },
+    "Mobile Control" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contrôle mobile"
+          }
+        }
+      }
+    },
+    "model" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "modèle"
+          }
+        }
+      }
+    },
+    "Model" : {
+      "comment" : "Menu that picks the agent's model in the chat composer",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modèle"
           }
         }
       }
@@ -4571,6 +4188,16 @@
         }
       }
     },
+    "Never" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jamais"
+          }
+        }
+      }
+    },
     "New Group…" : {
       "localizations" : {
         "fr" : {
@@ -4597,6 +4224,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nouveau sous-dossier…"
+          }
+        }
+      }
+    },
+    "New tab" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nouvel onglet"
+          }
+        }
+      }
+    },
+    "New Tab (⌘T)" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nouvel onglet (⌘T)"
           }
         }
       }
@@ -4707,6 +4354,36 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Les nouveaux worktrees sont créés dans ce dossier. Les worktrees existants restent où ils sont."
+          }
+        }
+      }
+    },
+    "Next Tab" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Onglet suivant"
+          }
+        }
+      }
+    },
+    "No agent conversation found in this terminal. Read its screen instead, without --reply or --messages." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucune conversation d’agent trouvée dans ce terminal. Lis plutôt son écran, sans --reply ni --messages."
+          }
+        }
+      }
+    },
+    "No agent is running in this terminal." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucun agent ne tourne dans ce terminal."
           }
         }
       }
@@ -4822,6 +4499,16 @@
         }
       }
     },
+    "No merge request for this branch." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucune merge request pour cette branche."
+          }
+        }
+      }
+    },
     "No newline at end of file" : {
       "localizations" : {
         "fr" : {
@@ -4852,6 +4539,26 @@
         }
       }
     },
+    "No pull request for this branch." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucune pull request pour cette branche."
+          }
+        }
+      }
+    },
+    "No agent is working" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucun agent ne travaille"
+          }
+        }
+      }
+    },
     "No Results" : {
       "localizations" : {
         "fr" : {
@@ -4862,12 +4569,32 @@
         }
       }
     },
+    "No Staged Changes" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucune modification indexée"
+          }
+        }
+      }
+    },
     "No Terminal Selected" : {
       "localizations" : {
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Aucun terminal sélectionné"
+          }
+        }
+      }
+    },
+    "No Unstaged Changes" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucune modification non indexée"
           }
         }
       }
@@ -4888,6 +4615,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Non connecté"
+          }
+        }
+      }
+    },
+    "Nothing to send: add the text after --, --stdin, --enter or --key." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rien à envoyer : ajoute le texte après --, --stdin, --enter ou --key."
+          }
+        }
+      }
+    },
+    "Nothing was removed. You can delete the worktree and keep the branch and its commits in the repository." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rien n’a été supprimé. Vous pouvez supprimer le worktree et conserver la branche et ses commits dans le dépôt."
           }
         }
       }
@@ -4962,12 +4709,32 @@
         }
       }
     },
+    "Open a terminal where the default agent commits the changes" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ouvrir un terminal où l’agent par défaut crée les commits"
+          }
+        }
+      }
+    },
     "Open Claude Code in a terminal to sign in with your Claude subscription." : {
       "localizations" : {
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ouvre Claude Code dans un terminal pour te connecter avec ton abonnement Claude."
+          }
+        }
+      }
+    },
+    "Open in Browser" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ouvrir dans le navigateur"
           }
         }
       }
@@ -4988,6 +4755,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ouvrir un terminal"
+          }
+        }
+      }
+    },
+    "Open the settings" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ouvrir les réglages"
           }
         }
       }
@@ -5102,6 +4879,16 @@
         }
       }
     },
+    "path" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "chemin"
+          }
+        }
+      }
+    },
     "Pending / Running" : {
       "localizations" : {
         "fr" : {
@@ -5152,12 +4939,32 @@
         }
       }
     },
+    "Pipelines · Local HEAD" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pipelines · HEAD local"
+          }
+        }
+      }
+    },
     "Point the camera at the QR code shown on the Mac in Settings → Mobile Control." : {
       "localizations" : {
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Vise le QR code affiché sur le Mac dans Réglages → Contrôle mobile."
+          }
+        }
+      }
+    },
+    "Prevents the Mac from sleeping so the mobile app can still reach it. The display can still turn off." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Empêche le Mac de se mettre en veille pour que l’app mobile puisse toujours le joindre. L’écran peut quand même s’éteindre."
           }
         }
       }
@@ -5182,12 +4989,32 @@
         }
       }
     },
+    "Previous Tab" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Onglet précédent"
+          }
+        }
+      }
+    },
     "Project not found." : {
       "localizations" : {
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Projet introuvable."
+          }
+        }
+      }
+    },
+    "Project not found. Pass the group’s UUID, or run the command from a Heka terminal or from the folder of a project open in Heka." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Projet introuvable. Passez l’UUID du groupe, ou lancez la commande depuis un terminal Heka ou depuis le dossier d’un projet ouvert dans Heka."
           }
         }
       }
@@ -5222,6 +5049,66 @@
         }
       }
     },
+    "Prompts" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prompts"
+          }
+        }
+      }
+    },
+    "Publish" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Publier"
+          }
+        }
+      }
+    },
+    "Publish Again" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Republier"
+          }
+        }
+      }
+    },
+    "Publish the branch first" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Publiez d’abord la branche"
+          }
+        }
+      }
+    },
+    "Pull Request" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pull request"
+          }
+        }
+      }
+    },
+    "Pull request unavailable" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pull request indisponible"
+          }
+        }
+      }
+    },
     "Purple" : {
       "localizations" : {
         "fr" : {
@@ -5232,12 +5119,63 @@
         }
       }
     },
+    "Push" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Push"
+          }
+        }
+      }
+    },
+    "Push this branch to a new %@/%@ branch and track it" : {
+      "comment" : "Help of the Publish button; the variables are a remote name and a branch name.",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pousser cette branche vers une nouvelle branche %@/%@ et la suivre"
+          }
+        }
+      }
+    },
     "Quit" : {
       "localizations" : {
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Quitter"
+          }
+        }
+      }
+    },
+    "Quit AgentUI" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quitter AgentUI"
+          }
+        }
+      }
+    },
+    "Quit AgentUI to move it into Heka?" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quitter AgentUI pour le transférer dans Heka ?"
+          }
+        }
+      }
+    },
+    "Quit Heka" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quitter Heka"
           }
         }
       }
@@ -5292,6 +5230,17 @@
         }
       }
     },
+    "Reasoning Effort" : {
+      "comment" : "Menu that picks how much the agent reasons before answering",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Effort de réflexion"
+          }
+        }
+      }
+    },
     "Reconnect to the Mac before sending." : {
       "localizations" : {
         "fr" : {
@@ -5302,12 +5251,33 @@
         }
       }
     },
+    "Recreate the deleted %@/%@ branch from this branch and track it" : {
+      "comment" : "Help of the Publish Again button; the variables are a remote name and a branch name.",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recréer la branche supprimée %@/%@ à partir de cette branche et la suivre"
+          }
+        }
+      }
+    },
     "Red" : {
       "localizations" : {
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Rouge"
+          }
+        }
+      }
+    },
+    "Redo the last undone message" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rétablir le dernier message annulé"
           }
         }
       }
@@ -5532,6 +5502,16 @@
         }
       }
     },
+    "Restore Default" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rétablir par défaut"
+          }
+        }
+      }
+    },
     "Result too large to display." : {
       "localizations" : {
         "fr" : {
@@ -5548,6 +5528,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Reprendre %@"
+          }
+        }
+      }
+    },
+    "Resume a conversation" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reprendre une conversation"
           }
         }
       }
@@ -5588,6 +5578,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Entrée"
+          }
+        }
+      }
+    },
+    "Review the changes" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relire les modifications"
+          }
+        }
+      }
+    },
+    "Review the changes for security issues" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relire les modifications pour la sécurité"
           }
         }
       }
@@ -5766,6 +5776,36 @@
         }
       }
     },
+    "Sent to the default agent by “Ask the Agent to Create the PR” (“the MR” on GitLab) in the Git inspector." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Envoyé à l’agent par défaut par « Demander à l’agent de créer la PR » (« la MR » sur GitLab) dans l’inspecteur Git."
+          }
+        }
+      }
+    },
+    "Sent to the default agent by “Generate Commits with AI” in the Git inspector." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Envoyé à l’agent par défaut par « Générer les commits avec l’IA » dans l’inspecteur Git."
+          }
+        }
+      }
+    },
+    "session" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "session"
+          }
+        }
+      }
+    },
     "Session Display" : {
       "localizations" : {
         "fr" : {
@@ -5846,12 +5886,32 @@
         }
       }
     },
+    "Share the conversation" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Partager la conversation"
+          }
+        }
+      }
+    },
     "Show diff for %@" : {
       "localizations" : {
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Afficher le diff de %@"
+          }
+        }
+      }
+    },
+    "Show floating terminal" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afficher le terminal flottant"
           }
         }
       }
@@ -5896,12 +5956,102 @@
         }
       }
     },
+    "Show the context usage" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afficher l’utilisation du contexte"
+          }
+        }
+      }
+    },
+    "Show the Git diff" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afficher le diff Git"
+          }
+        }
+      }
+    },
+    "Show the help" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afficher l’aide"
+          }
+        }
+      }
+    },
     "Show the parent terminal" : {
       "localizations" : {
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Afficher le terminal parent"
+          }
+        }
+      }
+    },
+    "Show the plan usage" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afficher l’utilisation du forfait"
+          }
+        }
+      }
+    },
+    "Show the pull request comments" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afficher les commentaires de la pull request"
+          }
+        }
+      }
+    },
+    "Show the session" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afficher la session"
+          }
+        }
+      }
+    },
+    "Show the session cost" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afficher le coût de la session"
+          }
+        }
+      }
+    },
+    "Show the status" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afficher l’état"
+          }
+        }
+      }
+    },
+    "Show the usage" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afficher l’utilisation"
           }
         }
       }
@@ -6006,6 +6156,16 @@
         }
       }
     },
+    "Some AgentUI data stayed behind" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Des données d’AgentUI sont restées en place"
+          }
+        }
+      }
+    },
     "Some folders couldn’t be read:" : {
       "localizations" : {
         "fr" : {
@@ -6016,12 +6176,52 @@
         }
       }
     },
+    "Some local commits aren’t pushed yet" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certains commits locaux n’ont pas encore été poussés"
+          }
+        }
+      }
+    },
+    "Specify the group: --group UUID or NAME (see heka list)." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Indiquez le groupe : --group UUID ou NOM (voir heka list)."
+          }
+        }
+      }
+    },
+    "Specify the terminal: --terminal UUID (see heka list)." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Indique le terminal : --terminal UUID (voir heka list)."
+          }
+        }
+      }
+    },
     "Specify the worktree to delete: --worktree UUID (see heka list)." : {
       "localizations" : {
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Indique le worktree à supprimer : --worktree UUID (voir heka list)."
+          }
+        }
+      }
+    },
+    "Specify the worktrees: --worktree UUID (see heka list)." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Indiquez les worktrees : --worktree UUID (voir heka list)."
           }
         }
       }
@@ -6066,12 +6266,84 @@
         }
       }
     },
+    "Split view" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vue scindée"
+          }
+        }
+      }
+    },
+    "Stage" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Indexer"
+          }
+        }
+      }
+    },
+    "Stage %@" : {
+      "comment" : "Accessibility label of the button that stages one file; the variable is the file name.",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Indexer %@"
+          }
+        }
+      }
+    },
+    "Stage All" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tout indexer"
+          }
+        }
+      }
+    },
     "Staged Changes" : {
       "localizations" : {
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Modifications indexées"
+          }
+        }
+      }
+    },
+    "Staged Changes · %lld" : {
+      "comment" : "Section title; the variable is the number of staged files.",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modifications indexées · %lld"
+          }
+        }
+      }
+    },
+    "Staged changes aren’t listed." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les modifications indexées ne sont pas listées."
+          }
+        }
+      }
+    },
+    "Start a new conversation" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Démarrer une nouvelle conversation"
           }
         }
       }
@@ -6116,6 +6388,16 @@
         }
       }
     },
+    "Stop the running Git command and drop the waiting ones" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arrêter la commande Git en cours et abandonner celles en attente"
+          }
+        }
+      }
+    },
     "Stopped" : {
       "localizations" : {
         "fr" : {
@@ -6142,6 +6424,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Réussi"
+          }
+        }
+      }
+    },
+    "Summarize the conversation" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Résumer la conversation"
+          }
+        }
+      }
+    },
+    "Switch session" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Changer de session"
           }
         }
       }
@@ -6186,6 +6488,16 @@
         }
       }
     },
+    "Terminal not found. Get its UUID with heka list." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Terminal introuvable. Récupère son UUID avec heka list."
+          }
+        }
+      }
+    },
     "Terminal open" : {
       "localizations" : {
         "fr" : {
@@ -6225,6 +6537,19 @@
           }
         }
       }
+    },
+    "Terminals shown side by side in a split view" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Terminaux affichés côte à côte dans une vue scindée"
+          }
+        }
+      }
+    },
+    "TestFlight" : {
+      "shouldTranslate" : false
     },
     "Text" : {
       "localizations" : {
@@ -6266,6 +6591,16 @@
         }
       }
     },
+    "The agent in this terminal is working. Wait for it with heka terminal wait, or run again with --force to stop it." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’agent de ce terminal travaille. Attends-le avec heka terminal wait, ou relance avec --force pour l’arrêter."
+          }
+        }
+      }
+    },
     "The agent runs commands and edits files without confirmation. Keep this for isolated worktrees." : {
       "localizations" : {
         "fr" : {
@@ -6296,12 +6631,52 @@
         }
       }
     },
+    "The branch “%@” changed after it was checked." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La branche « %@ » a changé après sa vérification."
+          }
+        }
+      }
+    },
     "The branch “%@” is already used by another worktree or by the project folder." : {
       "localizations" : {
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "La branche « %@ » est déjà utilisée par un autre worktree ou par le dossier du projet."
+          }
+        }
+      }
+    },
+    "The branch “%@” is checked out in another worktree." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La branche « %@ » est utilisée par un autre worktree."
+          }
+        }
+      }
+    },
+    "The branch “%@” is the repository’s main branch." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La branche « %@ » est la branche principale du dépôt."
+          }
+        }
+      }
+    },
+    "The branch “%@” isn’t merged into the main branch." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La branche « %@ » n’est pas fusionnée dans la branche principale."
           }
         }
       }
@@ -6316,12 +6691,32 @@
         }
       }
     },
+    "The command failed (exit code %d)." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La commande a échoué (code de sortie %d)."
+          }
+        }
+      }
+    },
     "The command is linked in ~/.local/bin; add it to your PATH if it isn’t there. Outside a Heka terminal, it acts on the project of the current folder. The skill teaches Claude, Codex, Copilot and OpenCode when to use it; it can also be installed with npx skills add LeBojo/Heka." : {
       "localizations" : {
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "La commande est liée dans ~/.local/bin, à ajouter au PATH s’il n’y est pas. Hors d’un terminal Heka, elle agit sur le projet du dossier courant. Le skill apprend à Claude, Codex, Copilot et OpenCode quand l’utiliser ; il est aussi installable avec npx skills add LeBojo/Heka."
+          }
+        }
+      }
+    },
+    "The command was interrupted by signal %d (%@)." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La commande a été interrompue par le signal %d (%@)."
           }
         }
       }
@@ -6386,12 +6781,46 @@
         }
       }
     },
+    "The group “%@” already existed: it was reused." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le groupe « %@ » existait déjà : il a été réutilisé."
+          }
+        }
+      }
+    },
+    "The group couldn’t be created: the project or worktree no longer exists." : {
+      "comment" : "Error message when a worktree group can’t be created because the project or worktree it was being added to no longer exists.",
+      "isCommentAutoGenerated" : true
+    },
+    "The group name can’t be empty." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le nom du groupe ne peut pas être vide."
+          }
+        }
+      }
+    },
     "The Mac is disconnected." : {
       "localizations" : {
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Le Mac est déconnecté."
+          }
+        }
+      }
+    },
+    "The Mac is kept awake for a connected device" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le Mac est maintenu éveillé pour un appareil connecté"
           }
         }
       }
@@ -6496,6 +6925,26 @@
         }
       }
     },
+    "The remote branch was deleted" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La branche distante a été supprimée"
+          }
+        }
+      }
+    },
+    "The repository’s main branch couldn’t be found, so the branch “%@” can’t be checked." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La branche principale du dépôt est introuvable, la branche « %@ » ne peut donc pas être vérifiée."
+          }
+        }
+      }
+    },
     "The saved organization is unreadable. Fix it, then use Retry in the app before creating terminals." : {
       "localizations" : {
         "fr" : {
@@ -6536,12 +6985,32 @@
         }
       }
     },
+    "The standard input isn’t UTF-8 text." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’entrée standard n’est pas du texte UTF-8."
+          }
+        }
+      }
+    },
     "The System theme follows macOS light or dark mode. Choose another theme to edit its colors." : {
       "localizations" : {
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Le thème Système suit le mode clair ou sombre de macOS. Choisis un autre thème pour modifier ses couleurs."
+          }
+        }
+      }
+    },
+    "The terminal is still printing output after %lld seconds." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le terminal affiche encore du texte après %lld secondes."
           }
         }
       }
@@ -6556,6 +7025,16 @@
         }
       }
     },
+    "The terminal’s command is still running after %lld seconds." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La commande du terminal tourne encore après %lld secondes."
+          }
+        }
+      }
+    },
     "The worktree “%@” has uncommitted changes or untracked files. Run again with --force to erase them." : {
       "localizations" : {
         "fr" : {
@@ -6566,12 +7045,82 @@
         }
       }
     },
+    "The worktree had left the branch “%@” since you confirmed." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le worktree avait quitté la branche « %@ » depuis votre confirmation."
+          }
+        }
+      }
+    },
+    "The worktree was created, but it couldn’t be put in the group “%@”. Use heka group add." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le worktree a été créé, mais il n’a pas pu être rangé dans le groupe « %@ ». Utilisez heka group add."
+          }
+        }
+      }
+    },
+    "The worktree was deleted, but its branch couldn’t be checked, so it was kept." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le worktree a été supprimé, mais sa branche n’a pas pu être vérifiée : elle a donc été conservée."
+          }
+        }
+      }
+    },
+    "The worktree was deleted, but not its branch. %@" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le worktree a été supprimé, mais pas sa branche. %@"
+          }
+        }
+      }
+    },
+    "The worktree was deleted. It wasn’t on a branch, so no branch was deleted." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le worktree a été supprimé. Il n’était sur aucune branche, aucune branche n’a donc été supprimée."
+          }
+        }
+      }
+    },
+    "The worktree’s branch couldn’t be checked." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La branche du worktree n’a pas pu être vérifiée."
+          }
+        }
+      }
+    },
     "The worktree’s first terminal starts directly in the agent." : {
       "localizations" : {
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Le premier terminal du worktree démarre directement sur l’agent."
+          }
+        }
+      }
+    },
+    "The worktrees couldn’t be moved. Check them with heka list." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les worktrees n’ont pas pu être déplacés. Vérifiez-les avec heka list."
           }
         }
       }
@@ -6592,6 +7141,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Thème"
+          }
+        }
+      }
+    },
+    "These checks are for the remote commit of the merge request, which differs from the local HEAD." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ces checks concernent le commit distant de la merge request, différent du HEAD local."
+          }
+        }
+      }
+    },
+    "These checks are for the remote commit of the pull request, which differs from the local HEAD." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ces checks concernent le commit distant de la pull request, différent du HEAD local."
           }
         }
       }
@@ -6676,6 +7245,16 @@
         }
       }
     },
+    "This is the current terminal. Pass the UUID of another terminal." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "C’est le terminal courant. Indique l’UUID d’un autre terminal."
+          }
+        }
+      }
+    },
     "This Mac’s pairing code is missing. Scan its QR code again." : {
       "localizations" : {
         "fr" : {
@@ -6746,12 +7325,42 @@
         }
       }
     },
+    "This terminal is on a different branch from its worktree" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ce terminal est sur une autre branche que son worktree"
+          }
+        }
+      }
+    },
+    "This terminal isn’t running." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ce terminal n’est pas lancé."
+          }
+        }
+      }
+    },
     "This terminal no longer exists on the Mac." : {
       "localizations" : {
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ce terminal n’existe plus sur le Mac."
+          }
+        }
+      }
+    },
+    "This worktree doesn’t belong to the group’s project." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ce worktree n’appartient pas au projet du groupe."
           }
         }
       }
@@ -6766,12 +7375,52 @@
         }
       }
     },
+    "This worktree group belongs to another project." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ce groupe de worktrees appartient à un autre projet."
+          }
+        }
+      }
+    },
     "This worktree is being deleted." : {
       "localizations" : {
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ce worktree est en cours de suppression."
+          }
+        }
+      }
+    },
+    "This worktree isn’t in the group “%@”." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ce worktree n’est pas dans le groupe « %@ »."
+          }
+        }
+      }
+    },
+    "Toggle tool details" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afficher ou masquer le détail des outils"
+          }
+        }
+      }
+    },
+    "Too many keys: %lld at most." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trop de touches : %lld au maximum."
           }
         }
       }
@@ -6846,6 +7495,26 @@
         }
       }
     },
+    "Undo the last message" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Annuler le dernier message"
+          }
+        }
+      }
+    },
+    "Undo the last turn" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Annuler le dernier tour"
+          }
+        }
+      }
+    },
     "Unified" : {
       "localizations" : {
         "fr" : {
@@ -6886,6 +7555,16 @@
         }
       }
     },
+    "Unknown key: %@. Use %@." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Touche inconnue : %@. Utilise %@."
+          }
+        }
+      }
+    },
     "Unknown option: %@" : {
       "localizations" : {
         "fr" : {
@@ -6912,6 +7591,37 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Modifications non sauvegardées : %@"
+          }
+        }
+      }
+    },
+    "Unstage" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Désindexer"
+          }
+        }
+      }
+    },
+    "Unstage %@" : {
+      "comment" : "Accessibility label of the button that unstages one file; the variable is the file name.",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Désindexer %@"
+          }
+        }
+      }
+    },
+    "Unstage All" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tout désindexer"
           }
         }
       }
@@ -6996,6 +7706,26 @@
         }
       }
     },
+    "Use either --idle or --exit, not both." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Utilise soit --idle, soit --exit, pas les deux."
+          }
+        }
+      }
+    },
+    "Use either --stdin or text after --, not both." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Utilise soit --stdin, soit un texte après --, pas les deux."
+          }
+        }
+      }
+    },
     "Use Mac Size" : {
       "localizations" : {
         "fr" : {
@@ -7005,6 +7735,29 @@
           }
         }
       }
+    },
+    "Use only one of --lines, --reply and --messages." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Utilise une seule option parmi --lines, --reply et --messages."
+          }
+        }
+      }
+    },
+    "Use Option as Meta key" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Utiliser Option comme touche Méta"
+          }
+        }
+      }
+    },
+    "Version %@" : {
+      "shouldTranslate" : false
     },
     "Waiting for a response…" : {
       "localizations" : {
@@ -7056,6 +7809,16 @@
         }
       }
     },
+    "When off, Option types characters such as @, [ or ~. Option with the arrow keys, Delete or Return always acts as Meta." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Désactivé, Option saisit les caractères comme @, [ ou ~. Option avec les flèches, Supprimer ou Retour agit toujours comme Méta."
+          }
+        }
+      }
+    },
     "While you view a terminal, the Mac resizes it to fit this screen. It returns to its own size when you leave or use it on the Mac, until you type here again." : {
       "localizations" : {
         "fr" : {
@@ -7076,12 +7839,32 @@
         }
       }
     },
+    "Work in Progress" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Travail en cours"
+          }
+        }
+      }
+    },
     "Working" : {
       "localizations" : {
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Travail"
+          }
+        }
+      }
+    },
+    "Worktree group not found. Get its UUID with heka list." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Groupe de worktrees introuvable. Obtenez son UUID avec heka list."
           }
         }
       }
@@ -7155,754 +7938,7 @@
           }
         }
       }
-    },
-    "Floating Terminal" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Terminal flottant"
-          }
-        }
-      }
-    },
-    "New Tab (⌘T)" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nouvel onglet (⌘T)"
-          }
-        }
-      }
-    },
-    "New tab" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nouvel onglet"
-          }
-        }
-      }
-    },
-    "Previous Tab" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Onglet précédent"
-          }
-        }
-      }
-    },
-    "Next Tab" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Onglet suivant"
-          }
-        }
-      }
-    },
-    "Close Tab" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Fermer l’onglet"
-          }
-        }
-      }
-    },
-    "Close tab %@" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Fermer l’onglet %@"
-          }
-        }
-      }
-    },
-    "Show floating terminal" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Afficher le terminal flottant"
-          }
-        }
-      }
-    },
-    "Floating Terminal (⇧⌘T)" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Terminal flottant (⇧⌘T)"
-          }
-        }
-      }
-    },
-    "TestFlight" : {
-      "shouldTranslate" : false
-    },
-    "Join the Heka beta on iPhone and iPad." : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Rejoignez la bêta de Heka sur iPhone et iPad."
-          }
-        }
-      }
-    },
-    "Made with ❤️ by Jordan Chap" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Fait avec ❤️ par Jordan Chap"
-          }
-        }
-      }
-    },
-    "Version %@" : {
-      "shouldTranslate" : false
-    },
-    "" : {},
-    "Add a working directory" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ajouter un dossier de travail"
-          }
-        }
-      }
-    },
-    "Manage subagents" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Gérer les sous-agents"
-          }
-        }
-      }
-    },
-    "Clear the conversation" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Effacer la conversation"
-          }
-        }
-      }
-    },
-    "Summarize the conversation" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Résumer la conversation"
-          }
-        }
-      }
-    },
-    "Open the settings" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ouvrir les réglages"
-          }
-        }
-      }
-    },
-    "Show the context usage" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Afficher l’utilisation du contexte"
-          }
-        }
-      }
-    },
-    "Show the session cost" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Afficher le coût de la session"
-          }
-        }
-      }
-    },
-    "Check the installation" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Vérifier l’installation"
-          }
-        }
-      }
-    },
-    "Export the conversation" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Exporter la conversation"
-          }
-        }
-      }
-    },
-    "Show the help" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Afficher l’aide"
-          }
-        }
-      }
-    },
-    "Manage hooks" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Gérer les hooks"
-          }
-        }
-      }
-    },
-    "Create an AGENTS.md or CLAUDE.md file" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Créer un fichier AGENTS.md ou CLAUDE.md"
-          }
-        }
-      }
-    },
-    "Manage MCP servers" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Gérer les serveurs MCP"
-          }
-        }
-      }
-    },
-    "Edit the memory files" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Modifier les fichiers de mémoire"
-          }
-        }
-      }
-    },
-    "Change the model" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Changer de modèle"
-          }
-        }
-      }
-    },
-    "Manage permissions" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Gérer les autorisations"
-          }
-        }
-      }
-    },
-    "Show the pull request comments" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Afficher les commentaires de la pull request"
-          }
-        }
-      }
-    },
-    "Resume a conversation" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Reprendre une conversation"
-          }
-        }
-      }
-    },
-    "Review the changes" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Relire les modifications"
-          }
-        }
-      }
-    },
-    "Go back to an earlier point" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Revenir à un point antérieur"
-          }
-        }
-      }
-    },
-    "Review the changes for security issues" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Relire les modifications pour la sécurité"
-          }
-        }
-      }
-    },
-    "Show the status" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Afficher l’état"
-          }
-        }
-      }
-    },
-    "Show the plan usage" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Afficher l’utilisation du forfait"
-          }
-        }
-      }
-    },
-    "Choose what runs without approval" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Choisir ce qui s’exécute sans validation"
-          }
-        }
-      }
-    },
-    "Show the Git diff" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Afficher le diff Git"
-          }
-        }
-      }
-    },
-    "Create an AGENTS.md file" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Créer un fichier AGENTS.md"
-          }
-        }
-      }
-    },
-    "List MCP tools" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Lister les outils MCP"
-          }
-        }
-      }
-    },
-    "Mention a file" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mentionner un fichier"
-          }
-        }
-      }
-    },
-    "Start a new conversation" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Démarrer une nouvelle conversation"
-          }
-        }
-      }
-    },
-    "Undo the last turn" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Annuler le dernier tour"
-          }
-        }
-      }
-    },
-    "Choose an agent" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Choisir un agent"
-          }
-        }
-      }
-    },
-    "Change the working directory" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Changer de dossier de travail"
-          }
-        }
-      }
-    },
-    "Show the session" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Afficher la session"
-          }
-        }
-      }
-    },
-    "Share the conversation" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Partager la conversation"
-          }
-        }
-      }
-    },
-    "Show the usage" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Afficher l’utilisation"
-          }
-        }
-      }
-    },
-    "Toggle tool details" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Afficher ou masquer le détail des outils"
-          }
-        }
-      }
-    },
-    "Redo the last undone message" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Rétablir le dernier message annulé"
-          }
-        }
-      }
-    },
-    "Switch session" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Changer de session"
-          }
-        }
-      }
-    },
-    "Undo the last message" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Annuler le dernier message"
-          }
-        }
-      }
-    },
-    "path" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "chemin"
-          }
-        }
-      }
-    },
-    "instructions" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "instructions"
-          }
-        }
-      }
-    },
-    "model" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "modèle"
-          }
-        }
-      }
-    },
-    "session" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "session"
-          }
-        }
-      }
-    },
-    "file" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "fichier"
-          }
-        }
-      }
-    },
-    "Commands" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Commandes"
-          }
-        }
-      }
-    },
-    "Add %@" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ajouter : %@"
-          }
-        }
-      }
-    },
-    "<%@>" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "<%@>"
-          }
-        }
-      }
-    },
-    "Custom command" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Commande personnalisée"
-          }
-        }
-      }
-    },
-    "heka — organize the terminals and worktrees of the running app\n\nheka list\nheka project add /path/to/project\nheka terminal create [--name NAME] [--project UUID] [--worktree UUID] [-- COMMAND ARGUMENTS…]\nheka worktree create --branch BRANCH [--name NAME] [--project UUID] [--group UUID|NAME] [-- COMMAND ARGUMENTS…]\nheka worktree delete --worktree UUID [--delete-branch [--force-branch]] [--force]\nheka terminal send --terminal UUID [--enter] (-- TEXT… | --stdin)\nheka terminal send --terminal UUID --key KEY [--key KEY…]\nheka terminal read --terminal UUID [--lines N | --reply | --messages N]\nheka terminal wait --terminal UUID [--idle SECONDS | --exit] [--timeout SECONDS]\nheka terminal close --terminal UUID [--force]\nheka group create --name NAME [--project UUID] [--worktree UUID…]\nheka group add --group UUID|NAME --worktree UUID [--worktree UUID…]\nheka group remove --group UUID|NAME --worktree UUID [--worktree UUID…]\nheka group delete --group UUID|NAME\n\nFrom a Heka terminal, the project and worktree are implicit.\nElsewhere, they are inferred from the current folder if it belongs to a project open in Heka.\nChild commands are passed as arguments, without shell interpretation.\nExamples:\n  heka terminal create --name Review -- claude \"Review the changes\"\n  heka worktree create --branch feature/tests -- codex \"Add the tests\"\nEach creation returns the identifiers and path as JSON.\nAn existing branch is opened as is; otherwise it is created from the project’s HEAD.\nworktree delete closes its terminals and erases its folder; by default, the branch and its commits stay in the repository.\nWith --delete-branch, the branch is deleted too if it’s merged into the repository’s main branch; otherwise nothing is removed. Add --force-branch to delete it even if it isn’t, losing its unmerged commits.\nThe repository’s main branch and a branch checked out elsewhere are never deleted.\nWithout --force, a worktree with uncommitted changes or untracked files is kept; --force never deletes an unmerged branch.\nA project’s main folder can’t be deleted. From its own worktree, the command replies once everything is checked, then closes the current terminal and deletes the worktree.\nterminal send types TEXT into another terminal, or the standard input with --stdin. With --enter, the text is submitted as one message, like pressing Return; --enter alone just presses Return.\n--key presses keys one after the other, in order: enter, escape, tab, shift-tab, backspace, delete, space, up, down, left, right, home, end, page-up, page-down, ctrl-a … ctrl-z.\nterminal read prints the last lines of a terminal (50 by default, 10,000 at most) as output.\nFor Claude, Codex, Copilot and OpenCode, --reply prints instead the agent’s answer to the last message as output, and --messages N the last N messages of its conversation (200 at most) as messages.\nterminal wait returns once the terminal has printed nothing for --idle SECONDS (5 by default), or once its command has exited with --exit. It gives up after --timeout SECONDS (120 by default, 3,600 at most) with ok: false.\nTheir replies include running, exitCode and, for a recognized agent, agent and status (working, ready or waitingForInput).\nterminal close stops the terminal’s processes and removes it. Without --force, it refuses while its agent is working. The current terminal closes itself after the reply.\nThe current terminal can’t send to or wait for itself.\nworktree create --group puts the new worktree in that group of its project; a group given by name is created if it doesn’t exist.\ngroup create makes a worktree group in the project of --project, of the given worktrees, or the current one, and moves the given worktrees into it. If the project already has a group with that name, it is reused.\nA group given by name is looked up in the project of the given worktrees, or the current one; a group UUID is found in any project. A project’s main folder can’t be grouped.\ngroup delete removes only the group: its worktrees stay, outside any group. Replies include groupID." : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "heka — organiser les terminaux et worktrees de l’application ouverte\n\nheka list\nheka project add /chemin/du/projet\nheka terminal create [--name NOM] [--project UUID] [--worktree UUID] [-- COMMANDE ARGUMENTS…]\nheka worktree create --branch BRANCHE [--name NOM] [--project UUID] [--group UUID|NOM] [-- COMMANDE ARGUMENTS…]\nheka worktree delete --worktree UUID [--delete-branch [--force-branch]] [--force]\nheka terminal send --terminal UUID [--enter] (-- TEXTE… | --stdin)\nheka terminal send --terminal UUID --key TOUCHE [--key TOUCHE…]\nheka terminal read --terminal UUID [--lines N | --reply | --messages N]\nheka terminal wait --terminal UUID [--idle SECONDES | --exit] [--timeout SECONDES]\nheka terminal close --terminal UUID [--force]\nheka group create --name NOM [--project UUID] [--worktree UUID…]\nheka group add --group UUID|NOM --worktree UUID [--worktree UUID…]\nheka group remove --group UUID|NOM --worktree UUID [--worktree UUID…]\nheka group delete --group UUID|NOM\n\nDepuis un terminal Heka, le projet et le worktree sont implicites.\nAilleurs, ils sont déduits du dossier courant s’il appartient à un projet ouvert dans Heka.\nLes commandes enfant sont passées comme arguments, sans interprétation shell.\nExemples :\n  heka terminal create --name Review -- claude \"Relis les modifications\"\n  heka worktree create --branch feature/tests -- codex \"Ajoute les tests\"\nChaque création renvoie les identifiants et le chemin au format JSON.\nUne branche existante est ouverte telle quelle ; sinon elle est créée depuis le HEAD du projet.\nworktree delete ferme ses terminaux et efface son dossier ; par défaut, la branche et ses commits restent dans le dépôt.\nAvec --delete-branch, la branche est aussi supprimée si elle est fusionnée dans la branche principale du dépôt ; sinon, rien n’est supprimé. Ajoutez --force-branch pour la supprimer même si elle ne l’est pas, en perdant ses commits non fusionnés.\nLa branche principale du dépôt et une branche utilisée ailleurs ne sont jamais supprimées.\nSans --force, un worktree avec des modifications non commitées ou des fichiers non suivis est conservé ; --force ne supprime jamais une branche non fusionnée.\nLe dossier principal d’un projet ne peut pas être supprimé. Depuis son propre worktree, la commande répond une fois tout vérifié, puis ferme le terminal courant et supprime le worktree.\nterminal send tape TEXTE dans un autre terminal, ou l’entrée standard avec --stdin. Avec --enter, le texte est envoyé en un seul message, comme avec la touche Retour ; --enter seul appuie juste sur Retour.\n--key appuie sur les touches l’une après l’autre, dans l’ordre : enter, escape, tab, shift-tab, backspace, delete, space, up, down, left, right, home, end, page-up, page-down, ctrl-a … ctrl-z.\nterminal read renvoie dans output les dernières lignes d’un terminal (50 par défaut, 10 000 au maximum).\nPour Claude, Codex, Copilot et OpenCode, --reply renvoie plutôt dans output la réponse de l’agent au dernier message, et --messages N les N derniers messages de sa conversation (200 au maximum) dans messages.\nterminal wait rend la main quand le terminal n’a rien affiché pendant --idle SECONDES (5 par défaut), ou quand sa commande s’est terminée avec --exit. Il abandonne après --timeout SECONDES (120 par défaut, 3 600 au maximum) avec ok: false.\nLeurs réponses incluent running, exitCode et, pour un agent reconnu, agent et status (working, ready ou waitingForInput).\nterminal close arrête les processus du terminal et le retire. Sans --force, il refuse tant que son agent travaille. Le terminal courant se ferme lui-même après la réponse.\nLe terminal courant ne peut ni s’envoyer de texte ni s’attendre lui-même.\nworktree create --group range le nouveau worktree dans ce groupe de son projet ; un groupe donné par son nom est créé s’il n’existe pas.\ngroup create crée un groupe de worktrees dans le projet de --project, des worktrees donnés ou le projet courant, et y range les worktrees donnés. Si le projet a déjà un groupe de ce nom, il est réutilisé.\nUn groupe donné par son nom est cherché dans le projet des worktrees donnés, ou le projet courant ; l’UUID d’un groupe est trouvé dans n’importe quel projet. Le dossier principal d’un projet ne peut pas être groupé.\ngroup delete supprime seulement le groupe : ses worktrees restent, hors de tout groupe. Les réponses incluent groupID."
-          }
-        }
-      }
-    },
-    "--group needs a group UUID or name." : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "--group attend l’UUID ou le nom d’un groupe."
-          }
-        }
-      }
-    },
-    "A group name is required: --name NAME." : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Un nom de groupe est requis : --name NOM."
-          }
-        }
-      }
-    },
-    "A project’s main folder can’t be grouped." : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Le dossier principal d’un projet ne peut pas être groupé."
-          }
-        }
-      }
-    },
-    "Project not found. Pass the group’s UUID, or run the command from a Heka terminal or from the folder of a project open in Heka." : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Projet introuvable. Passez l’UUID du groupe, ou lancez la commande depuis un terminal Heka ou depuis le dossier d’un projet ouvert dans Heka."
-          }
-        }
-      }
-    },
-    "Specify the group: --group UUID or NAME (see heka list)." : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Indiquez le groupe : --group UUID ou NOM (voir heka list)."
-          }
-        }
-      }
-    },
-    "Specify the worktrees: --worktree UUID (see heka list)." : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Indiquez les worktrees : --worktree UUID (voir heka list)."
-          }
-        }
-      }
-    },
-    "The group name can’t be empty." : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Le nom du groupe ne peut pas être vide."
-          }
-        }
-      }
-    },
-    "The group “%@” already existed: it was reused." : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Le groupe « %@ » existait déjà : il a été réutilisé."
-          }
-        }
-      }
-    },
-    "The worktree was created, but it couldn’t be put in the group “%@”. Use heka group add." : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Le worktree a été créé, mais il n’a pas pu être rangé dans le groupe « %@ ». Utilisez heka group add."
-          }
-        }
-      }
-    },
-    "The worktrees couldn’t be moved. Check them with heka list." : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Les worktrees n’ont pas pu être déplacés. Vérifiez-les avec heka list."
-          }
-        }
-      }
-    },
-    "This worktree doesn’t belong to the group’s project." : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ce worktree n’appartient pas au projet du groupe."
-          }
-        }
-      }
-    },
-    "This worktree group belongs to another project." : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ce groupe de worktrees appartient à un autre projet."
-          }
-        }
-      }
-    },
-    "This worktree isn’t in the group “%@”." : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ce worktree n’est pas dans le groupe « %@ »."
-          }
-        }
-      }
-    },
-    "Worktree group not found. Get its UUID with heka list." : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Groupe de worktrees introuvable. Obtenez son UUID avec heka list."
-          }
-        }
-      }
     }
   },
-  "version" : "1.0"
+  "version" : "1.1"
 }

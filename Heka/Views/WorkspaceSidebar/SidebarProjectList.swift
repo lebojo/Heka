@@ -8,7 +8,6 @@ struct SidebarProjectList: View {
 
     var body: some View {
         List(selection: Bindable(store).selection) {
-            SidebarWorkInProgressSection(query: query)
             Section {
                 ForEach(result.groups) { group in
                     SidebarFolderRow(group: group, query: query)

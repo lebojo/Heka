@@ -5,6 +5,7 @@ struct WorkspaceSidebar: View {
     @Environment(WorkspaceStore.self) private var store
     @Environment(WorkspacePresentation.self) private var presentation
 
+    @State private var page = SidebarPage.projects
     @State private var search = ""
     @State private var filtered = SidebarFilterResult()
 
@@ -28,51 +29,67 @@ struct WorkspaceSidebar: View {
         }
     }
 
+    @ViewBuilder private var pageContent: some View {
+        switch page {
+        case .projects:
+            SidebarProjectList(result: filtered, query: search)
+                .overlay { emptyState }
+        case .workInProgress:
+            SidebarWorkInProgressList(query: search)
+        }
+    }
+
+    private var addMenu: some View {
+        Menu {
+            Button("Add Project…", systemImage: "folder.badge.plus") { store.chooseProjects() }
+                .keyboardShortcut("o")
+            Button("Import Folder…", systemImage: "square.and.arrow.down") { store.chooseFolder() }
+            Divider()
+            Button("New Virtual Folder…", systemImage: "folder.badge.plus") { presentation.sheet = .folder(parentID: nil) }
+                .keyboardShortcut("n", modifiers: [.command, .shift])
+        } label: {
+            Image(systemName: "plus").frame(width: IconSize.l, height: IconSize.l)
+        }
+        .menuStyle(.borderlessButton)
+        .menuIndicator(.hidden)
+        .fixedSize()
+        .help("Add projects or a virtual folder")
+        .accessibilityLabel("Add projects or a virtual folder")
+        .disabled(store.isReadOnly || store.isImporting)
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             HStack {
-                Text("Projects").font(Typography.headline)
+                Text(page.title).font(Typography.headline)
                 Spacer()
-                Menu {
-                    Button("Add Project…", systemImage: "folder.badge.plus") { store.chooseProjects() }
-                        .keyboardShortcut("o")
-                    Button("Import Folder…", systemImage: "square.and.arrow.down") { store.chooseFolder() }
-                    Divider()
-                    Button("New Virtual Folder…", systemImage: "folder.badge.plus") { presentation.sheet = .folder(parentID: nil) }
-                        .keyboardShortcut("n", modifiers: [.command, .shift])
-                } label: {
-                    Image(systemName: "plus").frame(width: IconSize.l, height: IconSize.l)
-                }
-                .menuStyle(.borderlessButton)
-                .menuIndicator(.hidden)
-                .fixedSize()
-                .help("Add projects or a virtual folder")
-                .accessibilityLabel("Add projects or a virtual folder")
-                .disabled(store.isReadOnly || store.isImporting)
+                if page == .projects { addMenu }
             }
+            .frame(minHeight: IconSize.l)
             .padding(.horizontal, Spacing.l).padding(.top, Spacing.m)
-            HStack(spacing: Spacing.s) {
-                Image(systemName: "magnifyingglass").foregroundStyle(Palette.textSecondary)
-                TextField("Filter projects and terminals", text: $search)
-                    .textFieldStyle(.plain)
-                    .accessibilityLabel("Filter projects and terminals")
-                if !search.isEmpty {
-                    Button { search = "" } label: { Image(systemName: "xmark.circle.fill") }
-                        .buttonStyle(.plain).foregroundStyle(Palette.textSecondary).accessibilityLabel("Clear Filter")
-                }
-            }
-            .font(Typography.m)
-            .padding(Spacing.m)
-            .background(Palette.searchFieldFill, in: RoundedRectangle(cornerRadius: Radius.m))
-            .padding(.horizontal, Spacing.l).padding(.top, Spacing.m).padding(.bottom, Spacing.l)
 
-            SidebarProjectList(result: filtered, query: search)
+            SearchField(text: $search, prompt: page.searchPrompt)
+                .padding(.horizontal, Spacing.l).padding(.top, Spacing.m).padding(.bottom, Spacing.l)
+
+            pageContent
                 .safeAreaInset(edge: .bottom, spacing: 0) { UsageBar() }
-                .overlay { emptyState }
+
             SidebarFooter()
         }
         .toolbar {
-            ToolbarItem { FloatingTerminalButton() }
+            ToolbarItem(placement: .principal) {
+                Picker("Sidebar Page", selection: $page) {
+                    ForEach(SidebarPage.allCases) { page in
+                        Label(page.title, systemImage: page.systemImage).tag(page)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .labelStyle(.iconOnly)
+            }
+
+            ToolbarItem(placement: .primaryAction) {
+                FloatingTerminalButton()
+            }
         }
         .onChange(of: SidebarFilterInput(folders: store.folders, projects: store.projects, query: search), initial: true) { _, input in
             filtered = input.filtered()

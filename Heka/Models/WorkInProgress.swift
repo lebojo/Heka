@@ -4,6 +4,7 @@ struct WorkInProgressItem: Identifiable, Equatable, Sendable {
     let id: UUID
     let name: String
     let agent: ConversationAgent?
+    let projectID: UUID
     let projectName: String
     let worktreeName: String
 
@@ -19,27 +20,37 @@ struct WorkInProgressGroup: Identifiable, Equatable, Sendable {
     let items: [WorkInProgressItem]
 
     var id: AgentStatus { status }
-    var rows: [WorkInProgressRow] { [.status(status, count: items.count)] + items.map(WorkInProgressRow.terminal) }
+    var rows: [WorkInProgressRow] {
+        [.status(status, count: items.count)] + zip([nil] + items.map(Optional.some), items).flatMap(rows)
+    }
 
     func matching(_ query: String) -> WorkInProgressGroup? {
         let matches = items.filter { $0.matches(query) }
         return matches.isEmpty ? nil : WorkInProgressGroup(status: status, items: matches)
+    }
+
+    private func rows(after previous: WorkInProgressItem?, for item: WorkInProgressItem) -> [WorkInProgressRow] {
+        guard let previous, previous.projectID != item.projectID else { return [.terminal(item)] }
+        return [.projectDivider(before: item.id), .terminal(item)]
     }
 }
 
 enum WorkInProgressRow: Identifiable, Equatable, Sendable {
     case status(AgentStatus, count: Int)
     case terminal(WorkInProgressItem)
+    case projectDivider(before: UUID)
 
     enum ID: Hashable, Sendable {
         case status(AgentStatus)
         case terminal(UUID)
+        case projectDivider(UUID)
     }
 
     var id: ID {
         switch self {
         case .status(let status, _): .status(status)
         case .terminal(let item): .terminal(item.id)
+        case .projectDivider(let itemID): .projectDivider(itemID)
         }
     }
 }
@@ -54,7 +65,7 @@ enum WorkInProgress {
             for worktree in project.worktrees {
                 for terminal in worktree.terminals {
                     guard let status = statuses[terminal.id] else { continue }
-                    items[status, default: []].append(WorkInProgressItem(id: terminal.id, name: terminal.name, agent: agents[terminal.id],
+                    items[status, default: []].append(WorkInProgressItem(id: terminal.id, name: terminal.name, agent: agents[terminal.id], projectID: project.id,
                                                                          projectName: project.name, worktreeName: worktree.displayName))
                 }
             }
