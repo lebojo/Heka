@@ -20,6 +20,13 @@ enum ConversationTests {
         try FileManager.default.createDirectory(at: project, withIntermediateDirectories: true)
         let path = project.path
 
+        let image = URL(filePath: "/tmp/Heka/PastedImages/A.png")
+        try require(ConversationAgent.claude.prompt("Look", attaching: [image]) == "/tmp/Heka/PastedImages/A.png Look", "Claude takes image paths")
+        try require(ConversationAgent.codex.prompt("", attaching: [image]) == "/tmp/Heka/PastedImages/A.png", "Codex takes a lone image path")
+        try require(ConversationAgent.copilot.prompt("Look", attaching: [image, image]) == "@/tmp/Heka/PastedImages/A.png @/tmp/Heka/PastedImages/A.png Look", "Copilot mentions images")
+        try require(ConversationAgent.openCode.prompt("Look", attaching: [image]) == "@/tmp/Heka/PastedImages/A.png Look", "OpenCode mentions images")
+        try require(ConversationAgent.claude.prompt("Look", attaching: []) == "Look", "Prompt without images is unchanged")
+
         try require(ClaudeTranscript.directoryName(for: "/Users/me/My Project.v2") == "-Users-me-My-Project-v2", "Claude directory encoding")
         try require(ClaudeTranscript.directoryName(for: "/Users/me/🚀 é") == "-Users-me-----", "Claude replaces each UTF-16 unit like Claude Code")
 

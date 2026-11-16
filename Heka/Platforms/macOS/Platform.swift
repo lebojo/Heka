@@ -16,6 +16,8 @@ extension Color {
 }
 
 extension View {
+    func compactMenuStyle() -> some View { menuStyle(.borderlessButton).fixedSize() }
+
     func commandInputTraits() -> some View { self }
 
     func submitsChatMessage(perform submit: @escaping () -> Void) -> some View {

@@ -34,31 +34,35 @@ struct SessionAgentOptions: View {
         }
     }
 
-    @ViewBuilder private var pickers: some View {
-        Picker(selection: model) {
-            ForEach(source.models) { Text($0.title).tag($0) }
-        } label: {
-            Text(modelLabel)
-        }
-        .help(modelLabel)
-        Picker(selection: effort) {
-            ForEach(AgentEffort.allCases) { level in
-                Text(level.title).tag(level).disabled(!efforts.contains(level))
-            }
-        } label: {
-            Text(effortLabel)
-        }
-        .help(effortLabel)
-        .disabled(efforts.isEmpty)
-    }
-
     var body: some View {
-        ViewThatFits(in: .horizontal) {
-            HStack(spacing: Spacing.s) { pickers }
-            VStack(alignment: .leading, spacing: Spacing.xs) { pickers }
+        HStack(spacing: Spacing.xs) {
+            Menu {
+                Picker(modelLabel, selection: model) {
+                    ForEach(source.models) { Text($0.title).tag($0) }
+                }
+                .pickerStyle(.inline)
+            } label: {
+                Text(shown.model.title)
+            }
+            .help(modelLabel)
+            .accessibilityLabel(modelLabel)
+            .accessibilityValue(shown.model.title)
+            Menu {
+                Picker(effortLabel, selection: effort) {
+                    ForEach(AgentEffort.allCases) { level in
+                        Text(level.title).tag(level).disabled(!efforts.contains(level))
+                    }
+                }
+                .pickerStyle(.inline)
+            } label: {
+                Text(shown.effort.title)
+            }
+            .help(effortLabel)
+            .accessibilityLabel(effortLabel)
+            .accessibilityValue(shown.effort.title)
+            .disabled(efforts.isEmpty)
         }
-        .pickerStyle(.menu)
-        .labelsHidden()
+        .compactMenuStyle()
         .font(Typography.caption)
         .disabled(isBusy)
         .onChange(of: reported) { requested = nil }

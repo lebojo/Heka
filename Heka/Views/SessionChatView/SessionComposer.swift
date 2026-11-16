@@ -10,6 +10,7 @@ struct SessionComposer: View {
     @FocusState private var isFocused: Bool
 
     @Binding var draft: String
+    @Binding var images: [URL]
 
     let source: SessionChatSource
     let options: AgentOptions
@@ -34,8 +35,17 @@ struct SessionComposer: View {
         commands.first { SlashCommandMatcher.insertion(for: $0) == draft }?.argument
     }
 
+    private var acceptsImages: Bool { isEnabled && source.agent != nil }
+
+    private var canSend: Bool {
+        !sending && !(draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && images.isEmpty)
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.m) {
+            if !images.isEmpty {
+                SessionComposerImages(images: $images)
+            }
             TextField(prompt, text: $draft, axis: .vertical)
                 .font(.body)
                 .autocorrectionDisabled()
@@ -49,36 +59,40 @@ struct SessionComposer: View {
                 .accessibilityLabel(prompt)
                 .padding(.horizontal, Spacing.xs)
 
-            if source.supportsAgentOptions {
-                SessionAgentOptions(source: source, reported: options, isBusy: isBusy, run: run)
-            }
-
             HStack(spacing: Spacing.m) {
-                SessionComposerControls(source: source, control: control)
+                if source.supportsAgentOptions {
+                    SessionAgentOptions(source: source, reported: options, isBusy: isBusy, run: run)
+                }
+                SessionComposerControls(source: source, isBusy: isBusy, control: control, run: run)
                 Spacer(minLength: Spacing.s)
                 if let pendingArgument {
                     Text("Add \(pendingArgument)")
                         .font(Typography.captionMono).foregroundStyle(Palette.textTertiary)
+                        .lineLimit(1)
                 }
                 #if os(macOS)
                 Text("⇧Return for a new line")
-                    .font(Typography.caption).foregroundStyle(Palette.textSecondary)
+                    .font(Typography.xs).foregroundStyle(Palette.textTertiary)
+                    .lineLimit(1)
+                    .layoutPriority(-1)
                 #endif
                 Button(action: submit) {
                     Group {
-                        if sending { ProgressView().controlSize(.small) }
-                        else { Image(systemName: "arrow.up").font(Typography.headline) }
+                        if sending { ProgressView().controlSize(.mini) }
+                        else { Image(systemName: "arrow.up").font(Typography.label.weight(.semibold)) }
                     }
-                    .frame(minWidth: Dimension.Chat.actionSize, minHeight: Dimension.Chat.actionSize)
+                    .frame(width: Dimension.Chat.sendSize, height: Dimension.Chat.sendSize)
                     .contentShape(.circle)
                 }
                 .buttonStyle(.borderedProminent).buttonBorderShape(.circle)
+                .controlSize(.small)
                 .keyboardShortcut(.sendMessage)
                 .accessibilityLabel("Send to Session")
                 .help("Send to Session")
-                .disabled(sending || draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                .disabled(!canSend)
             }
         }
+        .pastesImages(isEnabled: acceptsImages && isFocused) { images.append(contentsOf: $0) }
         .padding(Spacing.l)
         .background(Palette.control, in: RoundedRectangle(cornerRadius: Radius.l))
         .overlay {
@@ -140,7 +154,13 @@ struct SessionComposer: View {
 
 private struct SessionComposerControls: View {
     let source: SessionChatSource
+    let isBusy: Bool
     let control: (Data) -> Void
+    let run: (AgentCommand) async -> Bool
+
+    private var modelLabel: String {
+        String(localized: "Model", comment: "Menu that picks the agent's model in the chat composer")
+    }
 
     var body: some View {
         HStack(spacing: Spacing.s) {
@@ -149,6 +169,13 @@ private struct SessionComposerControls: View {
             }
             Button { control(Data([27])) } label: {
                 Label("Interrupt", systemImage: "stop")
+            }
+            if let command = source.modelPickerCommand {
+                Button { Task { _ = await run(command) } } label: {
+                    Label(modelLabel, systemImage: "cpu")
+                }
+                .help("Open the agent's model picker")
+                .disabled(isBusy)
             }
             if source == .terminal {
                 Button("Return") { control(Data([13])) }

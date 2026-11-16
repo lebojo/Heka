@@ -55,6 +55,26 @@
         }
       }
     },
+    "Attached Image" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Image jointe"
+          }
+        }
+      }
+    },
+    "Open the agent's model picker" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ouvre le choix du modèle de l’agent"
+          }
+        }
+      }
+    },
     "Sidebar Page" : {
       "localizations" : {
         "fr" : {
@@ -5306,6 +5326,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Retirer"
+          }
+        }
+      }
+    },
+    "Remove Image" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retirer l’image"
           }
         }
       }

@@ -3,7 +3,8 @@ import SwiftUI
 enum Dimension {
     enum Chat {
         static let readableWidth: CGFloat = 760
-        static let actionSize: CGFloat = 36
+        static let sendSize: CGFloat = 22
+        static let attachmentSize: CGFloat = 56
         static let commandPopupMaxHeight: CGFloat = 260
     }
 
