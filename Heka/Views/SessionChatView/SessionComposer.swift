@@ -60,7 +60,7 @@ struct SessionComposer: View {
                         .font(Typography.captionMono).foregroundStyle(Palette.textTertiary)
                 }
                 #if os(macOS)
-                Text("⌥Return for a new line")
+                Text("⇧Return for a new line")
                     .font(Typography.caption).foregroundStyle(Palette.textSecondary)
                 #endif
                 Button(action: submit) {

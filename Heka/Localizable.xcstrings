@@ -930,12 +930,12 @@
         }
       }
     },
-    "⌥Return for a new line" : {
+    "⇧Return for a new line" : {
       "localizations" : {
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "⌥Entrée pour une nouvelle ligne"
+            "value" : "⇧Entrée pour une nouvelle ligne"
           }
         }
       }
