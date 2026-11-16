@@ -3,8 +3,9 @@ import SwiftUI
 struct MobileSavedHostsSection: View {
     @Environment(MobileWorkspaceStore.self) private var store
 
-    @State private var scannerVisible = false
     @State private var error: String?
+
+    @Binding var scannerVisible: Bool
 
     var body: some View {
         Section {
@@ -29,9 +30,6 @@ struct MobileSavedHostsSection: View {
             }
         } header: { Text("Macs") } footer: {
             Text("On the Mac, turn on Settings → Mobile Control, then scan the QR code it shows. Tap a saved Mac to switch to it. Both devices must be on the same network. The session continues on the Mac when you leave the mobile app.")
-        }
-        .sheet(isPresented: $scannerVisible) {
-            MobileScannerSheet().environment(store)
         }
     }
 

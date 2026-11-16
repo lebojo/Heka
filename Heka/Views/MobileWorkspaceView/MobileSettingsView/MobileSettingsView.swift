@@ -5,6 +5,8 @@ struct MobileSettingsView: View {
 
     @Environment(\.dismiss) private var dismiss
 
+    @State private var scannerVisible = false
+
     let store: MobileWorkspaceStore
 
     var body: some View {
@@ -12,7 +14,7 @@ struct MobileSettingsView: View {
             Form {
                 SessionDisplaySettingsSection(mode: $mode)
                 MobileTerminalSettingsSection()
-                MobileSavedHostsSection()
+                MobileSavedHostsSection(scannerVisible: $scannerVisible)
                 MobileManualHostSection()
                 TestFlightSettingsSection()
                 AboutSettingsSection()
@@ -20,6 +22,9 @@ struct MobileSettingsView: View {
             .environment(store)
             .navigationTitle("Settings")
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
+        }
+        .sheet(isPresented: $scannerVisible) {
+            MobileScannerSheet().environment(store)
         }
     }
 }
