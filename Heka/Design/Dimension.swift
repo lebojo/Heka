@@ -57,6 +57,13 @@ enum Dimension {
         static let idealHeight: CGFloat = 540
     }
 
+    enum Onboarding {
+        static let width: CGFloat = 560
+        static let height: CGFloat = 520
+        static let appIconSize: CGFloat = 96
+        static let iconWidth: CGFloat = 32
+    }
+
     enum Settings {
         static let width: CGFloat = 580
         static let minHeight: CGFloat = 460

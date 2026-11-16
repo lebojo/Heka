@@ -11,6 +11,9 @@ struct GeneralSettingsPane: View {
                 Toggle("Before closing a terminal", isOn: $settings.confirmations.onTerminalClosing)
             }
             WorktreeFolderSettings()
+            Section("Introduction") {
+                OnboardingReplayButton()
+            }
             AboutSettingsSection()
         }
         .formStyle(.grouped)
