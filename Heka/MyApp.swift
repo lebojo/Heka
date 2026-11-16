@@ -91,6 +91,7 @@ struct HekaApplication: App {
         Window("Heka", id: "workspace") {
             ContentView(store: store, gitActionQueues: gitActionQueues)
                 .modifier(SheetSpaceProvider())
+                .modifier(OnboardingPresenter())
                 .environment(store)
                 .environment(floating)
                 .environment(usage)
@@ -123,6 +124,7 @@ struct HekaApplication: App {
             NewVirtualFolderCommand(isDisabled: store.isReadOnly || store.isImporting)
             FloatingTerminalCommands(floating: floating)
             CommandGroup(replacing: .help) {
+                OnboardingReplayButton()
                 Button("Agent Commands") {
                     let alert = NSAlert()
                     alert.messageText = String(localized: "Control Heka from a Terminal")
