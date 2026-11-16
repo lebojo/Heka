@@ -6,6 +6,15 @@ enum LoginShell {
         return FileManager.default.isExecutableFile(atPath: configured) ? configured : "/bin/zsh"
     }
 
+    static func terminalEnvironment(inheriting environment: [String: String]) -> [String: String] {
+        environment.filter { !isInheritedSessionVariable($0.key) }
+    }
+
+    private static func isInheritedSessionVariable(_ name: String) -> Bool {
+        if name == "CLAUDECODE" || name == "CLAUDE_PID" || name.hasPrefix("CLAUDE_CODE_") { return true }
+        return name.hasPrefix("HEKA_") && name != "HEKA_STATE_DIRECTORY" && name != "HEKA_REAL_STATE"
+    }
+
     static func variable(_ name: String) async -> String? {
         if let value = ProcessInfo.processInfo.environment[name], !value.isEmpty { return value }
         let marker = "HEKA-\(UUID().uuidString)"

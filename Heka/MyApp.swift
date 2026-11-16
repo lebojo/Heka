@@ -9,6 +9,7 @@ import AppKit
         if CommandLine.arguments.first.map({ URL(fileURLWithPath: $0).lastPathComponent }) == CommandLineInstaller.commandName {
             exit(AgentCLI.run(arguments: Array(CommandLine.arguments.dropFirst())))
         }
+        WorkspaceDisk.isolateDebugState()
         AgentUIMigration.run()
         HekaApplication.main()
     }

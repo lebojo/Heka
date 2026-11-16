@@ -41,9 +41,13 @@ private struct BorderBeam: View {
     }
 
     private func beam(at angle: Angle) -> some View {
-        let gradient = AngularGradient(colors: [.clear, .clear, Palette.accent.opacity(0.4), Palette.accent, .clear],
+        let gradient = AngularGradient(colors: [.clear, Palette.accent.opacity(0.2), Palette.accent, .white.opacity(0.9), Palette.accent, Palette.accent.opacity(0.2), .clear, .clear],
                                        center: .center, angle: angle)
-        return shape.strokeBorder(gradient, lineWidth: Stroke.regular)
+        return ZStack {
+            shape.strokeBorder(Palette.accent.opacity(0.25), lineWidth: Stroke.regular)
+            shape.strokeBorder(gradient, lineWidth: Stroke.regular * 3).blur(radius: 6)
+            shape.strokeBorder(gradient, lineWidth: Stroke.regular)
+        }
     }
 
     private func angle(at date: Date) -> Angle {

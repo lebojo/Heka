@@ -60,7 +60,7 @@ import Observation
             view.feed(text: String(localized: "The folder is no longer accessible:") + "\r\n\(path)\r\n")
             return
         }
-        var env = ProcessInfo.processInfo.environment
+        var env = LoginShell.terminalEnvironment(inheriting: ProcessInfo.processInfo.environment)
         environment.forEach { env[$0.key] = $0.value }
         env["TERM"] = "xterm-256color"
         env["COLORTERM"] = "truecolor"
