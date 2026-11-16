@@ -16,13 +16,16 @@ struct SessionChatView: View {
     let control: (Data) async throws -> Void
     let run: (AgentCommand) async throws -> Void
 
+    private var isAgentWorking: Bool {
+        source.agent != nil && ChatActivity(status: status, isSending: sending || awaitsAgent, isEnabled: isEnabled).showsIndicator
+    }
+
     var body: some View {
-        SessionTranscriptList(messages: messages, source: source,
-                              showsTypingIndicator: source.agent != nil && ChatActivity(status: status, isSending: sending || awaitsAgent, isEnabled: isEnabled).showsIndicator)
+        SessionTranscriptList(messages: messages, source: source, showsTypingIndicator: isAgentWorking)
         .background(Palette.surface)
         .safeAreaInset(edge: .bottom, spacing: 0) {
             SessionComposer(draft: $draft, source: source, options: options, commands: commands, sending: sending, isEnabled: isEnabled,
-                            isBusy: !(status?.acceptsCommands ?? true), submit: submit, control: sendControl, run: runCommand)
+                            isBusy: !(status?.acceptsCommands ?? true), isWorking: isAgentWorking, submit: submit, control: sendControl, run: runCommand)
         }
         .onChange(of: status) { awaitsAgent = false }
         .task(id: awaitsAgent) {
