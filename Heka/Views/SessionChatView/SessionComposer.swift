@@ -17,6 +17,7 @@ struct SessionComposer: View {
     let sending: Bool
     let isEnabled: Bool
     let isBusy: Bool
+    let isWorking: Bool
     let submit: () -> Void
     let control: (Data) -> Void
     let run: (AgentCommand) async -> Bool
@@ -84,6 +85,7 @@ struct SessionComposer: View {
             RoundedRectangle(cornerRadius: Radius.l)
                 .strokeBorder(isFocused ? Palette.accent : Palette.textTertiary.opacity(0.4), lineWidth: Stroke.hairline)
         }
+        .borderBeam(isActive: isWorking, cornerRadius: Radius.l)
         .overlay(alignment: .top) {
             if !commandMatches.isEmpty {
                 SessionCommandPopup(matches: commandMatches, selection: commandSelection, accept: accept)
