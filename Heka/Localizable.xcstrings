@@ -8490,6 +8490,46 @@
     },
     "GitHub CLI" : {
       "shouldTranslate" : false
+    },
+    "Border beam" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Faisceau de bordure"
+          }
+        }
+      }
+    },
+    "Border Beam" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Faisceau de bordure"
+          }
+        }
+      }
+    },
+    "A light travels around the message field while the agent works." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Une lumière fait le tour du champ de message pendant que l’agent travaille."
+          }
+        }
+      }
+    },
+    "Reset Colors" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Réinitialiser les couleurs"
+          }
+        }
+      }
     }
   },
   "version" : "1.1"

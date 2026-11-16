@@ -2,6 +2,7 @@ import SwiftUI
 
 struct SessionComposer: View {
     @AppStorage("recentSlashCommands") private var recentCommands = ""
+    @AppStorage(BorderBeamAppearance.storageKey) private var beam = BorderBeamAppearance()
 
     @State private var commandMatches: [SlashCommandMatch] = []
     @State private var commandSelection = 0
@@ -99,7 +100,7 @@ struct SessionComposer: View {
             RoundedRectangle(cornerRadius: Radius.l)
                 .strokeBorder(isFocused ? Palette.accent : Palette.textTertiary.opacity(0.4), lineWidth: Stroke.hairline)
         }
-        .borderBeam(isActive: isWorking, cornerRadius: Radius.l)
+        .borderBeam(isActive: isWorking && beam.isEnabled, cornerRadius: Radius.l, color: beam.beamColor(for: source.agent))
         .overlay(alignment: .top) {
             if !commandMatches.isEmpty {
                 SessionCommandPopup(matches: commandMatches, selection: commandSelection, accept: accept)

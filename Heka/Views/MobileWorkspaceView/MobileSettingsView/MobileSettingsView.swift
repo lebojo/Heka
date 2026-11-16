@@ -11,6 +11,7 @@ struct MobileSettingsView: View {
         NavigationStack {
             Form {
                 SessionDisplaySettingsSection(mode: $mode)
+                BorderBeamSettingsSection()
                 MobileTerminalSettingsSection()
                 MobileSavedHostsSection()
                 MobileManualHostSection()
