@@ -10,7 +10,7 @@ struct TerminalFooter: View {
             Text((session?.currentDirectory ?? path).abbreviatingHome)
                 .lineLimit(1).truncationMode(.middle).textSelection(.enabled)
             Spacer(minLength: Spacing.l)
-            Text("⌘T  New Terminal   ⌘D  Split").foregroundStyle(Palette.textSecondary)
+            Text("\(ShortcutAction.newTerminal.symbols)  New Terminal   \(ShortcutAction.splitRight.symbols)  Split").foregroundStyle(Palette.textSecondary)
         }
         .font(Typography.s).foregroundStyle(Palette.textSecondary)
         .padding(.horizontal, Spacing.xl).frame(height: Dimension.Detail.footerHeight)

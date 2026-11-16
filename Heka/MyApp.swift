@@ -117,8 +117,8 @@ struct HekaApplication: App {
         .windowToolbarStyle(.unified)
         .commands {
             CommandGroup(replacing: .newItem) {
-                Button("Add Project…") { store.chooseProjects() }.keyboardShortcut("o").disabled(store.isReadOnly || store.isImporting)
-                Button("Import Folder…") { store.chooseFolder() }.keyboardShortcut("o", modifiers: [.command, .shift]).disabled(store.isReadOnly || store.isImporting)
+                Button("Add Project…") { store.chooseProjects() }.keyboardShortcut(.addProject).disabled(store.isReadOnly || store.isImporting)
+                Button("Import Folder…") { store.chooseFolder() }.keyboardShortcut(.importFolder).disabled(store.isReadOnly || store.isImporting)
             }
             NewVirtualFolderCommand(isDisabled: store.isReadOnly || store.isImporting)
             FloatingTerminalCommands(floating: floating)
