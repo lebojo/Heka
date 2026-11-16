@@ -8,10 +8,11 @@ struct SidebarWorkInProgressRow: View {
             switch row {
             case .status(let status, let count):
                 SidebarStatusHeader(status: status, count: count)
-            case .terminal(let item):
+            case .terminal(let item, let startsProject):
+                if startsProject {
+                    Divider().padding(.horizontal, Spacing.xs).padding(.bottom, Spacing.xxs).accessibilityHidden(true)
+                }
                 SidebarWorkInProgressItemRow(item: item)
-            case .projectDivider:
-                Divider().padding(.horizontal, Spacing.xs)
             }
         }
         .selectionDisabled()

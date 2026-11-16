@@ -16,7 +16,7 @@ enum Section: Int, Comparable {
 
     var title: String {
         switch self {
-        case .appStorage: "@AppStorage"
+        case .appStorage: "@AppStorage / @SceneStorage"
         case .environment: "@Environment / @EnvironmentObject"
         case .state: "@State"
         case .stateObject: "@StateObject"
@@ -32,6 +32,7 @@ enum Section: Int, Comparable {
 
 enum Wrapper: String, CaseIterable {
     case appStorage = "AppStorage"
+    case sceneStorage = "SceneStorage"
     case environment = "Environment"
     case environmentObject = "EnvironmentObject"
     case state = "State"
@@ -45,7 +46,7 @@ enum Wrapper: String, CaseIterable {
 
     var section: Section {
         switch self {
-        case .appStorage: .appStorage
+        case .appStorage, .sceneStorage: .appStorage
         case .environment, .environmentObject: .environment
         case .state: .state
         case .stateObject: .stateObject

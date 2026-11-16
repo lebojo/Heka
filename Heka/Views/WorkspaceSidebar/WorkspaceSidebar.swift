@@ -2,10 +2,11 @@ import AppKit
 import SwiftUI
 
 struct WorkspaceSidebar: View {
+    @SceneStorage("sidebarPage") private var page = SidebarPage.projects
+
     @Environment(WorkspaceStore.self) private var store
     @Environment(WorkspacePresentation.self) private var presentation
 
-    @State private var page = SidebarPage.projects
     @State private var search = ""
     @State private var filtered = SidebarFilterResult()
 
@@ -46,7 +47,6 @@ struct WorkspaceSidebar: View {
             Button("Import Folder…", systemImage: "square.and.arrow.down") { store.chooseFolder() }
             Divider()
             Button("New Virtual Folder…", systemImage: "folder.badge.plus") { presentation.sheet = .folder(parentID: nil) }
-                .keyboardShortcut("n", modifiers: [.command, .shift])
         } label: {
             Image(systemName: "plus").frame(width: IconSize.l, height: IconSize.l)
         }
@@ -77,21 +77,15 @@ struct WorkspaceSidebar: View {
             SidebarFooter()
         }
         .toolbar {
-            ToolbarItem(placement: .principal) {
-                Picker("Sidebar Page", selection: $page) {
-                    ForEach(SidebarPage.allCases) { page in
-                        Label(page.title, systemImage: page.systemImage).tag(page)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .labelStyle(.iconOnly)
+            ToolbarItem {
+                SidebarPagePicker(page: $page)
             }
 
-            ToolbarItem(placement: .primaryAction) {
+            ToolbarItem {
                 FloatingTerminalButton()
             }
         }
-        .onChange(of: SidebarFilterInput(folders: store.folders, projects: store.projects, query: search), initial: true) { _, input in
+        .onChange(of: SidebarFilterInput(folders: store.folders, projects: store.projects, query: page == .projects ? search : ""), initial: true) { _, input in
             filtered = input.filtered()
         }
     }

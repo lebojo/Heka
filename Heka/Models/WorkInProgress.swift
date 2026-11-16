@@ -21,43 +21,35 @@ struct WorkInProgressGroup: Identifiable, Equatable, Sendable {
 
     var id: AgentStatus { status }
     var rows: [WorkInProgressRow] {
-        [.status(status, count: items.count)] + zip([nil] + items.map(Optional.some), items).flatMap(rows)
+        [.status(status, count: items.count)] + items.indices.map { index in
+            .terminal(items[index], startsProject: index > 0 && items[index - 1].projectID != items[index].projectID)
+        }
     }
 
     func matching(_ query: String) -> WorkInProgressGroup? {
         let matches = items.filter { $0.matches(query) }
         return matches.isEmpty ? nil : WorkInProgressGroup(status: status, items: matches)
     }
-
-    private func rows(after previous: WorkInProgressItem?, for item: WorkInProgressItem) -> [WorkInProgressRow] {
-        guard let previous, previous.projectID != item.projectID else { return [.terminal(item)] }
-        return [.projectDivider(before: item.id), .terminal(item)]
-    }
 }
 
 enum WorkInProgressRow: Identifiable, Equatable, Sendable {
     case status(AgentStatus, count: Int)
-    case terminal(WorkInProgressItem)
-    case projectDivider(before: UUID)
+    case terminal(WorkInProgressItem, startsProject: Bool)
 
     enum ID: Hashable, Sendable {
         case status(AgentStatus)
         case terminal(UUID)
-        case projectDivider(UUID)
     }
 
     var id: ID {
         switch self {
         case .status(let status, _): .status(status)
-        case .terminal(let item): .terminal(item.id)
-        case .projectDivider(let itemID): .projectDivider(itemID)
+        case .terminal(let item, _): .terminal(item.id)
         }
     }
 }
 
 enum WorkInProgress {
-    static let expansionID = UUID(uuidString: "5E4A9C1D-7B2F-4E8A-9D3C-1F6B8A2E4C70")!
-
     static func groups(in projects: [Project], statuses: [UUID: AgentStatus], agents: [UUID: ConversationAgent]) -> [WorkInProgressGroup] {
         guard !statuses.isEmpty else { return [] }
         var items: [AgentStatus: [WorkInProgressItem]] = [:]
@@ -77,7 +69,7 @@ enum WorkInProgress {
 
     static func listsSameTerminals(_ old: [Project], _ new: [Project]) -> Bool {
         old.elementsEqual(new) { old, new in
-            old.name == new.name && old.worktrees.elementsEqual(new.worktrees) { old, new in
+            old.id == new.id && old.name == new.name && old.worktrees.elementsEqual(new.worktrees) { old, new in
                 old.isPrimary == new.isPrimary && old.name == new.name && old.terminals.elementsEqual(new.terminals) { $0.id == $1.id && $0.name == $1.name }
             }
         }

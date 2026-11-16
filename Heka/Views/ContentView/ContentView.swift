@@ -70,5 +70,6 @@ struct ContentView: View {
         } message: { Text(store.errorMessage ?? "") }
         .background { RemovalConfirmation() }
         .environment(presentation)
+        .focusedSceneValue(\.workspacePresentation, presentation)
     }
 }

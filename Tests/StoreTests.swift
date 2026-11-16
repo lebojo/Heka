@@ -340,6 +340,15 @@ private final class ChangeFlag: @unchecked Sendable {
                                                           .status(.ready), .terminal(ready.id)]
                         && progress[0].rows.first == .status(.waitingForInput, count: 1),
                     "Work in progress flattens into one list of status headers and terminals with stable identities")
+        var otherBusy = Project(url: root.appendingPathComponent("other"))
+        let otherWorking = TerminalRecord(name: "Lint")
+        let otherSecond = TerminalRecord(name: "Format")
+        otherBusy.worktrees[0].terminals = [otherWorking, otherSecond]
+        let mixed = WorkInProgress.groups(in: [busy, otherBusy], statuses: [working.id: .working, otherWorking.id: .working, otherSecond.id: .working], agents: [:])
+        let starts = mixed[0].rows.compactMap { row -> Bool? in
+            if case .terminal(_, let startsProject) = row { startsProject } else { nil }
+        }
+        try require(starts == [false, true, false], "A divider marks only the first terminal of each following project")
         let splitTerminal = split.projects[0].worktrees[0].terminals[0]
         let progressChanged = ChangeFlag()
         withObservationTracking { _ = split.workInProgress } onChange: { progressChanged.mark() }
