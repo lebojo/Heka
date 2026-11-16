@@ -43,7 +43,7 @@ struct WorkspaceSidebar: View {
     private var addMenu: some View {
         Menu {
             Button("Add Project…", systemImage: "folder.badge.plus") { store.chooseProjects() }
-                .keyboardShortcut("o")
+                .keyboardShortcut(.addProject)
             Button("Import Folder…", systemImage: "square.and.arrow.down") { store.chooseFolder() }
             Divider()
             Button("New Virtual Folder…", systemImage: "folder.badge.plus") { presentation.sheet = .folder(parentID: nil) }

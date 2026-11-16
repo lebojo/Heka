@@ -11,6 +11,8 @@ struct SettingsView: View {
                 .tabItem { Label("Agents", systemImage: "sparkles") }
             PromptSettingsPane()
                 .tabItem { Label("Prompts", systemImage: "text.bubble") }
+            ShortcutSettingsPane()
+                .tabItem { Label("Shortcuts", systemImage: "keyboard") }
             HostSettingsPane()
                 .tabItem { Label("Mobile Control", systemImage: "iphone") }
         }

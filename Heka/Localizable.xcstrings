@@ -1,9 +1,7 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "" : {
-
-    },
+    "" : {},
     " M " : {
       "shouldTranslate" : false
     },
@@ -909,26 +907,6 @@
     },
     "−%lld" : {
       "shouldTranslate" : false
-    },
-    "⌘T  New Terminal   ⌘D  Split" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "⌘T  Nouveau terminal   ⌘D  Diviser"
-          }
-        }
-      }
-    },
-    "⌘T and the “New Terminal” buttons open the agent instead of a shell." : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "⌘T et les boutons « Nouveau terminal » ouvrent l’agent au lieu d’un shell."
-          }
-        }
-      }
     },
     "⇧Return for a new line" : {
       "localizations" : {
@@ -3064,16 +3042,6 @@
         }
       }
     },
-    "Floating Terminal (⇧⌘T)" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Terminal flottant (⇧⌘T)"
-          }
-        }
-      }
-    },
     "Folder Unavailable" : {
       "localizations" : {
         "fr" : {
@@ -4238,16 +4206,6 @@
         }
       }
     },
-    "New Tab (⌘T)" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nouvel onglet (⌘T)"
-          }
-        }
-      }
-    },
     "New Terminal" : {
       "localizations" : {
         "fr" : {
@@ -5292,16 +5250,6 @@
         }
       }
     },
-    "Refresh (⌘R)" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Actualiser (⌘R)"
-          }
-        }
-      }
-    },
     "Refresh %@" : {
       "localizations" : {
         "fr" : {
@@ -6222,26 +6170,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Indiquez les worktrees : --worktree UUID (voir heka list)."
-          }
-        }
-      }
-    },
-    "Split Down (⇧⌘D)" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Diviser en bas (⇧⌘D)"
-          }
-        }
-      }
-    },
-    "Split Right (⌘D)" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Diviser à droite (⌘D)"
           }
         }
       }
@@ -7943,6 +7871,226 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ton Mac, à portée de main"
+          }
+        }
+      }
+    },
+    "Split Right (%@)" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diviser à droite (%@)"
+          }
+        }
+      }
+    },
+    "Split Down (%@)" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diviser en bas (%@)"
+          }
+        }
+      }
+    },
+    "New Tab (%@)" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nouvel onglet (%@)"
+          }
+        }
+      }
+    },
+    "Refresh (%@)" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Actualiser (%@)"
+          }
+        }
+      }
+    },
+    "Floating Terminal (%@)" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Terminal flottant (%@)"
+          }
+        }
+      }
+    },
+    "%@  New Terminal   %@  Split" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@  Nouveau terminal   %2$@  Diviser"
+          }
+        }
+      }
+    },
+    "%@ and the “New Terminal” buttons open the agent instead of a shell." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ et les boutons « Nouveau terminal » ouvrent l’agent au lieu d’un shell."
+          }
+        }
+      }
+    },
+    "Shortcuts" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Raccourcis"
+          }
+        }
+      }
+    },
+    "App" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "App"
+          }
+        }
+      }
+    },
+    "Chat" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chat"
+          }
+        }
+      }
+    },
+    "Inspector" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inspecteur"
+          }
+        }
+      }
+    },
+    "Split Right" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diviser à droite"
+          }
+        }
+      }
+    },
+    "Split Down" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diviser en bas"
+          }
+        }
+      }
+    },
+    "Restore Defaults" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rétablir les valeurs par défaut"
+          }
+        }
+      }
+    },
+    "Restore all keyboard shortcuts to their defaults?" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rétablir tous les raccourcis clavier par défaut ?"
+          }
+        }
+      }
+    },
+    "Type Shortcut…" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tapez le raccourci…"
+          }
+        }
+      }
+    },
+    "Recording" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enregistrement"
+          }
+        }
+      }
+    },
+    "Records a new key combination. Press Escape to cancel." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enregistre une nouvelle combinaison de touches. Appuyez sur Échap pour annuler."
+          }
+        }
+      }
+    },
+    "Type the new shortcut" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tapez le nouveau raccourci"
+          }
+        }
+      }
+    },
+    "Include ⌘, ⌃ or ⌥ in the shortcut." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Incluez ⌘, ⌃ ou ⌥ dans le raccourci."
+          }
+        }
+      }
+    },
+    "Already used by “%@”. Choose another combination." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Déjà utilisé par « %@ ». Choisissez une autre combinaison."
+          }
+        }
+      }
+    },
+    "Reset %@" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Réinitialiser %@"
           }
         }
       }

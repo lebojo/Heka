@@ -20,8 +20,8 @@ struct InspectorHeader: View {
             Spacer()
             if model.loading || previews.isLoading { ProgressView().controlSize(.small) }
             Button { refresh += 1 } label: { Image(systemName: "arrow.clockwise") }
-                .buttonStyle(.borderless).help("Refresh (⌘R)").accessibilityLabel("Refresh \(title)")
-                .keyboardShortcut("r")
+                .buttonStyle(.borderless).help(Text("Refresh (\(ShortcutAction.refreshInspector.symbols))")).accessibilityLabel("Refresh \(title)")
+                .keyboardShortcut(.refreshInspector)
         }.padding(Spacing.l)
     }
 }

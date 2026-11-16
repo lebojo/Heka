@@ -72,7 +72,7 @@ struct SessionComposer: View {
                     .contentShape(.circle)
                 }
                 .buttonStyle(.borderedProminent).buttonBorderShape(.circle)
-                .keyboardShortcut(.return, modifiers: .command)
+                .keyboardShortcut(.sendMessage)
                 .accessibilityLabel("Send to Session")
                 .help("Send to Session")
                 .disabled(sending || draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)

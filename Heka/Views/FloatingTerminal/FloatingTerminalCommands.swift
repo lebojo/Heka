@@ -6,7 +6,7 @@ struct FloatingTerminalCommands: Commands {
     var body: some Commands {
         CommandGroup(before: .windowList) {
             Button("Floating Terminal") { floating.isPresented.toggle() }
-                .keyboardShortcut("t", modifiers: [.command, .shift])
+                .keyboardShortcut(.floatingTerminal)
             Divider()
         }
     }

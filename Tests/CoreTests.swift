@@ -467,6 +467,7 @@ import Foundation
         try await RefreshTests.run(root: root)
         try await UsageTests.run()
         try SettingsTests.run()
+        try ShortcutTests.run()
         print("All core tests passed.")
     }
 

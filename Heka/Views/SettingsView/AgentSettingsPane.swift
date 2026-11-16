@@ -21,7 +21,7 @@ struct AgentSettingsPane: View {
                 }
                 Toggle(isOn: $settings.agentLaunch.onNewTerminal) {
                     Text("In a new terminal")
-                    Text("⌘T and the “New Terminal” buttons open the agent instead of a shell.")
+                    Text("\(ShortcutAction.newTerminal.symbols) and the “New Terminal” buttons open the agent instead of a shell.")
                 }
             }
             Section {
