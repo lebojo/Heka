@@ -2992,6 +2992,16 @@
         }
       }
     },
+    "Failed Calls" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Appels échoués"
+          }
+        }
+      }
+    },
     "Fetch Remote Branches" : {
       "localizations" : {
         "fr" : {

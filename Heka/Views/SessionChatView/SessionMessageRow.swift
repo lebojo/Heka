@@ -5,7 +5,7 @@ struct SessionMessageRow: View, Equatable {
     let agent: ConversationAgent?
 
     var body: some View {
-        switch message.kind {
+        switch message.presentation {
         case .input:
             HStack(alignment: .top) {
                 Spacer(minLength: Spacing.xxl)
@@ -25,13 +25,10 @@ struct SessionMessageRow: View, Equatable {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         case .tool:
-            let questions = message.userQuestions
-            if questions.isEmpty {
-                SessionToolMessage(message: message)
-            } else {
-                SessionQuestionMessage(message: message, questions: questions)
-            }
-        case .output, .notice:
+            SessionToolMessage(message: message)
+        case .question(let questions):
+            SessionQuestionMessage(message: message, questions: questions)
+        case .output:
             VStack(alignment: .leading, spacing: Spacing.s) {
                 Text("Session Output").font(Typography.caption).foregroundStyle(Palette.textSecondary)
                 Text(verbatim: message.text.isEmpty ? "…" : message.text)
@@ -43,10 +40,16 @@ struct SessionMessageRow: View, Equatable {
 }
 
 private struct SessionToolMessage: View {
+    @Environment(SessionTranscriptExpansion.self) private var expansion
+
     let message: SessionMessage
 
+    private var isExpanded: Binding<Bool> {
+        Binding { expansion.isToolExpanded(message.id) } set: { expansion.setTool(message.id, expanded: $0) }
+    }
+
     var body: some View {
-        DisclosureGroup {
+        DisclosureGroup(isExpanded: isExpanded) {
             VStack(alignment: .leading, spacing: Spacing.m) {
                 if let detail = message.detail, !detail.isEmpty, detail != message.text {
                     Text(verbatim: detail).font(Typography.code).textSelection(.enabled)
@@ -59,8 +62,8 @@ private struct SessionToolMessage: View {
             .background(Palette.fill.opacity(0.3), in: RoundedRectangle(cornerRadius: Radius.m))
         } label: {
             VStack(alignment: .leading, spacing: Spacing.xs) {
-                Label(message.title ?? String(localized: "Tool"), systemImage: message.toolState == .failed ? "exclamationmark.circle" : (message.toolState == .completed ? "checkmark.circle" : "gearshape"))
-                    .font(Typography.caption).foregroundStyle(message.toolState == .failed ? Palette.danger : Palette.textSecondary)
+                Label(message.title ?? String(localized: "Tool"), systemImage: message.displayedToolState.symbol)
+                    .font(Typography.caption).foregroundStyle(message.displayedToolState.tint)
                 if let detail = message.detail, !detail.isEmpty {
                     Text(verbatim: detail).font(Typography.code).foregroundStyle(Palette.textSecondary)
                         .lineLimit(2).frame(maxWidth: .infinity, alignment: .leading)

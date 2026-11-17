@@ -77,8 +77,38 @@ extension ChatJournalTests {
         print("PASS Slash command fuzzy completion, Return handling and custom commands")
     }
 
+    static func transcriptToolGrouping() throws {
+        func tool(_ id: String, _ title: String?, _ state: SessionMessage.ToolState?, detail: String? = nil) -> SessionMessage {
+            SessionMessage(id: id, kind: .tool, text: "", title: title, toolState: state, detail: detail)
+        }
+        let question = tool("q", "AskUserQuestion", .completed, detail: #"{"questions":[{"question":"Which?","options":[{"label":"A"}]}]}"#)
+        let items = SessionTranscriptItem.items(from: [
+            SessionMessage(id: "u", kind: .input, text: "Hi"),
+            tool("b1", "Bash", .completed, detail: "ls"), tool("b2", "Bash", .completed, detail: "pwd"),
+            tool("r", "Read", .completed),
+            question, tool("q2", "AskUserQuestion", .completed, detail: question.detail),
+            tool("n1", nil, .completed), tool("n2", nil, nil),
+        ])
+        try require(items.map(\.id) == ["u", "group-b1", "r", "q", "q2", "group-n1"], "Same-title tools group, singles and questions stay rows")
+        guard case .toolGroup(let bash) = items[1], case .toolGroup(let untitled) = items[5] else { throw NSError(domain: "Groups exist", code: 1) }
+        try require(bash.memberIDs == ["b1", "b2"] && bash.latestDetail == "pwd", "A group lists its members and shows the latest command")
+        try require(untitled.title == nil && untitled.state == .running, "Untitled tools group together and nil state reads as running")
+        try require(question.presentation == .question(question.userQuestions) && tool("x", "Bash", nil).displayedToolState == .running,
+                    "Presentation and displayed state are classified once")
+        func run(_ states: [SessionMessage.ToolState?]) -> SessionToolRun {
+            SessionToolRun(messages: states.enumerated().map { tool("\($0.offset)", "Bash", $0.element) })
+        }
+        try require(run([.running, .completed]).state == .completed, "A superseded background command does not keep the group running")
+        try require(run([.completed, .running]).state == .running, "A running latest call shows the group running")
+        let retried = run([.failed, .completed])
+        try require(retried.state == .completed && retried.failureCount == 1, "A successful retry shows completed with a failure count")
+        try require(run([.completed, .failed]).state == .failed, "A failing latest call shows the group failed")
+        print("PASS transcript tool grouping, identifiers and group state")
+    }
+
     @MainActor static func agentChatSupport() async throws {
         try slashCommandCompletion()
+        try transcriptToolGrouping()
         let root = FileManager.default.temporaryDirectory.appendingPathComponent("heka-chat-support-\(UUID())")
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: root) }

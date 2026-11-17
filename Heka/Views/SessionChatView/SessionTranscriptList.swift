@@ -3,12 +3,14 @@ import SwiftUI
 struct SessionTranscriptList: View {
     @State private var followsLatest = true
     @State private var lastContentOrigin: CGFloat?
+    @State private var expansion = SessionTranscriptExpansion()
 
     let messages: [SessionMessage]
     let source: SessionChatSource
     let showsTypingIndicator: Bool
 
     var body: some View {
+        let items = SessionTranscriptItem.items(from: messages)
         GeometryReader { viewport in
             ScrollViewReader { proxy in
                 ScrollView {
@@ -18,7 +20,12 @@ struct SessionTranscriptList: View {
                                                    systemImage: "bubble.left.and.bubble.right",
                                                    description: Text(source.agent == nil ? "Write to continue working on the Mac." : "Messages from this session will appear here. Interactive menus are available in Terminal."))
                         }
-                        ForEach(messages) { message in SessionMessageRow(message: message, agent: source.agent).equatable() }
+                        ForEach(items) { item in
+                            switch item {
+                            case .message(let message): SessionMessageRow(message: message, agent: source.agent).equatable()
+                            case .toolGroup(let run): SessionToolGroup(run: run, agent: source.agent)
+                            }
+                        }
                         TypingIndicatorSlot(isVisible: showsTypingIndicator)
                         Color.clear.frame(height: 1).id("latest")
                     }
@@ -53,6 +60,7 @@ struct SessionTranscriptList: View {
                 }
             }
         }
+        .environment(expansion)
     }
 }
 

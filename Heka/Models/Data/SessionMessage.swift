@@ -9,7 +9,23 @@ enum SessionDisplayMode: String, CaseIterable, Identifiable {
 
 struct SessionMessage: Identifiable, Codable, Equatable, Sendable {
     enum Kind: String, Codable, Sendable { case input, output, assistant, tool, notice }
-    enum ToolState: String, Codable, Sendable { case running, completed, failed }
+    enum ToolState: String, Codable, Sendable {
+        case running, completed, failed
+
+        var symbol: String {
+            switch self {
+            case .running: "gearshape"
+            case .completed: "checkmark.circle"
+            case .failed: "exclamationmark.circle"
+            }
+        }
+    }
+
+    enum Presentation: Equatable, Sendable {
+        case input, assistant, tool, output
+        case question([SessionUserQuestion])
+    }
+
     let id: String
     let kind: Kind
     var text: String
@@ -23,6 +39,19 @@ struct SessionMessage: Identifiable, Codable, Equatable, Sendable {
               let request = try? JSONDecoder().decode(SessionUserQuestion.Request.self, from: data) else { return [] }
         return request.questions
     }
+
+    var presentation: Presentation {
+        switch kind {
+        case .input: return .input
+        case .assistant: return .assistant
+        case .output, .notice: return .output
+        case .tool:
+            let questions = userQuestions
+            return questions.isEmpty ? .tool : .question(questions)
+        }
+    }
+
+    var displayedToolState: ToolState { toolState ?? .running }
 
     var questionAnswer: String? {
         toolState != .running && text != detail ? text : nil

@@ -12,7 +12,7 @@ struct SessionQuestionMessage: View {
             if let answer = message.questionAnswer {
                 Divider()
                 Text(verbatim: answer).textSelection(.enabled)
-                    .foregroundStyle(message.toolState == .failed ? Palette.danger : Palette.textSecondary)
+                    .foregroundStyle(message.displayedToolState.tint)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
