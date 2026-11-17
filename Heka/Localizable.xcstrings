@@ -8125,26 +8125,6 @@
         }
       }
     },
-    "⌘T  New Terminal   ⌘D  Split" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "⌘T  Nouveau terminal   ⌘D  Diviser"
-          }
-        }
-      }
-    },
-    "⌘T and the “New Terminal” buttons open the agent instead of a shell." : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "⌘T et les boutons « Nouveau terminal » ouvrent l’agent au lieu d’un shell."
-          }
-        }
-      }
-    },
     "⌥Return for a new line" : {
       "localizations" : {
         "fr" : {
