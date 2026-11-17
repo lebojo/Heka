@@ -3,7 +3,8 @@ import SwiftUI
 enum Dimension {
     enum Chat {
         static let readableWidth: CGFloat = 760
-        static let actionSize: CGFloat = 36
+        static let sendSize: CGFloat = 22
+        static let attachmentSize: CGFloat = 56
         static let commandPopupMaxHeight: CGFloat = 260
     }
 
@@ -57,11 +58,19 @@ enum Dimension {
         static let idealHeight: CGFloat = 540
     }
 
+    enum Onboarding {
+        static let width: CGFloat = 560
+        static let height: CGFloat = 520
+        static let appIconSize: CGFloat = 96
+        static let iconWidth: CGFloat = 32
+    }
+
     enum Settings {
         static let width: CGFloat = 580
         static let minHeight: CGFloat = 460
         static let idealHeight: CGFloat = 640
         static let themeCardMinWidth: CGFloat = 112
+        static let shortcutWidth: CGFloat = 72
         static let themeSampleHeight: CGFloat = 52
         static let swatchSize: CGFloat = 8
         static let pairingCodeSize: CGFloat = 180

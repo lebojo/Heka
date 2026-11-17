@@ -19,7 +19,8 @@ xcrun swiftc "${swift_flags[@]}" \
   Heka/Models/InstallationStatus.swift Heka/Platforms/macOS/TerminalKeyRoute.swift Heka/Services/AgentSkillInstaller.swift Heka/Services/CommandLineInstaller.swift Heka/Services/AgentUIMigration.swift Heka/Services/LoginShell.swift \
   Heka/Services/AgentProcess.swift Heka/Services/AgentSessionLocator.swift Heka/Services/SessionDatabase.swift Heka/Services/ConversationTranscripts.swift Heka/Models/AgentStatus.swift \
   Heka/Services/ClaudeSubagents.swift Heka/Models/Subagent.swift "Heka/Extensions/String+HomeAbbreviation.swift" \
-  Tests/RegressionTests.swift Tests/RefreshTests.swift Tests/InspectorTests.swift Tests/UsageTests.swift Tests/SettingsTests.swift Tests/CoreTests.swift -o "$test_binary"
+  Heka/Models/KeyCombination.swift Heka/Models/ShortcutAction.swift Heka/Models/ShortcutStore.swift Heka/Models/HexColor.swift Heka/Models/BorderBeamAppearance.swift \
+  Tests/ShortcutTests.swift Tests/RegressionTests.swift Tests/RefreshTests.swift Tests/InspectorTests.swift Tests/UsageTests.swift Tests/SettingsTests.swift Tests/CoreTests.swift -o "$test_binary"
 "$test_binary"
 
 xcrun swiftc "${swift_flags[@]}" \

@@ -9,6 +9,7 @@ import AppKit
         if CommandLine.arguments.first.map({ URL(fileURLWithPath: $0).lastPathComponent }) == CommandLineInstaller.commandName {
             exit(AgentCLI.run(arguments: Array(CommandLine.arguments.dropFirst())))
         }
+        WorkspaceDisk.isolateDebugState()
         AgentUIMigration.run()
         HekaApplication.main()
     }
@@ -91,6 +92,7 @@ struct HekaApplication: App {
         Window("Heka", id: "workspace") {
             ContentView(store: store, gitActionQueues: gitActionQueues)
                 .modifier(SheetSpaceProvider())
+                .modifier(OnboardingPresenter())
                 .environment(store)
                 .environment(floating)
                 .environment(usage)
@@ -117,12 +119,13 @@ struct HekaApplication: App {
         .windowToolbarStyle(.unified)
         .commands {
             CommandGroup(replacing: .newItem) {
-                Button("Add Project…") { store.chooseProjects() }.keyboardShortcut("o").disabled(store.isReadOnly || store.isImporting)
-                Button("Import Folder…") { store.chooseFolder() }.keyboardShortcut("o", modifiers: [.command, .shift]).disabled(store.isReadOnly || store.isImporting)
+                Button("Add Project…") { store.chooseProjects() }.keyboardShortcut(.addProject).disabled(store.isReadOnly || store.isImporting)
+                Button("Import Folder…") { store.chooseFolder() }.keyboardShortcut(.importFolder).disabled(store.isReadOnly || store.isImporting)
             }
             NewVirtualFolderCommand(isDisabled: store.isReadOnly || store.isImporting)
             FloatingTerminalCommands(floating: floating)
             CommandGroup(replacing: .help) {
+                OnboardingReplayButton()
                 Button("Agent Commands") {
                     let alert = NSAlert()
                     alert.messageText = String(localized: "Control Heka from a Terminal")

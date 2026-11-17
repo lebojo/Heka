@@ -10,6 +10,15 @@ enum WorkspaceDisk {
         return defaultApplicationDirectory
     }
 
+    static func isolateDebugState() {
+        #if DEBUG
+        let environment = ProcessInfo.processInfo.environment
+        guard environment["HEKA_STATE_DIRECTORY"] == nil, environment["HEKA_REAL_STATE"] == nil else { return }
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent("Heka-Debug-\(UUID().uuidString)", isDirectory: true)
+        setenv("HEKA_STATE_DIRECTORY", directory.path, 1)
+        #endif
+    }
+
     static var instancesDirectory: URL {
         applicationDirectory.appendingPathComponent("Instances", isDirectory: true)
     }

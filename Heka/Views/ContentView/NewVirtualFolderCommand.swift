@@ -8,7 +8,7 @@ struct NewVirtualFolderCommand: Commands {
     var body: some Commands {
         CommandGroup(after: .newItem) {
             Button("New Virtual Folder…") { presentation?.sheet = .folder(parentID: nil) }
-                .keyboardShortcut("n", modifiers: [.command, .shift])
+                .keyboardShortcut(.newVirtualFolder)
                 .disabled(isDisabled || presentation == nil)
         }
     }

@@ -48,6 +48,18 @@ enum ConversationAgent: String, Codable, CaseIterable, Identifiable, Sendable {
         return launchCommand(skippingPermissions: skippingPermissions) + promptArguments
     }
 
+    func prompt(_ text: String, attaching images: [URL]) -> String {
+        let references = images.map(imageReference)
+        return (references + [text]).filter { !$0.isEmpty }.joined(separator: " ")
+    }
+
+    private func imageReference(_ image: URL) -> String {
+        switch self {
+        case .claude, .codex: image.path
+        case .copilot, .openCode: "@" + image.path
+        }
+    }
+
     func resumeCommand(sessionID: String, skippingPermissions: Bool = false) -> [String]? {
         guard AgentConversation.isValidSessionID(sessionID) else { return nil }
         let command = switch self {

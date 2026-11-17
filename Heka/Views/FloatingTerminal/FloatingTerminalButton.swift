@@ -6,7 +6,7 @@ struct FloatingTerminalButton: View {
     var body: some View {
         Button("Floating Terminal", systemImage: "apple.terminal") { floating.isPresented = true }
             .labelStyle(.iconOnly)
-            .help("Floating Terminal (⇧⌘T)")
+            .help(Text("Floating Terminal (\(ShortcutAction.floatingTerminal.symbols))"))
             .accessibilityLabel("Show floating terminal")
     }
 }

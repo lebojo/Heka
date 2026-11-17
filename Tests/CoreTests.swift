@@ -22,6 +22,11 @@ import Foundation
         try require(children.map(\.lastPathComponent) == ["API", "Frontend"], "Import only immediate visible directories, excluding app packages and files")
         print("PASS folder import")
 
+        let terminalEnvironment = LoginShell.terminalEnvironment(inheriting: ["PATH": "/bin", "CLAUDECODE": "1", "CLAUDE_CODE_CHILD_SESSION": "1", "CLAUDE_PID": "4",
+                                                                    "CLAUDE_CONFIG_DIR": "/c", "HEKA_TERMINAL_ID": "x", "HEKA_INSTANCE": "/i", "HEKA_STATE_DIRECTORY": "/s"])
+        try require(terminalEnvironment == ["PATH": "/bin", "CLAUDE_CONFIG_DIR": "/c", "HEKA_STATE_DIRECTORY": "/s"], "Terminals drop the agent session variables inherited by Heka")
+        print("PASS inherited terminal environment")
+
         let folder = ProjectFolder(name: "Équipe mobile")
         let project = Project(url: children[0], folderID: folder.id)
         let selection = project.worktrees[0].terminals[0].id
@@ -467,6 +472,7 @@ import Foundation
         try await RefreshTests.run(root: root)
         try await UsageTests.run()
         try SettingsTests.run()
+        try ShortcutTests.run()
         print("All core tests passed.")
     }
 

@@ -17,18 +17,18 @@ struct FloatingTerminalTabBar: View {
             }
             .scrollIndicators(.hidden)
             Button { floating.openTab() } label: { Image(systemName: "plus") }
-                .help("New Tab (⌘T)")
+                .help(Text("New Tab (\(ShortcutAction.newTerminal.symbols))"))
                 .accessibilityLabel("New tab")
-                .keyboardShortcut("t")
+                .keyboardShortcut(.newTerminal)
             Divider().frame(height: IconSize.s)
             Button { floating.split(.horizontal) } label: { Image(systemName: "rectangle.split.2x1") }
-                .help("Split Right (⌘D)")
+                .help(Text("Split Right (\(ShortcutAction.splitRight.symbols))"))
                 .accessibilityLabel("Split terminal right")
-                .keyboardShortcut("d")
+                .keyboardShortcut(.splitRight)
             Button { floating.split(.vertical) } label: { Image(systemName: "rectangle.split.1x2") }
-                .help("Split Down (⇧⌘D)")
+                .help(Text("Split Down (\(ShortcutAction.splitDown.symbols))"))
                 .accessibilityLabel("Split terminal down")
-                .keyboardShortcut("d", modifiers: [.command, .shift])
+                .keyboardShortcut(.splitDown)
             Divider().frame(height: IconSize.s)
             Button("Done") { floating.isPresented = false }
         }
@@ -39,9 +39,9 @@ struct FloatingTerminalTabBar: View {
         .background {
             Group {
                 Button("Previous Tab") { floating.selectTab(offset: -1) }
-                    .keyboardShortcut("[", modifiers: [.command, .shift])
+                    .keyboardShortcut(.previousTab)
                 Button("Next Tab") { floating.selectTab(offset: 1) }
-                    .keyboardShortcut("]", modifiers: [.command, .shift])
+                    .keyboardShortcut(.nextTab)
             }
             .opacity(0)
             .accessibilityHidden(true)

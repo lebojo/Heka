@@ -32,7 +32,7 @@ import Observation
     private(set) var conversationRevision = 0
     private(set) var installedAgents: [ConversationAgent] = []
     private(set) var activity = SidebarActivity()
-    private var collapsed: Set<UUID> = []
+    private var expanded: Set<UUID> = []
     private(set) var agentLaunch = AgentLaunch()
     private(set) var busyProjects: Set<UUID> = []
     var selection: UUID? {
@@ -377,10 +377,10 @@ import Observation
         return try await operation()
     }
 
-    func isExpanded(_ id: UUID) -> Bool { !collapsed.contains(id) }
+    func isExpanded(_ id: UUID) -> Bool { expanded.contains(id) }
 
-    func setExpanded(_ id: UUID, _ expanded: Bool) {
-        if expanded { collapsed.remove(id) } else { collapsed.insert(id) }
+    func setExpanded(_ id: UUID, _ isExpanded: Bool) {
+        if isExpanded { expanded.insert(id) } else { expanded.remove(id) }
     }
 
     func newTerminal(in context: TerminalContext) async {

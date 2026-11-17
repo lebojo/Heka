@@ -16,14 +16,23 @@ extension Color {
 }
 
 extension View {
+    func compactMenuStyle() -> some View { menuStyle(.borderlessButton).fixedSize() }
+
     func commandInputTraits() -> some View { self }
 
     func submitsChatMessage(perform submit: @escaping () -> Void) -> some View {
         onSubmit(submit)
+            .onKeyPress(.return, phases: .down, action: insertsNewLineOnShiftReturn)
     }
 
     func previewSheetFrame(_ kind: PreviewSheetKind) -> some View {
         modifier(RememberedSheetSize(kind: kind))
             .presentationSizing(.fitted)
     }
+}
+
+@MainActor private func insertsNewLineOnShiftReturn(_ press: KeyPress) -> KeyPress.Result {
+    guard press.modifiers == .shift else { return .ignored }
+    NSApp.sendAction(#selector(NSText.insertNewlineIgnoringFieldEditor(_:)), to: nil, from: nil)
+    return .handled
 }

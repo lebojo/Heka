@@ -118,6 +118,26 @@ enum SettingsTests {
         try CoreTests.require(decodedConfirmations == confirmations, "Removal confirmations round-trip")
         print("PASS removal confirmations")
 
+        try CoreTests.require(HexColor(hex: "#FF8000")?.hex == "#FF8000FF", "A six-digit hex color is opaque")
+        try CoreTests.require(HexColor(hex: "3366CC80") == HexColor(red: 0.2, green: 0.4, blue: 0.8, alpha: 128.0 / 255), "An eight-digit hex color keeps its alpha")
+        try CoreTests.require(HexColor(hex: "#12345") == nil && HexColor(hex: "#GGGGGG") == nil, "Invalid hex colors are rejected")
+        try CoreTests.require(HexColor(red: 1.4, green: -1, blue: 0.5).hex == "#FF0080FF", "Hex components are clamped")
+        var beam = BorderBeamAppearance()
+        try CoreTests.require(beam.isEnabled && !beam.hasCustomColors, "The border beam is on with default colors")
+        try CoreTests.require(beam.color(for: .openCode).hex == "#FFFFFFFF", "OpenCode defaults to white")
+        let custom = HexColor(red: 0, green: 0, blue: 1)
+        beam.setColor(custom, for: .claude)
+        beam.isEnabled = false
+        let restored = BorderBeamAppearance(rawValue: beam.rawValue)
+        try CoreTests.require(restored == beam && restored?.color(for: .claude) == custom && restored?.isEnabled == false, "Border beam settings round-trip")
+        beam.setColor(BorderBeamAppearance.defaultColor(for: .claude), for: .claude)
+        try CoreTests.require(!beam.hasCustomColors, "Picking the default color clears the override")
+        beam.setColor(custom, for: .codex)
+        beam.resetColors()
+        try CoreTests.require(beam.color(for: .codex) == BorderBeamAppearance.defaultColor(for: .codex), "Reset restores the default colors")
+        try CoreTests.require(BorderBeamAppearance(rawValue: "garbage") == nil, "Invalid stored settings fall back to the defaults")
+        print("PASS border beam settings")
+
         try runAgentSkill()
     }
 

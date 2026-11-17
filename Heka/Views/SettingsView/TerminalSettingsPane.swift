@@ -9,6 +9,7 @@ struct TerminalSettingsPane: View {
         @Bindable var settings = settings
         Form {
             SessionDisplaySettingsSection(mode: $displayMode)
+            BorderBeamSettingsSection()
             Section("Theme") {
                 TerminalPreview(appearance: settings.terminal)
                 TerminalThemeGrid(appearance: $settings.terminal)

@@ -19,16 +19,16 @@ struct TerminalHeader: View {
             }
             Spacer()
             Button { split(.horizontal) } label: { Image(systemName: "rectangle.split.2x1") }
-                .buttonStyle(.borderless).help("Split Right (⌘D)")
+                .buttonStyle(.borderless).help(Text("Split Right (\(ShortcutAction.splitRight.symbols))"))
                 .accessibilityLabel("Split terminal right")
-                .keyboardShortcut("d")
+                .keyboardShortcut(.splitRight)
             Button { split(.vertical) } label: { Image(systemName: "rectangle.split.1x2") }
-                .buttonStyle(.borderless).help("Split Down (⇧⌘D)")
+                .buttonStyle(.borderless).help(Text("Split Down (\(ShortcutAction.splitDown.symbols))"))
                 .accessibilityLabel("Split terminal down")
-                .keyboardShortcut("d", modifiers: [.command, .shift])
+                .keyboardShortcut(.splitDown)
             Button(action: addTerminal) { Label("Terminal", systemImage: "plus") }
                 .buttonStyle(.borderless).help("New terminal in this worktree")
-                .keyboardShortcut("t")
+                .keyboardShortcut(.newTerminal)
         }
         .font(Typography.m).lineLimit(1).padding(.horizontal, Spacing.xl).frame(height: Dimension.Detail.headerHeight)
     }

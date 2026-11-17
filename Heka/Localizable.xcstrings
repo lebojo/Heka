@@ -1,9 +1,7 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "" : {
-
-    },
+    "" : {},
     " M " : {
       "shouldTranslate" : false
     },
@@ -53,6 +51,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "--messages doit être un nombre entier de 1 à %lld."
+          }
+        }
+      }
+    },
+    "Attached Image" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Image jointe"
+          }
+        }
+      }
+    },
+    "Open the agent's model picker" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ouvre le choix du modèle de l’agent"
           }
         }
       }
@@ -910,32 +928,12 @@
     "−%lld" : {
       "shouldTranslate" : false
     },
-    "⌘T  New Terminal   ⌘D  Split" : {
+    "⇧Return for a new line" : {
       "localizations" : {
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "⌘T  Nouveau terminal   ⌘D  Diviser"
-          }
-        }
-      }
-    },
-    "⌘T and the “New Terminal” buttons open the agent instead of a shell." : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "⌘T et les boutons « Nouveau terminal » ouvrent l’agent au lieu d’un shell."
-          }
-        }
-      }
-    },
-    "⌥Return for a new line" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "⌥Entrée pour une nouvelle ligne"
+            "value" : "⇧Entrée pour une nouvelle ligne"
           }
         }
       }
@@ -3064,16 +3062,6 @@
         }
       }
     },
-    "Floating Terminal (⇧⌘T)" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Terminal flottant (⇧⌘T)"
-          }
-        }
-      }
-    },
     "Folder Unavailable" : {
       "localizations" : {
         "fr" : {
@@ -4238,16 +4226,6 @@
         }
       }
     },
-    "New Tab (⌘T)" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nouvel onglet (⌘T)"
-          }
-        }
-      }
-    },
     "New Terminal" : {
       "localizations" : {
         "fr" : {
@@ -5292,16 +5270,6 @@
         }
       }
     },
-    "Refresh (⌘R)" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Actualiser (⌘R)"
-          }
-        }
-      }
-    },
     "Refresh %@" : {
       "localizations" : {
         "fr" : {
@@ -5358,6 +5326,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Retirer"
+          }
+        }
+      }
+    },
+    "Remove Image" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retirer l’image"
           }
         }
       }
@@ -6222,26 +6200,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Indiquez les worktrees : --worktree UUID (voir heka list)."
-          }
-        }
-      }
-    },
-    "Split Down (⇧⌘D)" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Diviser en bas (⇧⌘D)"
-          }
-        }
-      }
-    },
-    "Split Right (⌘D)" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Diviser à droite (⌘D)"
           }
         }
       }
@@ -7943,6 +7901,632 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ton Mac, à portée de main"
+          }
+        }
+      }
+    },
+    "Split Right (%@)" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diviser à droite (%@)"
+          }
+        }
+      }
+    },
+    "Split Down (%@)" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diviser en bas (%@)"
+          }
+        }
+      }
+    },
+    "New Tab (%@)" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nouvel onglet (%@)"
+          }
+        }
+      }
+    },
+    "Refresh (%@)" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Actualiser (%@)"
+          }
+        }
+      }
+    },
+    "Floating Terminal (%@)" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Terminal flottant (%@)"
+          }
+        }
+      }
+    },
+    "%@  New Terminal   %@  Split" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@  Nouveau terminal   %2$@  Diviser"
+          }
+        }
+      }
+    },
+    "%@ and the “New Terminal” buttons open the agent instead of a shell." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ et les boutons « Nouveau terminal » ouvrent l’agent au lieu d’un shell."
+          }
+        }
+      }
+    },
+    "Shortcuts" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Raccourcis"
+          }
+        }
+      }
+    },
+    "App" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "App"
+          }
+        }
+      }
+    },
+    "Chat" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chat"
+          }
+        }
+      }
+    },
+    "Inspector" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inspecteur"
+          }
+        }
+      }
+    },
+    "Split Right" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diviser à droite"
+          }
+        }
+      }
+    },
+    "Split Down" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diviser en bas"
+          }
+        }
+      }
+    },
+    "Restore Defaults" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rétablir les valeurs par défaut"
+          }
+        }
+      }
+    },
+    "Restore all keyboard shortcuts to their defaults?" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rétablir tous les raccourcis clavier par défaut ?"
+          }
+        }
+      }
+    },
+    "Type Shortcut…" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tapez le raccourci…"
+          }
+        }
+      }
+    },
+    "Recording" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enregistrement"
+          }
+        }
+      }
+    },
+    "Records a new key combination. Press Escape to cancel." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enregistre une nouvelle combinaison de touches. Appuyez sur Échap pour annuler."
+          }
+        }
+      }
+    },
+    "Type the new shortcut" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tapez le nouveau raccourci"
+          }
+        }
+      }
+    },
+    "Include ⌘, ⌃ or ⌥ in the shortcut." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Incluez ⌘, ⌃ ou ⌥ dans le raccourci."
+          }
+        }
+      }
+    },
+    "Already used by “%@”. Choose another combination." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Déjà utilisé par « %@ ». Choisissez une autre combinaison."
+          }
+        }
+      }
+    },
+    "Reset %@" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Réinitialiser %@"
+          }
+        }
+      }
+    },
+    "⌘T  New Terminal   ⌘D  Split" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "⌘T  Nouveau terminal   ⌘D  Diviser"
+          }
+        }
+      }
+    },
+    "⌘T and the “New Terminal” buttons open the agent instead of a shell." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "⌘T et les boutons « Nouveau terminal » ouvrent l’agent au lieu d’un shell."
+          }
+        }
+      }
+    },
+    "⌥Return for a new line" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "⌥Entrée pour une nouvelle ligne"
+          }
+        }
+      }
+    },
+    "Floating Terminal (⇧⌘T)" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Terminal flottant (⇧⌘T)"
+          }
+        }
+      }
+    },
+    "New Tab (⌘T)" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nouvel onglet (⌘T)"
+          }
+        }
+      }
+    },
+    "Refresh (⌘R)" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Actualiser (⌘R)"
+          }
+        }
+      }
+    },
+    "Split Down (⇧⌘D)" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diviser en bas (⇧⌘D)"
+          }
+        }
+      }
+    },
+    "Split Right (⌘D)" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diviser à droite (⌘D)"
+          }
+        }
+      }
+    },
+    "Skip" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Passer"
+          }
+        }
+      }
+    },
+    "Back" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retour"
+          }
+        }
+      }
+    },
+    "Continue" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continuer"
+          }
+        }
+      }
+    },
+    "Install…" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installer…"
+          }
+        }
+      }
+    },
+    "Checking" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vérification"
+          }
+        }
+      }
+    },
+    "Not installed" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non installé"
+          }
+        }
+      }
+    },
+    "Step %lld of %lld" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Étape %1$lld sur %2$lld"
+          }
+        }
+      }
+    },
+    "Closes the introduction. You can replay it from the Help menu." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ferme la présentation. Tu peux la revoir depuis le menu Aide."
+          }
+        }
+      }
+    },
+    "Welcome to Heka" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bienvenue dans Heka"
+          }
+        }
+      }
+    },
+    "Heka organizes your projects and worktrees, and runs your coding agents side by side in terminals or chats." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Heka organise tes projets et tes worktrees, et fait tourner tes agents de code côte à côte, en terminal ou en chat."
+          }
+        }
+      }
+    },
+    "How Heka Works" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comment fonctionne Heka"
+          }
+        }
+      }
+    },
+    "A few ideas to find your way around." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quelques notions pour t’y retrouver."
+          }
+        }
+      }
+    },
+    "Folders, projects and worktrees" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dossiers, projets et worktrees"
+          }
+        }
+      }
+    },
+    "Group projects in virtual folders. Each project holds Git worktrees, and each worktree holds its terminals." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Range tes projets dans des dossiers virtuels. Chaque projet contient des worktrees Git, et chaque worktree ses terminaux."
+          }
+        }
+      }
+    },
+    "Terminal and chat modes" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modes terminal et chat"
+          }
+        }
+      }
+    },
+    "Follow an agent in its raw terminal, or switch to a chat view of the same session." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suis un agent dans son terminal brut, ou passe à une vue chat de la même session."
+          }
+        }
+      }
+    },
+    "Browse Files, Agents, Git changes and Checks for the selected worktree." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Parcours les fichiers, les agents, les changements Git et les checks du worktree sélectionné."
+          }
+        }
+      }
+    },
+    "Agent CLI and Mobile Control" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CLI pour agents et contrôle mobile"
+          }
+        }
+      }
+    },
+    "Let agents drive Heka with the heka command, and follow them from your iPhone." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Laisse les agents piloter Heka avec la commande heka, et suis-les depuis ton iPhone."
+          }
+        }
+      }
+    },
+    "Setup Check" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vérification de l’installation"
+          }
+        }
+      }
+    },
+    "Some features rely on tools installed on your Mac. Nothing here is required to continue." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Certaines fonctionnalités s’appuient sur des outils installés sur ton Mac. Rien ici n’est requis pour continuer."
+          }
+        }
+      }
+    },
+    "Run gh auth login in a terminal" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lance gh auth login dans un terminal"
+          }
+        }
+      }
+    },
+    "Signed in" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connecté"
+          }
+        }
+      }
+    },
+    "Your First Project" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ton premier projet"
+          }
+        }
+      }
+    },
+    "Add a Git repository, or import a folder that contains several of them." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajoute un dépôt Git, ou importe un dossier qui en contient plusieurs."
+          }
+        }
+      }
+    },
+    "You can do this later from the File menu." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tu pourras le faire plus tard depuis le menu Fichier."
+          }
+        }
+      }
+    },
+    "Show Welcome Tour" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Revoir la présentation"
+          }
+        }
+      }
+    },
+    "Introduction" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Présentation"
+          }
+        }
+      }
+    },
+    "GitHub" : {
+      "shouldTranslate" : false
+    },
+    "GitHub CLI" : {
+      "shouldTranslate" : false
+    },
+    "Border beam" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Faisceau de bordure"
+          }
+        }
+      }
+    },
+    "Border Beam" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Faisceau de bordure"
+          }
+        }
+      }
+    },
+    "A light travels around the message field while the agent works." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Une lumière fait le tour du champ de message pendant que l’agent travaille."
+          }
+        }
+      }
+    },
+    "Reset Colors" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Réinitialiser les couleurs"
           }
         }
       }
