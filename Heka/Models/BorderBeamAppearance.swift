@@ -28,6 +28,15 @@ struct BorderBeamAppearance: Hashable, Sendable {
     mutating func resetColors() {
         colors = [:]
     }
+
+    static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.isEnabled == rhs.isEnabled && lhs.colors == rhs.colors
+    }
+
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(isEnabled)
+        hasher.combine(colors)
+    }
 }
 
 extension BorderBeamAppearance: RawRepresentable {
@@ -38,7 +47,9 @@ extension BorderBeamAppearance: RawRepresentable {
     }
 
     var rawValue: String {
-        let data = (try? JSONEncoder().encode(Stored(isEnabled: isEnabled, colors: colors))) ?? Data()
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = .sortedKeys
+        let data = (try? encoder.encode(Stored(isEnabled: isEnabled, colors: colors))) ?? Data()
         return String(decoding: data, as: UTF8.self)
     }
 
