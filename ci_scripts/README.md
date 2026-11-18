@@ -29,7 +29,7 @@ The **Github link** group owns [the public TestFlight invitation](https://testfl
 
 ## Build preparation
 
-`ci_post_clone.sh` runs only inside Xcode Cloud, refuses non-iOS actions, and updates the temporary checkout's `CURRENT_PROJECT_VERSION` to `CI_BUILD_NUMBER + 1`. Build 1 of version 0.5.0 was already uploaded manually, so Cloud build 1 becomes app build 2. Keep the offset stable and do not reset the Cloud counter; if uploading a manual build later, choose its number in coordination with the next Cloud build.
+`ci_post_clone.sh` runs only inside Xcode Cloud and refuses non-iOS actions. Xcode Cloud sets the build number itself from its own counter (`CI_BUILD_NUMBER`) when it archives, so the number keeps increasing across versions and any `CURRENT_PROJECT_VERSION` change in the checkout is ignored: run 1 uploaded build 1 of 0.6.0, run 6 build 6 of 0.8.0. App Store Connect only requires the number to be unique within a version. Never reset the Cloud counter. The macOS GitHub release uses its own number, which starts at 1 for each tag.
 
 The script also enables SwiftTerm's pinned build-info package plugin on the disposable Cloud machine. It does not change `MARKETING_VERSION`, create tags, or publish a GitHub release. The existing macOS release workflow remains separate.
 
