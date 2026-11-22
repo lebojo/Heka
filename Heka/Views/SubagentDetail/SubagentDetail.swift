@@ -17,7 +17,7 @@ struct SubagentDetail: View {
             Divider()
             TerminalFooter(session: store.sessions.session(context.terminal.id), path: context.worktree.path)
         }
-        .background(Palette.surface)
+        .background(Color.surface)
         .navigationTitle(subagent.title)
     }
 }

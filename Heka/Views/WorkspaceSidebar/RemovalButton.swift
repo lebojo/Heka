@@ -24,7 +24,7 @@ struct RemovalButton: View {
 
     var body: some View {
         Button(title, systemImage: removal.systemImage, role: role) { request() }
-            .tint(Palette.danger)
+            .tint(Color.danger)
             .disabled(store.isReadOnly || store.isBusy(removal))
     }
 

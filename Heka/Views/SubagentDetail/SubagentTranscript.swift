@@ -14,7 +14,7 @@ struct SubagentTranscript: View {
                 SessionTranscriptList(messages: transcript.messages, source: transcript.source, showsTypingIndicator: ChatActivity(subagent: status).showsIndicator)
             }
         }
-        .background(Palette.surface)
+        .background(Color.surface)
         .task(id: journal) {
             let monitor = AgentJournalMonitor(transcript: transcript)
             monitor.attach(AgentJournal(source: .claude, url: journal, isSubagent: true))

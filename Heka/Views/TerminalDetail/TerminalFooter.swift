@@ -6,13 +6,13 @@ struct TerminalFooter: View {
 
     var body: some View {
         HStack(spacing: Spacing.m) {
-            Image(systemName: "folder").foregroundStyle(Palette.textSecondary)
+            Image(systemName: "folder").foregroundStyle(Color.textSecondary)
             Text((session?.currentDirectory ?? path).abbreviatingHome)
                 .lineLimit(1).truncationMode(.middle).textSelection(.enabled)
             Spacer(minLength: Spacing.l)
-            Text("\(ShortcutAction.newTerminal.symbols)  New Terminal   \(ShortcutAction.splitRight.symbols)  Split").foregroundStyle(Palette.textSecondary)
+            Text("\(ShortcutAction.newTerminal.symbols)  New Terminal   \(ShortcutAction.splitRight.symbols)  Split").foregroundStyle(Color.textSecondary)
         }
-        .font(Typography.s).foregroundStyle(Palette.textSecondary)
+        .font(Font.s).foregroundStyle(Color.textSecondary)
         .padding(.horizontal, Spacing.xl).frame(height: Dimension.Detail.footerHeight)
     }
 }

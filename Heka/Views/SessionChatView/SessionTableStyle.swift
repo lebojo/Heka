@@ -9,7 +9,7 @@ struct SessionTableStyle: StructuredText.TableStyle {
                 .textual.tableOverlay { layout in
                     Canvas { context, _ in
                         for divider in layout.dividers() {
-                            context.fill(Path(divider), with: .color(Palette.textTertiary))
+                            context.fill(Path(divider), with: .color(Color.textTertiary))
                         }
                     }
                 }

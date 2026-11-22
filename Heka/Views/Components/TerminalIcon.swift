@@ -8,7 +8,7 @@ struct TerminalIcon: View {
             if let agent {
                 AgentLogo(agent: agent, size: IconSize.s)
             } else {
-                Image(systemName: "terminal").font(Typography.m).foregroundStyle(Palette.textSecondary)
+                Image(systemName: "terminal").font(Font.m).foregroundStyle(Color.textSecondary)
             }
         }
         .accessibilityHidden(true)

@@ -13,7 +13,7 @@ struct OnboardingNavigationBar: View {
             Spacer()
             Text("Step \(step.rawValue + 1) of \(OnboardingStep.allCases.count)")
                 .font(.callout)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.textSecondary)
             Spacer()
             if let previous = step.previous {
                 Button("Back") { step = previous }

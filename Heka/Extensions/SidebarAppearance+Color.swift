@@ -23,8 +23,8 @@ extension SidebarTint {
 extension SidebarItemKind {
     var defaultColor: Color {
         switch self {
-        case .folder: Palette.accent
-        case .project: Palette.textSecondary
+        case .folder: Color.accentColor
+        case .project: Color.textSecondary
         }
     }
 }

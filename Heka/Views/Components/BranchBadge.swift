@@ -3,16 +3,16 @@ import SwiftUI
 struct BranchBadge: View {
     let branch: GitBranch
 
-    private var foreground: Color { branch.isDetached ? Palette.textPrimary : Palette.branchForeground }
-    private var background: Color { branch.isDetached ? Palette.control : Palette.branchBackground }
+    private var foreground: Color { branch.isDetached ? Color.textPrimary : Color.branchForeground }
+    private var background: Color { branch.isDetached ? Color.control : Color.branchBackground }
 
     var body: some View {
         HStack(spacing: Spacing.xxs) {
             Image(systemName: branch.symbolName)
-                .font(Typography.xxs.weight(.medium))
+                .font(.xxs.weight(.medium))
             Text(branch.name).lineLimit(1).truncationMode(.middle)
         }
-        .font(Typography.xs.weight(.medium))
+        .font(.xs.weight(.medium))
         .foregroundStyle(foreground)
         .padding(.horizontal, Spacing.s).padding(.vertical, Spacing.xxs)
         .background(background, in: Capsule())

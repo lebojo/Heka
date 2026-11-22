@@ -3,18 +3,12 @@ import SwiftUI
 struct SettingsView: View {
     var body: some View {
         TabView {
-            GeneralSettingsPane()
-                .tabItem { Label("General", systemImage: "gearshape") }
-            TerminalSettingsPane()
-                .tabItem { Label("Display", systemImage: "rectangle.split.2x1") }
-            AgentSettingsPane()
-                .tabItem { Label("Agents", systemImage: "sparkles") }
-            PromptSettingsPane()
-                .tabItem { Label("Prompts", systemImage: "text.bubble") }
-            ShortcutSettingsPane()
-                .tabItem { Label("Shortcuts", systemImage: "keyboard") }
-            HostSettingsPane()
-                .tabItem { Label("Mobile Control", systemImage: "iphone") }
+            Tab("General", systemImage: "gearshape") { GeneralSettingsPane() }
+            Tab("Display", systemImage: "rectangle.split.2x1") { TerminalSettingsPane() }
+            Tab("Agents", systemImage: "sparkles") { AgentSettingsPane() }
+            Tab("Prompts", systemImage: "text.bubble") { PromptSettingsPane() }
+            Tab("Shortcuts", systemImage: "keyboard") { ShortcutSettingsPane() }
+            Tab("Mobile Control", systemImage: "iphone") { HostSettingsPane() }
         }
         .frame(width: Dimension.Settings.width)
         .frame(minHeight: Dimension.Settings.minHeight, idealHeight: Dimension.Settings.idealHeight)

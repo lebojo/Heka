@@ -8,9 +8,9 @@ struct TerminalPaneHeader: View {
 
     var body: some View {
         HStack(spacing: Spacing.s) {
-            Image(systemName: "terminal").foregroundStyle(isFocused ? Palette.accent : Palette.textSecondary)
+            Image(systemName: "terminal").foregroundStyle(isFocused ? Color.accentColor : Color.textSecondary)
             Text(title).lineLimit(1)
-                .foregroundStyle(isFocused ? Palette.textPrimary : Palette.textSecondary)
+                .foregroundStyle(isFocused ? Color.textPrimary : Color.textSecondary)
             if let branch {
                 BranchBadge(branch: branch).frame(maxWidth: Dimension.Badge.sidebarMaxWidth)
             }
@@ -19,8 +19,8 @@ struct TerminalPaneHeader: View {
                 .buttonStyle(.borderless).help("Close This Pane")
                 .accessibilityLabel("Close terminal \(title)")
         }
-        .font(Typography.s).padding(.horizontal, Spacing.l).frame(height: Dimension.Detail.paneTitleHeight)
-        .background(isFocused ? Palette.focusedPaneFill : .clear)
+        .font(Font.s).padding(.horizontal, Spacing.l).frame(height: Dimension.Detail.paneTitleHeight)
+        .background(isFocused ? Color.focusedPaneFill : .clear)
         .contentShape(Rectangle())
     }
 }

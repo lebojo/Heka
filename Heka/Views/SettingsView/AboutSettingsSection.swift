@@ -12,7 +12,7 @@ struct AboutSettingsSection: View {
             Link(destination: websiteURL) {
                 Text("Made with ❤️ by Jordan Chap")
             }
-            .foregroundStyle(.primary)
+            .foregroundStyle(Color.textPrimary)
         } footer: {
             Text("Version \(version)")
         }

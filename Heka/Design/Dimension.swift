@@ -6,6 +6,11 @@ enum Dimension {
         static let sendSize: CGFloat = 22
         static let attachmentSize: CGFloat = 56
         static let commandPopupMaxHeight: CGFloat = 260
+        #if os(macOS)
+        static let bodyFontSize: CGFloat = 13
+        #else
+        static let bodyFontSize: CGFloat = 17
+        #endif
     }
 
     enum Window {

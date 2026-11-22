@@ -15,9 +15,9 @@ struct UsageGauge: View {
 extension UsageLevel {
     var tint: Color {
         switch self {
-        case .comfortable: Palette.accent
-        case .warning: Palette.warning
-        case .critical: Palette.danger
+        case .comfortable: Color.accentColor
+        case .warning: Color.warning
+        case .critical: Color.danger
         }
     }
 }

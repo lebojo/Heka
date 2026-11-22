@@ -19,12 +19,12 @@ struct SessionCodeHighlighter: MarkupParser {
 private extension SessionCodeTokens.Kind {
     var color: Color {
         switch self {
-        case .comment: Palette.textSecondary
-        case .string: Palette.codeString
-        case .number: Palette.codeNumber
-        case .keyword: Palette.codeKeyword
-        case .addition: Palette.success
-        case .deletion: Palette.danger
+        case .comment: Color.textSecondary
+        case .string: Color.codeString
+        case .number: Color.codeNumber
+        case .keyword: Color.codeKeyword
+        case .addition: Color.success
+        case .deletion: Color.danger
         }
     }
 }

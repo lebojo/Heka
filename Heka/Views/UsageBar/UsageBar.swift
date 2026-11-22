@@ -37,13 +37,13 @@ struct UsageBar: View {
 
                     Button { withAnimation(Motion.standard) { isCollapsed.toggle() } } label: {
                         Image(systemName: "chevron.down")
-                            .font(Typography.xxs.weight(.semibold))
+                            .font(.xxs.weight(.semibold))
                             .rotationEffect(.degrees(isCollapsed ? 180 : 0))
                             .frame(width: IconSize.s, height: IconSize.s)
                             .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
-                    .foregroundStyle(Palette.textSecondary)
+                    .foregroundStyle(Color.textSecondary)
                     .help(isCollapsed ? "Show limit details" : "Collapse Usage")
                     .accessibilityLabel(isCollapsed ? "Expand Usage" : "Collapse Usage")
                 }

@@ -18,10 +18,10 @@ struct AgentShortcutBar: View {
             }
             Spacer(minLength: 0)
         }
-        .font(Typography.caption)
+        .font(Font.caption)
         .buttonStyle(.bordered).buttonBorderShape(.capsule).controlSize(.small)
         .padding(.horizontal, Spacing.l).padding(.vertical, Spacing.s)
         .frame(maxWidth: .infinity)
-        .background(Palette.bar)
+        .background(Material.bar)
     }
 }

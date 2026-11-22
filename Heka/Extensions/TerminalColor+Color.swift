@@ -21,8 +21,8 @@ extension TerminalAppearance {
     }
 
     var font: Font { Font(nsFont) }
-    var background: Color { palette?.background.color ?? Palette.surface }
-    var foreground: Color { palette?.foreground.color ?? Palette.textPrimary }
-    var cursor: Color { palette?.cursor.color ?? Palette.accent }
+    var background: Color { palette?.background.color ?? Color.surface }
+    var foreground: Color { palette?.foreground.color ?? Color.textPrimary }
+    var cursor: Color { palette?.cursor.color ?? Color.accentColor }
     var ansi: [Color] { (palette?.ansi ?? TerminalTheme.terminalAppANSI).map(\.color) }
 }

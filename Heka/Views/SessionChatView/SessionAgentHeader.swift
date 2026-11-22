@@ -16,8 +16,8 @@ struct SessionAgentHeader: View {
                     .accessibilityHidden(true)
             }
             Text(verbatim: name)
-                .foregroundStyle(Palette.textSecondary)
+                .foregroundStyle(Color.textSecondary)
         }
-        .font(Typography.caption)
+        .font(Font.caption)
     }
 }

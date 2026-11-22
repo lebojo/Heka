@@ -3,20 +3,11 @@ import SwiftUI
 struct OnboardingView: View {
     @State private var step = OnboardingStep.welcome
 
-    @ViewBuilder private var page: some View {
-        switch step {
-        case .welcome: OnboardingWelcomePage()
-        case .concepts: OnboardingConceptsPage()
-        case .setup: OnboardingSetupPage()
-        case .project: OnboardingProjectPage()
-        }
-    }
-
     var body: some View {
         VStack(spacing: 0) {
-            page
+            OnboardingPage(step: step)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-                .padding(24)
+                .padding(Spacing.xxl)
                 .id(step)
             Divider()
             OnboardingNavigationBar(step: $step)

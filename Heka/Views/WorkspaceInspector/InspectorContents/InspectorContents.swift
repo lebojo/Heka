@@ -1,0 +1,49 @@
+import SwiftUI
+
+struct InspectorContents: View {
+    @Environment(\.workspaceVisible) private var workspaceVisible
+    @Environment(\.scenePhase) private var scenePhase
+
+    @State private var model: InspectorStore
+    @State private var previews = InspectorPreviews()
+    @State private var refresh = 0
+    @State private var monitoredRefresh = 0
+
+    let context: TerminalContext
+    let tab: InspectorTab
+    let source: any InspectorSource
+
+    var body: some View {
+        VStack(spacing: 0) {
+            InspectorHeader(refresh: $refresh, model: model, title: tab.title,
+                            subtitle: context.worktree.isPrimary ? context.project.name : context.worktree.name,
+                            path: context.worktree.path)
+            Divider()
+            switch tab {
+            case .files: InspectorFileTree(path: context.worktree.path, refresh: refresh, source: source)
+            case .agents: AgentConversationList(context: context, refresh: refresh, source: source)
+            case .git, .checks: InspectorRepositoryContent(model: model, tab: tab, refresh: refresh, source: source)
+            }
+        }
+        .environment(previews)
+        .environment(model)
+        .environment(\.inspectedWorktree, InspectedWorktree(projectID: context.project.id, worktreeID: context.worktree.id))
+        .modifier(InspectorPreviewPresenter(previews: previews, source: source))
+        .task(id: "\(tab.rawValue)-\(refresh)-\(workspaceVisible)-\(scenePhase == .background)", priority: .utility) {
+            guard workspaceVisible, scenePhase != .background, tab == .git || tab == .checks else { return }
+            let forceRemote = refresh != monitoredRefresh
+            monitoredRefresh = refresh
+            let changes = await source.repositoryChanges(at: context.worktree.path)
+            await model.monitor(path: context.worktree.path, forceRemote: forceRemote, changes: changes,
+                                readLocal: { [source] in try await source.localGit(at: $0) },
+                                readRemote: { [source] in try await source.remote($0) })
+        }
+    }
+
+    init(context: TerminalContext, tab: InspectorTab, source: any InspectorSource) {
+        self.context = context
+        self.tab = tab
+        self.source = source
+        _model = State(initialValue: source.gitActionQueues.map(InspectorStore.init(actionQueues:)) ?? InspectorStore())
+    }
+}

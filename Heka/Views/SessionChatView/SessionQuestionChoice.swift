@@ -7,12 +7,12 @@ struct SessionQuestionChoice: View {
     var body: some View {
         HStack(alignment: .top, spacing: Spacing.m) {
             Image(systemName: symbol)
-                .foregroundStyle(Palette.textSecondary)
+                .foregroundStyle(Color.textSecondary)
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: Spacing.xs) {
-                Text(verbatim: option.label).font(Typography.chatChoice)
+                Text(verbatim: option.label).font(Font.chatChoice)
                 if let detail = option.detail {
-                    Text(verbatim: detail).foregroundStyle(Palette.textSecondary)
+                    Text(verbatim: detail).foregroundStyle(Color.textSecondary)
                 }
             }
         }

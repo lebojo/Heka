@@ -17,7 +17,7 @@ Une interface compacte inspirée de la hiérarchie Orca, avec les conventions de
 - Contrôles SwiftUI, SF Symbols et couleurs sémantiques du système.
 - Libellés français directs, chemins et états accessibles sans surcharge.
 
-Les valeurs sont centralisées dans `Heka/Design/` : `Spacing` (2, 4, 6, 8, 12, 16, 24), `Radius`, `Typography`, `Palette`, `IconSize`, `Stroke`, `Motion` et `Dimension`. Les vues n’emploient aucune valeur en dur ; les opacités restent locales.
+Les valeurs sont centralisées dans `Heka/Design/` : `Spacing` (2, 4, 6, 8, 12, 16, 24), `Radius`, `IconSize`, `Stroke`, `Motion` et `Dimension`. Couleurs et polices sont des extensions de `Color` et de `Font` (`Heka/Extensions/Color+Design.swift`, `Font+Design.swift`) ; les couleurs propres à l’app sont dans `Assets.xcassets`. Les vues n’emploient aucune valeur en dur ; les opacités restent locales.
 
 Documentation extraite de `Heka/ContentView.swift`, `Heka/Views/`, `Heka/Services/TerminalSessions.swift` et `Heka/MyApp.swift`. Les captures ont été écartées : Stage Manager et la capture AppKit ont altéré la composition ou la vibrance et les couleurs (voir `.impeccable/review/REVIEW.md`). Ce document décrit le code ; il ne constitue pas une validation visuelle.
 

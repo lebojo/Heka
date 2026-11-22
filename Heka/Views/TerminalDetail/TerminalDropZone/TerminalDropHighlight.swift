@@ -6,8 +6,8 @@ struct TerminalDropHighlight: View {
 
     var body: some View {
         RoundedRectangle(cornerRadius: Radius.m)
-            .fill(Palette.dropTargetFill)
-            .strokeBorder(Palette.accent, lineWidth: Stroke.regular)
+            .fill(Color.dropTargetFill)
+            .strokeBorder(Color.accentColor, lineWidth: Stroke.regular)
             .padding(Spacing.xs)
             .frame(width: edge.axis == .horizontal ? size.width / 2 : size.width,
                    height: edge.axis == .vertical ? size.height / 2 : size.height)

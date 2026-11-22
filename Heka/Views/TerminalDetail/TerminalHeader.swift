@@ -9,11 +9,11 @@ struct TerminalHeader: View {
 
     var body: some View {
         HStack(spacing: Spacing.m) {
-            Image(systemName: "shippingbox").foregroundStyle(Palette.textSecondary)
+            Image(systemName: "shippingbox").foregroundStyle(Color.textSecondary)
             Text(context.project.name).fontWeight(.medium)
-            Image(systemName: "chevron.right").font(Typography.xxs).foregroundStyle(Palette.textTertiary)
-            Image(systemName: "arrow.triangle.branch").foregroundStyle(Palette.textSecondary)
-            Text(context.worktree.name).foregroundStyle(Palette.textSecondary)
+            Image(systemName: "chevron.right").font(Font.xxs).foregroundStyle(Color.textTertiary)
+            Image(systemName: "arrow.triangle.branch").foregroundStyle(Color.textSecondary)
+            Text(context.worktree.name).foregroundStyle(Color.textSecondary)
             if let branch = store.sessions.branch(for: context.terminal.id, initialPath: context.worktree.path) {
                 BranchBadge(branch: branch).frame(maxWidth: Dimension.Badge.detailMaxWidth)
             }
@@ -30,7 +30,7 @@ struct TerminalHeader: View {
                 .buttonStyle(.borderless).help("New terminal in this worktree")
                 .keyboardShortcut(.newTerminal)
         }
-        .font(Typography.m).lineLimit(1).padding(.horizontal, Spacing.xl).frame(height: Dimension.Detail.headerHeight)
+        .font(Font.m).lineLimit(1).padding(.horizontal, Spacing.xl).frame(height: Dimension.Detail.headerHeight)
     }
 
     private func addTerminal() {

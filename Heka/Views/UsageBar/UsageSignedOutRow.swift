@@ -12,7 +12,7 @@ struct UsageSignedOutRow: View {
             if isWaiting { ProgressView().controlSize(.mini) }
             else { Button("Sign In…", action: showDetails).buttonStyle(.link) }
         }
-        .font(Typography.s).foregroundStyle(Palette.textSecondary)
+        .font(.s).foregroundStyle(Color.textSecondary)
         .padding(.horizontal, Spacing.l).padding(.vertical, Spacing.m)
     }
 }

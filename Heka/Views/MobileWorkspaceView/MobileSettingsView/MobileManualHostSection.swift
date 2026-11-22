@@ -20,11 +20,11 @@ struct MobileManualHostSection: View {
                 .autocorrectionDisabled()
                 .accessibilityLabel("Mac IP Address")
             TextField("Pairing code, e.g. ABCD-EFGH-JKLM", text: $pairingCode)
-                .font(Typography.body.monospaced())
+                .font(Font.callout.monospaced())
                 .textInputAutocapitalization(.characters)
                 .autocorrectionDisabled()
                 .accessibilityLabel("Pairing Code")
-            if let error { Text(error).foregroundStyle(Palette.danger) }
+            if let error { Text(error).foregroundStyle(Color.danger) }
             Button("Connect", action: connect).disabled(isIncomplete)
         } header: { Text("Add Manually") } footer: {
             Text("Enter the IP address and pairing code shown on the Mac in Settings → Mobile Control.")

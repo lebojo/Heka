@@ -13,7 +13,7 @@ struct SidebarFooter: View {
                 if store.isImporting { ProgressView().controlSize(.mini) }
                 else { Text("\(store.sessions.runningWorkspaceCount) open") }
             }
-            .font(Typography.s).foregroundStyle(Palette.textSecondary)
+            .font(Font.s).foregroundStyle(Color.textSecondary)
             .padding(.horizontal, Spacing.l).padding(.vertical, Spacing.l)
         }
     }

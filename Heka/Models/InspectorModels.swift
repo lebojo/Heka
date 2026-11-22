@@ -473,6 +473,10 @@ struct RemoteRepository: Codable, Equatable, Sendable {
 }
 
 struct RemoteCheck: Codable, Identifiable, Equatable, Sendable {
+    private enum CodingKeys: String, CodingKey {
+        case name, context, status, conclusion, state, detailsUrl, targetUrl
+    }
+
     let name: String?
     let context: String?
     let status: String?
@@ -480,10 +484,23 @@ struct RemoteCheck: Codable, Identifiable, Equatable, Sendable {
     let state: String?
     let detailsUrl: String?
     let targetUrl: String?
+    var occurrence = 0
     var title: String { name ?? context ?? "Check" }
     var result: String { conclusion.flatMap { $0.isEmpty ? nil : $0 } ?? state ?? status ?? "PENDING" }
     var url: String? { detailsUrl ?? targetUrl }
-    var id: String { title + (url ?? "") }
+    var id: String { "\(title)\u{0}\(url ?? "")\u{0}\(occurrence)" }
+
+    static func numbered(_ checks: [RemoteCheck]) -> [RemoteCheck] {
+        var counts: [String: Int] = [:]
+        return checks.map { check in
+            var numbered = check
+            numbered.occurrence = 0
+            let key = numbered.id
+            numbered.occurrence = counts[key, default: 0]
+            counts[key] = numbered.occurrence + 1
+            return numbered
+        }
+    }
 }
 
 struct ChangeRequest: Codable, Equatable, Sendable {
@@ -497,6 +514,22 @@ struct ChangeRequest: Codable, Equatable, Sendable {
     let baseRefName: String
     let reviewDecision: String?
     let statusCheckRollup: [RemoteCheck]?
+}
+
+extension ChangeRequest {
+    init(from decoder: any Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        self.init(number: try values.decode(Int.self, forKey: .number),
+                  title: try values.decode(String.self, forKey: .title),
+                  url: try values.decode(String.self, forKey: .url),
+                  state: try values.decode(String.self, forKey: .state),
+                  isDraft: try values.decode(Bool.self, forKey: .isDraft),
+                  headRefName: try values.decode(String.self, forKey: .headRefName),
+                  headRefOid: try values.decode(String.self, forKey: .headRefOid),
+                  baseRefName: try values.decode(String.self, forKey: .baseRefName),
+                  reviewDecision: try values.decodeIfPresent(String.self, forKey: .reviewDecision),
+                  statusCheckRollup: try values.decodeIfPresent([RemoteCheck].self, forKey: .statusCheckRollup).map(RemoteCheck.numbered))
+    }
 }
 
 struct PipelineRun: Codable, Identifiable, Equatable, Sendable {
@@ -528,8 +561,28 @@ struct TextContent: Sendable {
 struct TextPreview: Identifiable {
     var id = UUID()
     let title: String
-    let text: String
+    let lines: [TextPreviewLine]
     let url: URL?
+
+    init(title: String, text: String, url: URL?) {
+        self.title = title
+        self.url = url
+        lines = text.split(omittingEmptySubsequences: false, whereSeparator: \.isNewline).enumerated()
+            .map { TextPreviewLine(number: $0.offset + 1, text: String($0.element)) }
+    }
+}
+
+struct TextPreviewLine: Identifiable, Sendable {
+    let number: Int
+    let text: String
+
+    var id: Int { number }
+    var displayText: String { text.isEmpty ? " " : text }
+}
+
+struct ExplorerRequest: Equatable, Sendable {
+    let url: URL
+    let refresh: Int
 }
 
 enum InspectorPreview: Identifiable {
@@ -604,7 +657,7 @@ struct GitLabMergeRequest: Decodable, Sendable {
     func changeRequest(checks: [RemoteCheck]?) -> ChangeRequest {
         ChangeRequest(number: iid, title: title, url: webUrl, state: state == "opened" ? "OPEN" : state.uppercased(),
                       isDraft: draft ?? workInProgress ?? false, headRefName: sourceBranch, headRefOid: sha ?? "",
-                      baseRefName: targetBranch, reviewDecision: nil, statusCheckRollup: checks)
+                      baseRefName: targetBranch, reviewDecision: nil, statusCheckRollup: checks.map(RemoteCheck.numbered))
     }
 }
 

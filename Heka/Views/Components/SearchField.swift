@@ -7,17 +7,17 @@ struct SearchField: View {
 
     var body: some View {
         HStack(spacing: Spacing.s) {
-            Image(systemName: "magnifyingglass").foregroundStyle(Palette.textSecondary)
+            Image(systemName: "magnifyingglass").foregroundStyle(Color.textSecondary)
             TextField(prompt, text: $text)
                 .textFieldStyle(.plain)
                 .accessibilityLabel(prompt)
             if !text.isEmpty {
                 Button { text = "" } label: { Image(systemName: "xmark.circle.fill") }
-                    .buttonStyle(.plain).foregroundStyle(Palette.textSecondary).accessibilityLabel("Clear Filter")
+                    .buttonStyle(.plain).foregroundStyle(Color.textSecondary).accessibilityLabel("Clear Filter")
             }
         }
-        .font(Typography.m)
+        .font(.m)
         .padding(Spacing.m)
-        .background(Palette.searchFieldFill, in: RoundedRectangle(cornerRadius: Radius.m))
+        .background(Color.searchFieldFill, in: RoundedRectangle(cornerRadius: Radius.m))
     }
 }

@@ -5,7 +5,7 @@ struct GlassBackground: ViewModifier {
         if #available(macOS 26, iOS 26, *) {
             content.glassEffect(.regular, in: .containerRelative)
         } else {
-            content.background(Palette.bar, in: .containerRelative)
+            content.background(Material.bar, in: .containerRelative)
         }
     }
 }

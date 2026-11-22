@@ -6,10 +6,10 @@ struct RemoteGridBadge: View {
     var body: some View {
         if session.remoteGrid != nil {
             HStack(spacing: Spacing.m) {
-                Label("Sized for Mobile", systemImage: "iphone").foregroundStyle(Palette.textSecondary)
+                Label("Sized for Mobile", systemImage: "iphone").foregroundStyle(Color.textSecondary)
                 Button("Use Mac Size") { session.takeBackGrid() }.buttonStyle(.link)
             }
-            .font(Typography.s)
+            .font(Font.s)
             .padding(.horizontal, Spacing.l).padding(.vertical, Spacing.s)
             .containerShape(Capsule())
             .glassBackground()

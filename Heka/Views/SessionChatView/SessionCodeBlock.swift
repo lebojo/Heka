@@ -6,7 +6,7 @@ struct SessionCodeBlockStyle: StructuredText.CodeBlockStyle {
         let block = SessionCodeBlockHint(hint: configuration.languageHint)
         VStack(alignment: .leading, spacing: Spacing.s) {
             if let language = block?.language, !language.isEmpty {
-                Text(verbatim: language).font(Typography.caption).foregroundStyle(Palette.textSecondary)
+                Text(verbatim: language).font(Font.caption).foregroundStyle(Color.textSecondary)
             }
             Overflow {
                 Group {
@@ -16,11 +16,11 @@ struct SessionCodeBlockStyle: StructuredText.CodeBlockStyle {
                         configuration.label
                     }
                 }
-                .font(Typography.code)
+                .font(Font.code)
                 .fixedSize(horizontal: false, vertical: true)
             }
         }.padding(Spacing.m)
-            .background(Palette.fill.opacity(0.5), in: RoundedRectangle(cornerRadius: Radius.s))
+            .background(Color.fill.opacity(0.5), in: RoundedRectangle(cornerRadius: Radius.s))
             .textual.blockSpacing(.fontScaled(top: 0.5, bottom: 1))
     }
 }
