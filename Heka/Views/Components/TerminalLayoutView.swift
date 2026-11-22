@@ -2,24 +2,24 @@ import SwiftUI
 
 struct TerminalLayoutView<Pane: View>: View {
     let layout: TerminalLayout
-    @ViewBuilder let pane: (UUID) -> Pane
+    let panes: [UUID: Pane]
 
     var body: some View {
         switch layout {
         case .terminal(let id):
-            pane(id)
+            panes[id]
                 .id(id)
                 .frame(minWidth: Dimension.Detail.paneMinLength, minHeight: Dimension.Detail.paneMinLength)
-        case .split(.horizontal, let children):
+        case .split(.horizontal, let children, _):
             HSplitView {
                 ForEach(children) { child in
-                    TerminalLayoutView(layout: child, pane: pane)
+                    TerminalLayoutView(layout: child, panes: panes)
                 }
             }
-        case .split(.vertical, let children):
+        case .split(.vertical, let children, _):
             VSplitView {
                 ForEach(children) { child in
-                    TerminalLayoutView(layout: child, pane: pane)
+                    TerminalLayoutView(layout: child, panes: panes)
                 }
             }
         }

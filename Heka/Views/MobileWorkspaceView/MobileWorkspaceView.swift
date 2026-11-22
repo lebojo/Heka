@@ -15,19 +15,12 @@ struct MobileWorkspaceView: View {
     }
 
     var body: some View {
-        WorkspaceSplitView(inspectorVisible: $inspectorVisible) {
-            MobileSidebar(store: store, showSettings: { settingsVisible = true })
-        } detail: {
-            MobileSessionDetail(mode: mode, store: store, showSettings: { settingsVisible = true })
-        } inspector: {
-            if let context = store.context {
-                WorkspaceInspector(context: context,
-                                   source: MobileInspectorSource(host: store.host, terminal: context.terminal.id, store: store))
-                    .id(context.terminal.id)
-            } else {
-                ContentUnavailableView("No Terminal Selected", systemImage: "sidebar.right")
-            }
-        }
+        WorkspaceSplitView(
+            inspectorVisible: $inspectorVisible,
+            sidebar: MobileSidebar(settingsVisible: $settingsVisible, store: store),
+            detail: MobileSessionDetail(settingsVisible: $settingsVisible, mode: mode, store: store),
+            inspector: MobileInspectorPanel(store: store)
+        )
         .sheet(isPresented: $settingsVisible) { MobileSettingsView(store: store) }
         .task(id: watchKey) {
             guard !isInBackground else { store.suspend(); return }

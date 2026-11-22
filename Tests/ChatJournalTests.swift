@@ -54,7 +54,13 @@ import Foundation
             try item(["type": "custom_tool_call", "call_id": "f", "name": "exec", "input": "false"]),
             try output("f", "Chunk ID: 1\nWall time: 0.0 seconds\nProcess exited with code 1\nOutput:\n"),
             try item(["type": "custom_tool_call", "call_id": "e", "name": "exec", "input": "touch done"]),
-            try output("e", "Script completed\nWall time 0.0 seconds\nOutput:\n")
+            try output("e", "Script completed\nWall time 0.0 seconds\nOutput:\n"),
+            try item(["type": "custom_tool_call", "call_id": "x", "name": "shell_command", "input": "make"]),
+            try output("x", "Exit code: 2\nWall time: 0.2 seconds\nOutput:\nmake: *** No rule"),
+            try item(["type": "custom_tool_call", "call_id": "z", "name": "shell_command", "input": "true"]),
+            try output("z", "Exit code: 0\nWall time: 0.1 seconds\nOutput:\n"),
+            try item(["type": "custom_tool_call", "call_id": "t", "name": "exec", "input": "sleep 999"]),
+            try output("t", "Script terminated\nWall time 30.0 seconds\nOutput:\n")
         ]
     }
 
@@ -217,8 +223,9 @@ import Foundation
         try require(codex.messages[3].text == "Terminé.", "Codex assistant reply")
         var codexStates = CodexChatDecoder()
         for (offset, record) in try codexExecOutputs().enumerated() { codexStates.consume(record, offset: UInt64(offset)) }
-        try require(codexStates.messages.map(\.toolState) == [.running, .failed, .completed],
-                    "Codex exec headers report running, non-zero exit and empty output without erasing the command")
+        try require(codexStates.messages.map(\.toolState) == [.running, .failed, .completed, .failed, .completed, .failed],
+                    "Codex exec headers report running, non-zero exit codes, terminated scripts and empty output without erasing the command")
+        try require(codexStates.messages[3].text == "make: *** No rule", "A shell command output keeps its body after the exit code header")
         try require(codexStates.messages[2].text == "touch done", "An empty tool output keeps the command visible")
         var codexChunks = CodexChatDecoder()
         let item = { (payload: [String: Any]) in try line(["type": "response_item", "payload": payload]) }
@@ -329,6 +336,11 @@ import Foundation
         try await eventually("Reattaching reads what was appended while suspended") { transcript.messages.last?.text == "While suspended" }
         monitor.attach(nil)
         try require(transcript.source == .terminal, "Detaching the Claude journal returns to the terminal transcript")
+        monitor.attach(AgentJournal(source: .claude, url: log))
+        try await eventually("Reattaching after a detach reads the journal") { transcript.messages.last?.text == "While suspended" }
+        monitor.attach(AgentJournal(source: .claude, url: log.deletingLastPathComponent().appendingPathComponent("\(UUID().uuidString).jsonl")))
+        try require(transcript.messages.isEmpty, "Switching to another conversation clears the previous one at once")
+        monitor.attach(nil)
         print("PASS Claude journal monitor follows creation, appends and replacement")
 
         let rollout = root.appendingPathComponent("rollout-2026-10-30T10-00-00-00000000-0000-0000-0000-000000000000.jsonl")

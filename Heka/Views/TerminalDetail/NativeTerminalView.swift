@@ -2,14 +2,6 @@ import AppKit
 import SwiftUI
 
 struct NativeTerminalView: NSViewRepresentable {
-    final class Coordinator {
-        var appliedAppearance: TerminalAppearance?
-        var appliedColorScheme: ColorScheme?
-        var wasFocused = false
-        var focus: () -> Void = {}
-        var eventMonitor: Any?
-    }
-
     let session: TerminalSession
     let appearance: TerminalAppearance
     let isFocused: Bool
@@ -21,7 +13,7 @@ struct NativeTerminalView: NSViewRepresentable {
         let terminal = session.view
         let host = TerminalHostView(terminal: terminal)
         host.setAccessibilityLabel(String(localized: "Interactive Terminal"))
-        applyAppearance(context: context)
+        applyAppearance()
         let coordinator = context.coordinator
         coordinator.focus = focus
         coordinator.wasFocused = isFocused
@@ -35,29 +27,44 @@ struct NativeTerminalView: NSViewRepresentable {
             }
             return event
         }
-        if isFocused { DispatchQueue.main.async { terminal.window?.makeFirstResponder(terminal) } }
+        if isFocused { takeFocus() }
         return host
     }
+
     func updateNSView(_ nsView: NSView, context: Context) {
-        applyAppearance(context: context)
+        applyAppearance()
         context.coordinator.focus = focus
-        if isFocused, !context.coordinator.wasFocused {
-            let terminal = session.view
-            DispatchQueue.main.async { terminal.window?.makeFirstResponder(terminal) }
-        }
+        if isFocused, !context.coordinator.wasFocused { takeFocus() }
         context.coordinator.wasFocused = isFocused
     }
+
     static func dismantleNSView(_ nsView: NSView, coordinator: Coordinator) {
         if let monitor = coordinator.eventMonitor { NSEvent.removeMonitor(monitor) }
         coordinator.eventMonitor = nil
     }
 
-    private func applyAppearance(context: Context) {
-        let colorScheme = context.environment.colorScheme
-        guard context.coordinator.appliedAppearance != appearance || context.coordinator.appliedColorScheme != colorScheme else { return }
-        context.coordinator.appliedAppearance = appearance
-        context.coordinator.appliedColorScheme = colorScheme
-        session.view.apply(appearance)
-        session.view.refitRemoteGrid()
+    private func applyAppearance() {
+        if session.view.apply(appearance) { session.view.refitRemoteGrid() }
+    }
+
+    private func takeFocus() {
+        let terminal = session.view
+        let keyboardNavigation = Self.isKeyboardNavigation(in: NSApp.keyWindow)
+        DispatchQueue.main.async {
+            guard !keyboardNavigation, let window = terminal.window else { return }
+            window.makeFirstResponder(terminal)
+        }
+    }
+
+    private static func isKeyboardNavigation(in window: NSWindow?) -> Bool {
+        guard let event = NSApp.currentEvent, event.type == .keyDown, !event.modifierFlags.contains(.command) else { return false }
+        let responder = window?.firstResponder
+        return responder is NSTableView || responder is NSText
+    }
+
+    final class Coordinator {
+        var wasFocused = false
+        var focus: () -> Void = {}
+        var eventMonitor: Any?
     }
 }

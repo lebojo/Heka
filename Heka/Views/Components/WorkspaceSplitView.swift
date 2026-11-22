@@ -5,18 +5,18 @@ struct WorkspaceSplitView<Sidebar: View, Detail: View, Inspector: View>: View {
 
     @Binding var inspectorVisible: Bool
 
-    @ViewBuilder let sidebar: () -> Sidebar
-    @ViewBuilder let detail: () -> Detail
-    @ViewBuilder let inspector: () -> Inspector
+    let sidebar: Sidebar
+    let detail: Detail
+    let inspector: Inspector
 
     var body: some View {
         NavigationSplitView(columnVisibility: $columnVisibility) {
-            sidebar()
+            sidebar
                 .navigationTitle("Heka")
                 .navigationSplitViewColumnWidth(min: Dimension.Sidebar.minWidth, ideal: Dimension.Sidebar.idealWidth,
                                                 max: Dimension.Sidebar.maxWidth)
         } detail: {
-            detail()
+            detail
                 .toolbar {
                     ToolbarItem(placement: .primaryAction) {
                         Button("Right Panel", systemImage: "sidebar.right") { inspectorVisible.toggle() }
@@ -28,7 +28,7 @@ struct WorkspaceSplitView<Sidebar: View, Detail: View, Inspector: View>: View {
         }
         .navigationSplitViewStyle(.balanced)
         .inspector(isPresented: $inspectorVisible) {
-            inspector()
+            inspector
                 .inspectorColumnWidth(min: Dimension.Inspector.minWidth, ideal: Dimension.Inspector.idealWidth,
                                       max: Dimension.Inspector.maxWidth)
                 .presentationDetents([.medium, .large])

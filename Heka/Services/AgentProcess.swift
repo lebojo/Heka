@@ -49,7 +49,7 @@ struct AgentProcess: Equatable, Sendable {
             let pid = pending.removeFirst()
             guard pid > 0, visited.insert(pid).inserted else { continue }
             let arguments = arguments(of: pid)
-            if let agent = agent(of: pid, arguments: arguments) {
+            if let agent = agent(processName: name(of: pid), arguments: arguments) {
                 let startedAt = startDate(of: pid) ?? .distantPast
                 let directory = TerminalProcessDirectory.read(pid: pid) ?? fallbackDirectory
                 let config = agent == .claude ? processClaudeConfig(of: pid) ?? claudeConfig : claudeConfig
@@ -115,10 +115,19 @@ struct AgentProcess: Equatable, Sendable {
         return (components[...(index + 1)] + ["events.jsonl"]).joined(separator: "/")
     }
 
-    private static func agent(of pid: Int32, arguments: [String]) -> ConversationAgent? {
-        let candidates = [name(of: pid)].compactMap { $0 } + Array(arguments.prefix(2))
-        let names = candidates.map { URL(fileURLWithPath: $0).lastPathComponent }
-        return agent(named: names)
+    static func agent(processName: String?, arguments: [String]) -> ConversationAgent? {
+        let launchers = [processName, arguments.first].compactMap { $0 }.map(fileName)
+        if let agent = agent(named: launchers) { return agent }
+        guard launchers.contains(where: isScriptHost), let script = arguments.dropFirst().first, script.contains("/") else { return nil }
+        return agent(named: [fileName(script)])
+    }
+
+    private static func fileName(_ path: String) -> String {
+        URL(fileURLWithPath: path).lastPathComponent
+    }
+
+    private static func isScriptHost(_ name: String) -> Bool {
+        ["node", "bun", "deno", "sh", "bash", "zsh"].contains(name) || name.lowercased().hasPrefix("python")
     }
 
     private static func resolveSession(of agent: ConversationAgent, in pids: [Int32], claudeConfig: URL,
@@ -206,7 +215,7 @@ struct AgentProcess: Equatable, Sendable {
         return String(decoding: buffer.prefix { $0 != 0 }.map(UInt8.init(bitPattern:)), as: UTF8.self)
     }
 
-    private static func arguments(of pid: Int32) -> [String] {
+    static func arguments(of pid: Int32) -> [String] {
         commandLine(of: pid, includingEnvironment: false).arguments
     }
 

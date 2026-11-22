@@ -48,6 +48,7 @@ struct TerminalPane: View {
             }
         }
         .task(id: startableTerminal) { store.startSession(for: context.terminal.id) }
+        .terminalDropZone(context.terminal.id)
     }
 
     private func select() {

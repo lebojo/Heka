@@ -13,7 +13,7 @@ import AppKit
         monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
             guard let self, event.modifierFlags.intersection([.command, .shift, .control, .option]) == .command,
                   event.charactersIgnoringModifiers?.lowercased() == "w",
-                  self.canCloseFloatingTerminal || (self.canCloseTerminal && event.window == NSApp.mainWindow) else { return event }
+                  self.canCloseFloatingTerminal || (self.canCloseTerminal && event.window?.isWorkspace == true) else { return event }
             self.close(nil)
             return nil
         }
@@ -28,9 +28,9 @@ import AppKit
     }
 
     private var canCloseTerminal: Bool {
-        !floating.isKey && !store.isReadOnly && store.selectedContext != nil &&
-        NSApp.modalWindow == nil && NSApp.mainWindow?.attachedSheet == nil &&
-        NSApp.keyWindow == NSApp.mainWindow
+        guard let window = NSApp.keyWindow, window.isWorkspace else { return false }
+        return !floating.isKey && !store.isReadOnly && store.selectedContext != nil &&
+            NSApp.modalWindow == nil && window.attachedSheet == nil
     }
 
     @objc func close(_ sender: Any?) {
@@ -61,4 +61,8 @@ import AppKit
         }
         if let menu = NSApp.mainMenu { visit(menu) }
     }
+}
+
+private extension NSWindow {
+    var isWorkspace: Bool { identifier?.rawValue == "workspace" }
 }

@@ -21,9 +21,7 @@ struct FloatingTerminalPane: View {
                 NativeTerminalView(session: session, appearance: settings.terminal, isFocused: isFocused) { floating.focus(id) }
                     .id(ObjectIdentifier(session))
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-                SessionEndedBar(session: session) { floating.reopen(id) } accessory: {
-                    Button("Close") { floating.close(id) }
-                }
+                SessionEndedBar(session: session, accessory: Button("Close") { floating.close(id) }) { floating.reopen(id) }
             } else {
                 ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
             }

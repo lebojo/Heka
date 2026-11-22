@@ -38,6 +38,7 @@ import Observation
     private(set) var agentStatus: AgentStatus?
     private(set) var subagents: [Subagent] = []
     @ObservationIgnored private(set) var hadAgent = false
+    @ObservationIgnored private(set) var hasStarted = false
     @ObservationIgnored var resume: AgentResume?
     @ObservationIgnored fileprivate weak var owner: TerminalSessions?
     fileprivate(set) var remoteGrid: TerminalGridSize? {
@@ -49,7 +50,7 @@ import Observation
         terminalID = context.terminal.id
         isFloating = context.isFloating
         currentDirectory = context.worktree.path
-        runsShell = command.isEmpty
+        runsShell = command.isEmpty || keepsShell
         view = ActivityTerminalView(frame: NSRect(x: 0, y: 0, width: 800, height: 500))
         super.init()
         view.processDelegate = self
@@ -70,15 +71,24 @@ import Observation
         env["HEKA_WORKTREE_ID"] = workspaceContext?.worktree.id.uuidString
         env["HEKA_TERMINAL_ID"] = workspaceContext?.terminal.id.uuidString
         if env["LANG"] == nil { env["LANG"] = "en_US.UTF-8" }
-        let shell = LoginShell.path(environment: env)
-        let args = if command.isEmpty { ["-l"] }
-            else if keepsShell { ["-l", "-i", "-c", "\"$@\"; exec \"$0\" -l", shell] + command }
-            else { ["-l", "-i", "-c", "exec \"$@\"", "heka"] + command }
-        view.startProcess(executable: shell, args: args, environment: env.map { "\($0.key)=\($0.value)" }, currentDirectory: path)
-        if !view.process.running {
+        let shell = LoginShell.session(running: command, keepingShell: keepsShell, shell: LoginShell.path(environment: env))
+        view.startProcess(executable: shell.executable, args: shell.arguments, environment: env.map { "\($0.key)=\($0.value)" }, currentDirectory: path)
+        guard view.process.running else {
             hasExited = true
             view.feed(text: String(localized: "Couldn’t start the terminal.") + "\r\n")
+            return
         }
+        _ = fcntl(view.process.childfd, F_SETFD, FD_CLOEXEC)
+        hasStarted = true
+    }
+
+    var hasEndedAgent: Bool {
+        guard hasStarted else { return false }
+        return hasExited || hadAgent || (resume != nil && hasLeftResumeCommand)
+    }
+
+    private var hasLeftResumeCommand: Bool {
+        !AgentProcess.arguments(of: view.process.shellPid).contains("-c")
     }
 
     func terminalReceived(_ slice: ArraySlice<UInt8>) {
@@ -303,7 +313,7 @@ import Observation
         if agentKind != running?.agent { agentKind = running?.agent }
         if agentStatus != status { agentStatus = status }
         if self.subagents != children { self.subagents = children }
-        if chatViewers > 0 || chatRelease != nil { journalMonitor.attach(running?.journal) }
+        if running == nil || chatViewers > 0 || chatRelease != nil { journalMonitor.attach(running?.journal) }
         if agentChanged { scheduleTranscriptRefresh() }
         return owner?.recordAgent(agentKind, status: agentStatus, of: terminalID) ?? false
     }
@@ -312,8 +322,10 @@ import Observation
         journalMonitor.attach(nil)
         guard view.process.running else { return }
         let pid = view.process.shellPid
-        if pid > 0 { kill(-pid, SIGHUP) }
+        let groups = Set([pid, tcgetpgrp(view.process.childfd)]).filter { $0 > 0 }
+        groups.forEach { kill(-$0, SIGHUP) }
         view.terminate()
+        ProcessReaper.reap(pid, killing: Array(groups))
     }
 }
 
@@ -478,7 +490,7 @@ import Observation
                     return
                 }
                 resume = found
-            } else if session.hasExited || session.hadAgent {
+            } else if session.hasEndedAgent {
                 resume = nil
             } else { return }
             session.resume = resume

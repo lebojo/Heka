@@ -10,6 +10,10 @@ struct AgentJournal: Equatable, Sendable {
     var launchOptions = AgentOptionsReport()
     var launchedAt = Date.distantPast
 
+    func continues(_ other: AgentJournal) -> Bool {
+        url == other.url && sessionID == other.sessionID
+    }
+
     var refreshInterval: Duration? {
         switch source {
         case .openCode: .seconds(1)
@@ -70,9 +74,13 @@ struct AgentJournal: Equatable, Sendable {
 }
 
 @MainActor final class AgentJournalMonitor {
+    private struct Attachment {
+        let journal: AgentJournal
+        let read: @Sendable (URL) async -> ChatJournalRead
+    }
+
     private let transcript: SessionTranscript
-    private var attached: AgentJournal?
-    private var read: (@Sendable (URL) async -> ChatJournalRead)?
+    private var attachment: Attachment?
     private var fileWatch: FileSystemWatcher?
     private var settingsWatches: [URL: FileSystemWatcher] = [:]
     private var watchRetry: Task<Void, Never>?
@@ -86,6 +94,8 @@ struct AgentJournal: Equatable, Sendable {
         self.transcript = transcript
     }
 
+    private var attached: AgentJournal? { attachment?.journal }
+
     func attach(_ journal: AgentJournal?) {
         guard journal != attached else {
             if isSuspended { resume() }
@@ -93,18 +103,15 @@ struct AgentJournal: Equatable, Sendable {
         }
         let previous = attached
         stopWatching()
-        attached = journal
-        read = journal?.makeReader()
+        attachment = journal.map { Attachment(journal: $0, read: $0.makeReader()) }
         isSuspended = false
-        guard journal != nil else {
-            if let previous, transcript.source == previous.source { transcript.useTerminal() }
-            return
-        }
+        if let previous, transcript.source == previous.source, journal.map(previous.continues) != true { transcript.useTerminal() }
+        guard journal != nil else { return }
         resume()
     }
 
     func suspend() {
-        guard attached != nil, !isSuspended else { return }
+        guard attachment != nil, !isSuspended else { return }
         stopWatching()
         isSuspended = true
     }
@@ -205,15 +212,15 @@ struct AgentJournal: Equatable, Sendable {
     }
 
     private func scheduleRead() {
-        guard let attached, let read else { return }
+        guard let attachment else { return }
         if reading != nil { readAgain = true; return }
         let token = generation
         reading = Task { [weak self] in
             do { try await Task.sleep(for: .milliseconds(100)) } catch { return }
-            let journal = await read(attached.url)
+            let journal = await attachment.read(attachment.journal.url)
             guard let self, !Task.isCancelled, generation == token else { return }
             reading = nil
-            transcript.useJournal(journal, from: attached.source)
+            transcript.useJournal(journal, from: attachment.journal.source)
             if readAgain { readAgain = false; scheduleRead() }
         }
     }

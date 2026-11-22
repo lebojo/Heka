@@ -15,13 +15,13 @@ struct ContentView: View {
     let gitActionQueues: GitActionQueues
 
     var body: some View {
-        WorkspaceSplitView(inspectorVisible: $inspectorVisible) {
-            WorkspaceSidebar()
+        WorkspaceSplitView(
+            inspectorVisible: $inspectorVisible,
+            sidebar: WorkspaceSidebar()
                 .environment(\.agentLaunch, settings.agentLaunch)
                 .environment(\.removalConfirmations, settings.confirmations)
-                .disabled(store.isReadOnly)
-        } detail: {
-            Group {
+                .disabled(store.isReadOnly),
+            detail: Group {
                 if let context = store.selectedContext, let selected = store.selectedSubagent {
                     SubagentDetail(store: store, context: context, subagent: selected.subagent)
                 } else if let context = store.selectedContext {
@@ -30,11 +30,11 @@ struct ContentView: View {
                     WorkspaceWelcomeView()
                 }
             }
-            .disabled(store.isReadOnly)
-        } inspector: {
-            WorkspaceInspector(context: store.selectedContext, source: LocalInspectorSource(store: store, settings: settings, gitActionQueues: gitActionQueues))
+            .disabled(store.isReadOnly),
+            inspector: WorkspaceInspector(context: store.selectedContext,
+                                          source: LocalInspectorSource(store: store, settings: settings, gitActionQueues: gitActionQueues))
                 .disabled(store.isReadOnly)
-        }
+        )
         .environment(\.workspaceVisible, visibility.isVisible)
         .safeAreaInset(edge: .top, spacing: 0) {
             if store.isReadOnly {
@@ -43,7 +43,7 @@ struct ContentView: View {
                     Spacer()
                     Button("Retry") { store.retryLoading() }
                 }
-                .font(Typography.body).padding(Spacing.l).background(Palette.bar)
+                .font(Font.callout).padding(Spacing.l).background(Material.bar)
             } else if let error = store.persistenceError {
                 HStack {
                     Label(error, systemImage: "exclamationmark.triangle")
@@ -51,7 +51,7 @@ struct ContentView: View {
                     Spacer()
                     Button("Retry Saving") { Task { try? await store.flushPersistence() } }
                 }
-                .font(Typography.body).padding(Spacing.l).background(Palette.bar)
+                .font(Font.callout).padding(Spacing.l).background(Material.bar)
             }
         }
         .frame(minWidth: Dimension.Window.minWidth, minHeight: Dimension.Window.minHeight)

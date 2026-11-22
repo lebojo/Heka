@@ -1,8 +1,6 @@
 import Foundation
 import Observation
 
-// This test executable compiles the production store with inert terminal processes.
-// Real SwiftTerm and PTY behavior is covered by integration.py against the actual app.
 @MainActor final class TerminalSessions {
     func close(_ id: UUID) {}
     func start(_ context: TerminalContext, command: [String] = []) {}
@@ -36,6 +34,13 @@ private final class ChangeFlag: @unchecked Sendable {
 @main struct StoreTests {
     static func require(_ condition: @autoclosure () -> Bool, _ message: String) throws {
         if !condition() { throw WorkspaceError(message: "FAIL: " + message) }
+    }
+
+    static func fails(_ operation: () throws -> Void) -> Bool {
+        do {
+            try operation()
+            return false
+        } catch { return true }
     }
     @MainActor static func main() async throws {
         let fm = FileManager.default
@@ -97,6 +102,26 @@ private final class ChangeFlag: @unchecked Sendable {
         try require(byProjectName.groups.isEmpty && byProjectName.ungrouped == [p2], "Filter projects without inventing empty groups")
         print("PASS sidebar filtering and stable identities")
 
+        let reviews = WorktreeGroup(name: "Reviews")
+        let spare = WorktreeGroup(name: "Spare")
+        var sidebarProject = Project(url: root.appendingPathComponent("sidebar-project"))
+        let reviewed = Worktree(name: "fix-login", path: "/tmp/fix-login", terminals: [TerminalRecord(name: "codex")], groupID: reviews.id)
+        let loose = Worktree(name: "feature-api", path: "/tmp/feature-api")
+        sidebarProject.worktreeGroups = [reviews, spare]
+        sidebarProject.worktrees += [reviewed, loose]
+        let everything = SidebarProjectInput(project: sidebarProject, query: "", showAll: false).content()
+        try require(everything.primary.map(\.id) == [sidebarProject.worktrees[0].id] && everything.ungrouped == [loose]
+                    && everything.groups.map(\.id) == [reviews.id, spare.id] && everything.groups.map(\.total) == [1, 0],
+                    "A project lists its main worktree, its groups with their totals and its ungrouped worktrees")
+        let byTerminal = SidebarProjectInput(project: sidebarProject, query: "codex", showAll: false).content()
+        try require(byTerminal.groups.map(\.id) == [reviews.id] && byTerminal.groups[0].worktrees == [reviewed] && byTerminal.ungrouped.isEmpty
+                    && !byTerminal.showsEverything, "Filtering keeps only the groups and worktrees holding a matching terminal")
+        let byGroup = SidebarProjectInput(project: sidebarProject, query: "Spare", showAll: false).content()
+        try require(byGroup.groups.map(\.id) == [spare.id] && byGroup.groups[0].showsAll, "A matching group stays visible even when empty")
+        let shown = SidebarProjectInput(project: sidebarProject, query: "nothing", showAll: true).content()
+        try require(shown.showsEverything && shown.groups.count == 2 && shown.ungrouped == [loose], "A revealed project shows all its worktrees")
+        print("PASS sidebar project content")
+
         let nestedFile = root.appendingPathComponent("nested.json")
         let nested = WorkspaceStore(fileURL: nestedFile)
         let parent = nested.addFolder("Clients")
@@ -127,6 +152,25 @@ private final class ChangeFlag: @unchecked Sendable {
         let reloaded = try WorkspaceDisk.load(from: nestedFile)
         try require(reloaded.folders == nested.folders, "Nested folders and appearances persist")
         print("PASS nested folders and appearance")
+
+        let deadFolder = UUID()
+        let livingDirectory = root.appendingPathComponent("living")
+        try fm.createDirectory(at: livingDirectory, withIntermediateDirectories: true)
+        let living = try nested.addProject(livingDirectory, folderID: deadFolder)
+        try require(living.folderID == nil, "A project added to a folder that no longer exists lands at the root")
+        nested.moveProject(living.id, to: deadFolder)
+        try require(nested.projects.first { $0.id == living.id }?.folderID == nil, "Moving a project to a folder that no longer exists is refused")
+        let strayFile = root.appendingPathComponent("stray.json")
+        try WorkspaceDisk.save(Workspace(projects: [Project(url: livingDirectory, folderID: deadFolder)]), to: strayFile)
+        try require(WorkspaceStore(fileURL: strayFile).projects.allSatisfy { $0.folderID == nil }, "A project whose folder no longer exists comes back at the root")
+        print("PASS unknown folders never hide a project")
+
+        let unknownAppearance = Data(#"{"folders":[{"id":"\#(folder.id)","name":"Studio","symbol":"future"}],"projects":[{"id":"\#(p1.id)","name":"one","path":"/tmp/one","worktrees":[],"tint":"future"}]}"#.utf8)
+        let tolerant = try JSONDecoder().decode(Workspace.self, from: unknownAppearance)
+        try require(tolerant.version == 1 && tolerant.folders.map(\.name) == ["Studio"] && tolerant.folders[0].symbol == nil
+                        && tolerant.projects.map(\.id) == [p1.id] && tolerant.projects[0].tint == nil && tolerant.collapsed.isEmpty && tolerant.selection == nil,
+                    "An unknown symbol or tint and missing keys keep the organization readable")
+        print("PASS tolerant organization decoding")
 
         struct Item: Identifiable, Equatable { let id: Int }
         let items = (1...6).map(Item.init)
@@ -181,7 +225,7 @@ private final class ChangeFlag: @unchecked Sendable {
         let right = try split.splitTerminal(first, axis: .horizontal).terminal.id
         let below = try split.splitTerminal(right, axis: .vertical).terminal.id
         let third = try split.splitTerminal(below, axis: .vertical).terminal.id
-        try require(split.layout(for: first) == .split(.horizontal, [.terminal(first), .split(.vertical, [.terminal(right), .terminal(below), .terminal(third)])]),
+        try require(split.layout(for: first) ≈ .split(.horizontal, [.terminal(first), .split(.vertical, [.terminal(right), .terminal(below), .terminal(third)])]),
                     "Splitting nests panes and appends along the same axis")
         try require(split.selection == third && split.worktree(containing: third)?.terminals.count == 4, "Split panes are real terminals of the worktree")
         split.closeTerminal(third)
@@ -198,13 +242,13 @@ private final class ChangeFlag: @unchecked Sendable {
         let pane4 = try split.addTerminal(projectID: splitProject.id, worktreeID: dropped, select: false).terminal.id
         try require(!split.moveTerminal(first, beside: first, edge: .trailing) && split.worktree(containing: first)?.layouts.isEmpty == true,
                     "Dropping a terminal on itself changes nothing")
-        try require(split.moveTerminal(pane2, beside: first, edge: .trailing) && split.layout(for: first) == .split(.horizontal, [.terminal(first), .terminal(pane2)])
+        try require(split.moveTerminal(pane2, beside: first, edge: .trailing) && split.layout(for: first) ≈ .split(.horizontal, [.terminal(first), .terminal(pane2)])
                     && split.selection == pane2, "Dropping a standalone terminal splits the target and selects it")
         try require(split.moveTerminal(pane3, beside: pane2, edge: .top)
-                    && split.layout(for: first) == .split(.horizontal, [.terminal(first), .split(.vertical, [.terminal(pane3), .terminal(pane2)])]),
+                    && split.layout(for: first) ≈ .split(.horizontal, [.terminal(first), .split(.vertical, [.terminal(pane3), .terminal(pane2)])]),
                     "Dropping on an edge inserts before the target")
         try require(split.moveTerminal(pane3, beside: first, edge: .leading)
-                    && split.layout(for: first) == .split(.horizontal, [.terminal(pane3), .terminal(first), .terminal(pane2)]),
+                    && split.layout(for: first) ≈ .split(.horizontal, [.terminal(pane3), .terminal(first), .terminal(pane2)]),
                     "Rearrange panes within a layout")
         let rearranged = split.projects
         try require(split.moveTerminal(pane3, beside: first, edge: .leading) && split.projects == rearranged && split.selection == pane3,
@@ -212,7 +256,7 @@ private final class ChangeFlag: @unchecked Sendable {
         _ = try split.splitTerminal(pane4, axis: .vertical)
         try require(split.worktree(containing: first)?.layouts.count == 2, "A worktree can hold several layouts")
         try require(split.moveTerminal(pane4, beside: pane2, edge: .bottom)
-                    && split.layout(for: first) == .split(.horizontal, [.terminal(pane3), .terminal(first), .split(.vertical, [.terminal(pane2), .terminal(pane4)])])
+                    && split.layout(for: first) ≈ .split(.horizontal, [.terminal(pane3), .terminal(first), .split(.vertical, [.terminal(pane2), .terminal(pane4)])])
                     && split.worktree(containing: first)?.layouts.count == 1 && split.selection == pane4,
                     "Moving from another layout of the worktree dissolves the emptied layout")
         let elsewhere = root.appendingPathComponent("dropped-elsewhere")
@@ -393,7 +437,7 @@ private final class ChangeFlag: @unchecked Sendable {
         stored.projects[projectIndex].worktrees += [review, other]
         try WorkspaceDisk.save(stored, to: splitFile)
         let groups = WorkspaceStore(fileURL: splitFile)
-        let groupID = groups.addWorktreeGroup("  Revues ", projectID: grouped.id, moving: review.id)
+        let groupID = try groups.addWorktreeGroup("  Revues ", projectID: grouped.id, moving: review.id)
         let groupedProject = { groups.projects.first { $0.id == grouped.id }! }
         try require(groupID != nil && groupedProject().worktreeGroups.map(\.name) == ["Revues"], "Create a named worktree group")
         try require(groupedProject().worktrees(in: groupID).map(\.id) == [review.id] && groupedProject().worktrees(in: nil).map(\.id) == [other.id],
@@ -402,6 +446,19 @@ private final class ChangeFlag: @unchecked Sendable {
         try require(!groups.moveWorktree(other.id, to: UUID()), "Unknown groups are refused")
         groups.rename(groupID!, to: "Relectures")
         try require(groupedProject().worktreeGroups.map(\.name) == ["Relectures"], "Rename a worktree group")
+        do {
+            _ = try groups.addWorktreeGroup(" relectures", projectID: grouped.id)
+            throw WorkspaceError(message: "FAIL: duplicate group created")
+        } catch let error as WorkspaceError {
+            try require(!error.message.hasPrefix("FAIL") && groupedProject().worktreeGroups.count == 1, "A second group with the same name is refused")
+        }
+        let otherGroup = groups.addWorktreeGroup("Autre", projectID: grouped.id, moving: [])
+        groups.rename(otherGroup!, to: "RELECTURES")
+        try require(groupedProject().worktreeGroups.map(\.name) == ["Relectures", "Autre"], "Renaming a group to the name of another one is refused")
+        try require(fails { try groups.requireAvailableGroupName("RELECTURES", in: grouped.id, renaming: otherGroup) }
+                        && !fails { try groups.requireAvailableGroupName("RELECTURES", in: grouped.id, renaming: groupID) },
+                    "A group can change the case of its own name but not take another group's name")
+        groups.removeWorktreeGroup(otherGroup!)
         try await groups.flushPersistence()
         let persistedGroups = try WorkspaceDisk.load(from: splitFile)
         try require(persistedGroups == groups.state, "Groups persist")
@@ -459,6 +516,13 @@ private final class ChangeFlag: @unchecked Sendable {
         try lonelyGitLink.write(to: lonelyGitFile, atomically: true, encoding: .utf8)
         try require(!canonicalRegistration.isEmpty && registrationThroughLink?.path == canonicalRegistration,
                     "A worktree whose Git link goes through a symlink still knows its registration")
+        let lonelyCopy = root.appendingPathComponent("lonely-copy")
+        try fm.copyItem(at: URL(fileURLWithPath: lonely.path), to: lonelyCopy)
+        try require(WorkspaceStore.ownRegistration(ofWorktreeAt: lonely.path)?.path == canonicalRegistration
+                        && WorkspaceStore.ownRegistration(ofWorktreeAt: WorkspacePath.canonical(lonelyCopy)) == nil
+                        && WorkspaceStore.ownRegistration(ofWorktreeAt: WorkspacePath.canonical(broken)) == nil,
+                    "Trashing a copy of a worktree never removes the registration of the original")
+        try fm.removeItem(at: lonelyCopy)
         print("PASS worktree folder adoption")
 
         let reviewRemoval = Removal.worktree(projectID: grouped.id, worktreeID: review.id, name: review.name)
@@ -536,6 +600,21 @@ private final class ChangeFlag: @unchecked Sendable {
                         && !mainLeft.isEmpty && !fm.fileExists(atPath: extra.path)
                         && !groups.projects.contains { $0.worktrees.contains { $0.id == onMain.id } },
                     "From the sidebar, a worktree on the main branch is deleted and its branch kept with an explanation")
+        let locked = try await GitService.createWorktree(project: grouped, branch: "locked/one", root: worktreesRoot)
+        await groups.refreshWorktrees(grouped.id)
+        let lockedIndex = groupedProject().worktrees.firstIndex { $0.path == locked.path }
+        _ = try await GitService.run(["worktree", "lock", locked.path], at: gitRoot.path)
+        do {
+            try await groups.deleteWorktree(projectID: grouped.id, worktreeID: groupedProject().worktrees[lockedIndex!].id)
+            throw WorkspaceError(message: "FAIL: locked worktree deleted")
+        } catch let error as WorkspaceError where error.message.hasPrefix("FAIL") {
+            throw error
+        } catch {
+            try require(lockedIndex != nil && groupedProject().worktrees.firstIndex { $0.path == locked.path } == lockedIndex,
+                        "A worktree that Git refuses to remove comes back at its place")
+        }
+        _ = try await GitService.run(["worktree", "unlock", locked.path], at: gitRoot.path)
+        try await groups.deleteWorktree(projectID: grouped.id, worktreeID: groupedProject().worktrees[lockedIndex!].id)
         print("PASS worktree deletion with or without its branch")
 
         let legacy = Data(#"{"version":1,"folders":[],"collapsed":[],"projects":[{"id":"\#(UUID())","name":"Old","path":"/tmp/old","worktrees":[{"id":"\#(UUID())","name":"Principal","path":"/tmp/old","isPrimary":true,"terminals":[]}]}]}"#.utf8)
@@ -604,6 +683,22 @@ private final class ChangeFlag: @unchecked Sendable {
                     && flatStore.projects.allSatisfy { $0.folderID == flatStore.folders[0].id },
                     "A flat import puts only the selected repositories in a single folder")
         try require(!flatStore.isImporting, "The import indicator is cleared once the import finishes")
+        let busyStore = WorkspaceStore(fileURL: root.appendingPathComponent("busy.json"))
+        let firstImport = Task { await busyStore.importFolder(company, review: false) }
+        var waited = 0
+        while !busyStore.isImporting, waited < 10_000 {
+            await Task.yield()
+            waited += 1
+        }
+        do {
+            try await busyStore.addLocation(company)
+            throw WorkspaceError(message: "FAIL: concurrent import ignored")
+        } catch let error as WorkspaceError {
+            try require(error.message == "An import is already in progress." && !busyStore.canImport,
+                        "Adding a project during an import reports it instead of doing nothing")
+        }
+        await firstImport.value
+        try require(busyStore.canImport, "Imports are possible again once the first one finishes")
 
         let work = nestedStore.addFolder("Work")
         guard let rootPlan = try await planned(company, in: nestedStore, into: work) else { throw WorkspaceError(message: "FAIL: reimport plan") }

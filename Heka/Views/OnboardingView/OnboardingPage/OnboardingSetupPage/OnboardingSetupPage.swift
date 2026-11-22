@@ -4,6 +4,7 @@ struct OnboardingSetupPage: View {
     @Environment(InstalledAgents.self) private var installedAgents
 
     @State private var check = OnboardingSetupCheck()
+    @State private var hasCheckedAgents = false
 
     private let gitHubURL = URL(string: "https://cli.github.com")!
 
@@ -25,21 +26,28 @@ struct OnboardingSetupPage: View {
                 }
                 Section("Agents") {
                     ForEach(ConversationAgent.allCases) { agent in
-                        OnboardingCheckRow(title: LocalizedStringKey(agent.title), status: agentStatus(agent),
-                                           fixURL: installedAgents.agents.contains(agent) ? nil : agent.installURL)
+                        OnboardingCheckRow(title: LocalizedStringKey(agent.title), status: agentStatus(agent), fixURL: agentFixURL(agent))
                     }
                 }
             }
             .formStyle(.grouped)
             .scrollDisabled(true)
         }
-        .task {
-            await check.refresh()
-            await installedAgents.refresh()
-        }
+        .task { await check.refresh() }
+        .task(checkAgents)
+    }
+
+    private func checkAgents() async {
+        await installedAgents.reload()
+        hasCheckedAgents = true
     }
 
     private func agentStatus(_ agent: ConversationAgent) -> OnboardingCheckStatus {
-        installedAgents.agents.contains(agent) ? .ready("Installed") : .problem("Not installed")
+        guard hasCheckedAgents else { return .checking }
+        return installedAgents.agents.contains(agent) ? .ready("Installed") : .problem("Not installed")
+    }
+
+    private func agentFixURL(_ agent: ConversationAgent) -> URL? {
+        hasCheckedAgents && !installedAgents.agents.contains(agent) ? agent.installURL : nil
     }
 }

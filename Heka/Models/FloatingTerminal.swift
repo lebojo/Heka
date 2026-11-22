@@ -35,7 +35,7 @@ struct FloatingTerminal: Codable, Equatable, Sendable {
     private(set) var focusHistory: [UUID] = []
 
     var isEmpty: Bool { tabs.isEmpty }
-    var focusedID: UUID? { focusHistory.first { pane($0) != nil } ?? tabs.first?.layout.id }
+    var focusedID: UUID? { focusHistory.first { pane($0) != nil } ?? tabs.first?.layout.firstTerminalID }
     var selectedTab: Tab? {
         guard let focusedID else { return nil }
         return tabs.first { $0.layout.contains(focusedID) }
@@ -48,7 +48,7 @@ struct FloatingTerminal: Codable, Equatable, Sendable {
     }
 
     func focusedID(in tab: Tab) -> UUID {
-        focusHistory.first(where: tab.layout.contains) ?? tab.layout.id
+        focusHistory.first(where: tab.layout.contains) ?? tab.layout.firstTerminalID
     }
 
     @discardableResult mutating func addTab(path: String) -> Pane {

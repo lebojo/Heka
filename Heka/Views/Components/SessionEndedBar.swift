@@ -2,8 +2,8 @@ import SwiftUI
 
 struct SessionEndedBar<Accessory: View>: View {
     let session: TerminalSession
+    let accessory: Accessory
     let reopen: () -> Void
-    @ViewBuilder let accessory: Accessory
 
     var body: some View {
         if session.hasExited {
@@ -13,13 +13,13 @@ struct SessionEndedBar<Accessory: View>: View {
                 accessory
                 Button("Reopen Terminal", action: reopen)
             }
-            .font(Typography.body).padding(Spacing.l).background(Palette.bar)
+            .font(Font.callout).padding(Spacing.l).background(Material.bar)
         }
     }
 }
 
 extension SessionEndedBar where Accessory == EmptyView {
     init(session: TerminalSession, reopen: @escaping () -> Void) {
-        self.init(session: session, reopen: reopen) { EmptyView() }
+        self.init(session: session, accessory: EmptyView(), reopen: reopen)
     }
 }

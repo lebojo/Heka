@@ -1,34 +1,18 @@
 import AppKit
 import SwiftTerm
 
-extension TerminalView {
-    func apply(_ appearance: TerminalAppearance) {
-        font = appearance.nsFont
-        if let palette = appearance.palette {
-            nativeBackgroundColor = palette.background.nsColor
-            nativeForegroundColor = palette.foreground.nsColor
-            caretColor = palette.cursor.nsColor
-            selectedTextBackgroundColor = palette.selection.nsColor
-        } else {
-            effectiveAppearance.performAsCurrentDrawingAppearance {
-                nativeBackgroundColor = .textBackgroundColor
-                nativeForegroundColor = .textColor
-                caretColor = .selectedControlColor
-                selectedTextBackgroundColor = .selectedTextBackgroundColor
-            }
-        }
-        installColors((appearance.palette?.ansi ?? TerminalTheme.terminalAppANSI).map(\.terminalColor))
-        getTerminal().setCursorStyle(appearance.cursorStyle)
-    }
-}
-
-private extension TerminalColor {
+extension TerminalColor {
     var terminalColor: SwiftTerm.Color {
-        SwiftTerm.Color(red8: UInt16((red * 255).rounded()), green8: UInt16((green * 255).rounded()), blue8: UInt16((blue * 255).rounded()))
+        SwiftTerm.Color(red8: Self.channel(red), green8: Self.channel(green), blue8: Self.channel(blue))
+    }
+
+    private static func channel(_ value: Double) -> UInt16 {
+        guard value.isFinite else { return 0 }
+        return UInt16((min(max(value, 0), 1) * 255).rounded())
     }
 }
 
-private extension TerminalAppearance {
+extension TerminalAppearance {
     var cursorStyle: CursorStyle {
         switch (cursorShape, cursorBlinks) {
         case (.block, true): .blinkBlock

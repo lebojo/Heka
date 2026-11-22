@@ -16,20 +16,20 @@ xcrun swiftc "${swift_flags[@]}" \
   Heka/Models/InspectorStore.swift Heka/Models/GitActionQueue.swift Heka/Models/GitActionQueues.swift Heka/Models/InspectorPreviews.swift Heka/Services/WorkspaceWriter.swift \
   Heka/Models/UsageModels.swift Heka/Models/UsageStore.swift Heka/Services/UsageService.swift \
   Heka/Models/AgentConversation.swift Heka/Models/AgentLaunch.swift Heka/Models/TerminalTheme.swift Heka/Models/Removal.swift Heka/Models/RemovalConfirmations.swift Heka/Models/TerminalAppearance.swift \
-  Heka/Models/InstallationStatus.swift Heka/Platforms/macOS/TerminalKeyRoute.swift Heka/Services/AgentSkillInstaller.swift Heka/Services/CommandLineInstaller.swift Heka/Services/AgentUIMigration.swift Heka/Services/LoginShell.swift \
+  Heka/Models/InstallationStatus.swift Heka/Models/TerminalLink.swift "Heka/Extensions/String+BracketedPaste.swift" Heka/Platforms/macOS/TerminalKeyRoute.swift Heka/Services/AgentSkillInstaller.swift Heka/Services/CommandLineInstaller.swift Heka/Services/AgentUIMigration.swift Heka/Services/LoginShell.swift \
   Heka/Services/AgentProcess.swift Heka/Services/AgentSessionLocator.swift Heka/Services/SessionDatabase.swift Heka/Services/ConversationTranscripts.swift Heka/Models/AgentStatus.swift \
   Heka/Services/ClaudeSubagents.swift Heka/Models/Subagent.swift "Heka/Extensions/String+HomeAbbreviation.swift" \
-  Heka/Models/KeyCombination.swift Heka/Models/ShortcutAction.swift Heka/Models/ShortcutStore.swift Heka/Models/HexColor.swift Heka/Models/BorderBeamAppearance.swift \
-  Tests/ShortcutTests.swift Tests/RegressionTests.swift Tests/RefreshTests.swift Tests/InspectorTests.swift Tests/UsageTests.swift Tests/SettingsTests.swift Tests/CoreTests.swift -o "$test_binary"
+  Heka/Models/KeyCombination.swift Heka/Models/ShortcutAction.swift Heka/Models/ShortcutStore.swift Heka/Models/HexColor.swift Heka/Models/BorderBeamAppearance.swift "Heka/Extensions/Optional+Selection.swift" \
+  Tests/TerminalLayoutShape.swift Tests/ShortcutTests.swift Tests/RegressionTests.swift Tests/RefreshTests.swift Tests/InspectorTests.swift Tests/UsageTests.swift Tests/SettingsTests.swift Tests/CoreTests.swift -o "$test_binary"
 "$test_binary"
 
 xcrun swiftc "${swift_flags[@]}" \
-  Heka/Models/Workspace.swift Heka/Services/WorkspaceDisk.swift Heka/Models/TerminalLayout.swift Heka/Models/SidebarAppearance.swift Heka/Models/WorkspaceStore.swift Heka/Extensions/Array+Moving.swift Heka/Models/SidebarFilter.swift Heka/Models/Removal.swift Heka/Models/SidebarTerminalBlock.swift Heka/Models/TerminalDragItem.swift Heka/Models/WorkInProgress.swift Heka/Models/AgentStatus.swift \
+  Heka/Models/Workspace.swift Heka/Services/WorkspaceDisk.swift Heka/Models/TerminalLayout.swift Heka/Models/SidebarAppearance.swift Heka/Models/WorkspaceStore.swift Heka/Extensions/Array+Moving.swift Heka/Models/SidebarFilter.swift Heka/Models/UI/SidebarProjectContent.swift Heka/Models/Removal.swift Heka/Models/SidebarTerminalBlock.swift Heka/Models/TerminalDragItem.swift Heka/Models/WorkInProgress.swift Heka/Models/AgentStatus.swift \
   Heka/Models/AgentConversation.swift Heka/Models/Subagent.swift \
   Heka/Services/GitService.swift Heka/Services/GitRepository.swift Heka/Models/DiscoveredWorktree.swift Heka/Models/RepositoryImport.swift Heka/Models/GitBranch.swift Heka/Models/WorktreeBranch.swift Heka/Services/DefaultBranch.swift Heka/Services/GitBranchProtection.swift Heka/Services/TerminalSessionsDelegate.swift Heka/Services/WorkspaceWriter.swift \
   Heka/Services/ReadCommand.swift Heka/Services/CommandRunner.swift Heka/Services/GitConfiguration.swift Heka/Services/GitFilterGuard.swift \
   Heka/Models/InspectorModels.swift Heka/Models/GitAction.swift Heka/Models/RemoteWebAddress.swift "Heka/Extensions/String+QueryValue.swift" Heka/Models/BranchMergeState.swift Heka/Models/GitDiff.swift \
-  Tests/StoreTests.swift -o "$store_binary"
+  Tests/TerminalLayoutShape.swift Tests/StoreTests.swift -o "$store_binary"
 "$store_binary"
 
 xcrun swiftc "${swift_flags[@]}" \
@@ -54,5 +54,5 @@ xcrun swiftc "${swift_flags[@]}" \
   Heka/Models/Data/SessionMessage.swift Heka/Models/SessionTranscriptItem.swift Heka/Models/Data/AgentOptions.swift Heka/Core/Session/SessionTranscript.swift \
   Heka/Core/Session/ChatMessageLog.swift Heka/Core/Session/ClaudeChatDecoder.swift Heka/Core/Session/CodexChatDecoder.swift \
   Heka/Core/Session/CopilotChatDecoder.swift Heka/Core/Session/ChatJournalReader.swift Heka/Services/FileSystemWatcher.swift \
-  Heka/Platforms/macOS/AgentJournalMonitor.swift Heka/Platforms/macOS/OpenCodeChatReader.swift Heka/Services/SessionDatabase.swift Heka/Services/AgentSessionLocator.swift Heka/Models/AgentConversation.swift Heka/Models/AgentStatus.swift Heka/Models/Subagent.swift Heka/Models/ChatActivity.swift Heka/Core/Session/SessionCodeTokens.swift Heka/Core/Session/SessionCodeBlockHint.swift Heka/Models/Data/SlashCommand.swift Heka/Core/Session/SlashCommandMatcher.swift Heka/Core/Session/SlashCommandDiscovery.swift Heka/Core/Session/SessionTaskList.swift Heka/Platforms/macOS/ClaudeSettings.swift Heka/Services/ConversationTranscripts.swift Tests/AgentChatSupportTests.swift Tests/ChatJournalTests.swift -o "$claude_binary"
+  Heka/Platforms/macOS/AgentJournalMonitor.swift Heka/Platforms/macOS/OpenCodeChatReader.swift Heka/Services/SessionDatabase.swift Heka/Services/AgentSessionLocator.swift Heka/Models/AgentConversation.swift Heka/Models/AgentStatus.swift Heka/Models/Subagent.swift Heka/Models/ChatActivity.swift Heka/Core/Session/SessionCodeTokens.swift Heka/Core/Session/SessionCodeBlockHint.swift Heka/Models/Data/SlashCommand.swift Heka/Core/Session/SlashCommandMatcher.swift Heka/Core/Session/SlashCommandDiscovery.swift Heka/Core/Session/SessionTaskList.swift Heka/Platforms/macOS/ClaudeSettings.swift Heka/Services/ConversationTranscripts.swift Heka/Core/Session/SessionChannel.swift Heka/Models/SessionChat.swift Heka/Models/ChatDraft.swift Heka/Models/ChatDrafts.swift Heka/Core/Session/ComposerImageStore.swift Tests/AgentChatSupportTests.swift Tests/ChatJournalTests.swift -o "$claude_binary"
 "$claude_binary"

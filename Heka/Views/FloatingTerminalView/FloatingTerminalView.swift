@@ -8,9 +8,9 @@ struct FloatingTerminalView: View {
             FloatingTerminalTabBar()
             Divider()
             if let tab = floating.state.selectedTab, let focusedID = floating.state.focusedID {
-                TerminalLayoutView(layout: tab.layout) { id in
-                    FloatingTerminalPane(id: id, isFocused: id == focusedID, isSplit: tab.layout.isSplit)
-                }
+                TerminalLayoutView(layout: tab.layout, panes: tab.layout.terminalIDs.reduce(into: [:]) { panes, id in
+                    panes[id] = FloatingTerminalPane(id: id, isFocused: id == focusedID, isSplit: tab.layout.isSplit)
+                })
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 Divider()
                 TerminalFooter(session: floating.session(focusedID), path: floating.directory(of: focusedID))
@@ -18,7 +18,7 @@ struct FloatingTerminalView: View {
                 Spacer()
             }
         }
-        .background(Palette.surface)
+        .background(Color.surface)
         .background { FloatingTerminalWindowReader() }
         .previewSheetFrame(.floatingTerminal)
         .onAppear { floating.prepare() }

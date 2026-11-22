@@ -28,21 +28,65 @@ enum DropEdge: Sendable {
 
 indirect enum TerminalLayout: Codable, Equatable, Identifiable, Sendable {
     case terminal(UUID)
-    case split(SplitAxis, [TerminalLayout])
+    case split(SplitAxis, [TerminalLayout], id: UUID = UUID())
 
-    var id: UUID { terminalIDs[0] }
+    private enum CodingKeys: String, CodingKey {
+        case terminal, split
+    }
+
+    private enum TerminalKeys: String, CodingKey {
+        case id = "_0"
+    }
+
+    private enum SplitKeys: String, CodingKey {
+        case axis = "_0", children = "_1", id
+    }
+
+    init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        if container.contains(.terminal) {
+            let terminal = try container.nestedContainer(keyedBy: TerminalKeys.self, forKey: .terminal)
+            self = .terminal(try terminal.decode(UUID.self, forKey: .id))
+        } else {
+            let split = try container.nestedContainer(keyedBy: SplitKeys.self, forKey: .split)
+            self = .split(try split.decode(SplitAxis.self, forKey: .axis), try split.decode([TerminalLayout].self, forKey: .children),
+                          id: try split.decodeIfPresent(UUID.self, forKey: .id) ?? UUID())
+        }
+    }
+
+    func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        switch self {
+        case .terminal(let id):
+            var terminal = container.nestedContainer(keyedBy: TerminalKeys.self, forKey: .terminal)
+            try terminal.encode(id, forKey: .id)
+        case .split(let axis, let children, let id):
+            var split = container.nestedContainer(keyedBy: SplitKeys.self, forKey: .split)
+            try split.encode(axis, forKey: .axis)
+            try split.encode(children, forKey: .children)
+            try split.encode(id, forKey: .id)
+        }
+    }
+
+    var id: UUID {
+        switch self {
+        case .terminal(let id), .split(_, _, let id): id
+        }
+    }
+
+    var firstTerminalID: UUID { terminalIDs.first ?? id }
 
     var terminalIDs: [UUID] {
         switch self {
         case .terminal(let id): [id]
-        case .split(_, let children): children.flatMap(\.terminalIDs)
+        case .split(_, let children, _): children.flatMap(\.terminalIDs)
         }
     }
 
     var isSplit: Bool { terminalIDs.count > 1 }
 
     var axis: SplitAxis? {
-        if case .split(let axis, _) = self { axis } else { nil }
+        if case .split(let axis, _, _) = self { axis } else { nil }
     }
 
     func contains(_ id: UUID) -> Bool { terminalIDs.contains(id) }
@@ -57,12 +101,12 @@ indirect enum TerminalLayout: Codable, Equatable, Identifiable, Sendable {
         switch self {
         case .terminal(let current):
             return current == id ? .split(axis, [self, .terminal(newID)]) : self
-        case .split(let current, var children):
+        case .split(let current, var children, let splitID):
             if current == axis, let index = children.firstIndex(of: .terminal(id)) {
                 children.insert(.terminal(newID), at: index + 1)
-                return .split(current, children)
+                return .split(current, children, id: splitID)
             }
-            return .split(current, children.map { $0.splitting(id, with: newID, axis: axis) })
+            return .split(current, children.map { $0.splitting(id, with: newID, axis: axis) }, id: splitID)
         }
     }
 
@@ -70,8 +114,8 @@ indirect enum TerminalLayout: Codable, Equatable, Identifiable, Sendable {
         switch self {
         case .terminal(let current):
             return current == id ? nil : self
-        case .split(let axis, let children):
-            return Self.normalised(axis, children.compactMap { $0.removing(id) })
+        case .split(let axis, let children, let splitID):
+            return Self.normalised(axis, children.compactMap { $0.removing(id) }, id: splitID)
         }
     }
 
@@ -80,12 +124,12 @@ indirect enum TerminalLayout: Codable, Equatable, Identifiable, Sendable {
         switch self {
         case .terminal:
             return .split(edge.axis, edge.insertsBefore ? [.terminal(id), self] : [self, .terminal(id)])
-        case .split(let axis, var children):
+        case .split(let axis, var children, let splitID):
             if axis == edge.axis, let index = children.firstIndex(of: .terminal(target)) {
                 children.insert(.terminal(id), at: edge.insertsBefore ? index : index + 1)
-                return .split(axis, children)
+                return .split(axis, children, id: splitID)
             }
-            return Self.normalised(axis, children.map { $0.inserting(id, beside: target, edge: edge) }) ?? self
+            return Self.normalised(axis, children.map { $0.inserting(id, beside: target, edge: edge) }, id: splitID) ?? self
         }
     }
 
@@ -94,10 +138,10 @@ indirect enum TerminalLayout: Codable, Equatable, Identifiable, Sendable {
         return remaining.inserting(id, beside: target, edge: edge)
     }
 
-    private static func normalised(_ axis: SplitAxis, _ children: [TerminalLayout]) -> TerminalLayout? {
+    private static func normalised(_ axis: SplitAxis, _ children: [TerminalLayout], id: UUID) -> TerminalLayout? {
         let flattened = children.flatMap { child -> [TerminalLayout] in
-            if case .split(axis, let grandchildren) = child { grandchildren } else { [child] }
+            if case .split(axis, let grandchildren, _) = child { grandchildren } else { [child] }
         }
-        return flattened.count > 1 ? .split(axis, flattened) : flattened.first
+        return flattened.count > 1 ? .split(axis, flattened, id: id) : flattened.first
     }
 }
