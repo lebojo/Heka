@@ -10,8 +10,12 @@ import AppKit
 
     init(store: WorkspaceStore) throws {
         self.store = store
-        directory = FileManager.default.temporaryDirectory.appendingPathComponent("heka-\(UUID().uuidString)", isDirectory: true)
-        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
+        let instances = WorkspaceDisk.instancesDirectory
+        directory = instances.appendingPathComponent(String(ProcessInfo.processInfo.processIdentifier), isDirectory: true)
+        AgentCLI.liveInstances(in: instances)
+        try? FileManager.default.removeItem(at: directory)
+        try FileManager.default.createDirectory(at: instances, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: false, attributes: [.posixPermissions: 0o700])
         let bin = directory.appendingPathComponent("bin")
         try FileManager.default.createDirectory(at: bin, withIntermediateDirectories: true)
         try Self.installLauncher(at: bin.appendingPathComponent("heka"))
@@ -32,23 +36,13 @@ import AppKit
             try directory.path.write(to: stateDirectory.appendingPathComponent("instance-path"), atomically: true, encoding: .utf8)
         }
         #endif
-        publish()
-    }
-
-    private var registration: URL {
-        WorkspaceDisk.instancesDirectory.appendingPathComponent(String(ProcessInfo.processInfo.processIdentifier))
+        drain()
     }
 
     func stop() {
         watcher?.cancel()
         watcher = nil
         try? FileManager.default.removeItem(at: directory)
-        try? FileManager.default.removeItem(at: registration)
-    }
-
-    private func publish() {
-        try? FileManager.default.createDirectory(at: WorkspaceDisk.instancesDirectory, withIntermediateDirectories: true)
-        try? directory.path.write(to: registration, atomically: true, encoding: .utf8)
     }
 
     private func drain() {
@@ -63,23 +57,45 @@ import AppKit
     private func process(_ file: URL, id: UUID) async {
         defer { active.remove(id); try? FileManager.default.removeItem(at: file) }
         let response: BridgeResponse
+        var callerProcessID: Int32?
         do {
             let request = try await BridgeMailbox.request(at: file)
             guard request.id == id else { throw WorkspaceError(message: String(localized: "Invalid request ID.")) }
-            var result = try await execute(request)
-            if !Self.leavesWorkspaceUnchanged(request.action) {
-                do { try await store.flushPersistence() }
-                catch { result.ok = false; result.message = error.localizedDescription }
-            }
-            response = result
+            callerProcessID = request.callerProcessID
+            try request.validate()
+            response = try await reply(to: request)
         } catch { response = BridgeResponse(ok: false, message: error.localizedDescription) }
-        guard delivered.remove(id) == nil else {
+        removeExpiredResponses()
+        guard delivered.remove(id) == nil, Self.isRunning(callerProcessID) else {
             if !response.ok, let message = response.message { store.errorMessage = message }
             return
         }
         do {
             try await BridgeMailbox.write(response, to: responseFile(for: id))
         } catch { store.errorMessage = String(localized: "Couldn’t reply to heka: \(error.localizedDescription)") }
+    }
+
+    private func reply(to request: BridgeRequest) async throws -> BridgeResponse {
+        var response = try await execute(request)
+        guard !Self.leavesWorkspaceUnchanged(request.action) else { return response }
+        do { try await store.flushPersistence() } catch {
+            response.ok = false
+            response.message = String(localized: "The command was carried out, but Heka couldn’t save it: \(error.localizedDescription) Use Retry in the app instead of running the command again.")
+        }
+        return response
+    }
+
+    private static func isRunning(_ caller: Int32?) -> Bool {
+        caller.map(AgentCLI.isRunning) ?? true
+    }
+
+    private func removeExpiredResponses() {
+        let expiry = Date.now.addingTimeInterval(-BridgeRequest.longestResponseTimeout)
+        let files = (try? FileManager.default.contentsOfDirectory(at: directory, includingPropertiesForKeys: [.contentModificationDateKey])) ?? []
+        for file in files where file.pathExtension == "response" {
+            guard let modified = try? file.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate, modified < expiry else { continue }
+            try? FileManager.default.removeItem(at: file)
+        }
     }
 
     private func responseFile(for id: UUID) -> URL {
@@ -115,7 +131,7 @@ import AppKit
         guard !store.isReadOnly else { throw WorkspaceError(message: String(localized: "The saved organization is unreadable. Fix it, then use Retry in the app before creating terminals.")) }
         if request.action == "project.add", let path = request.path {
             let project = try store.addProject(URL(fileURLWithPath: path))
-            return BridgeResponse(ok: true, projectID: project.id, worktreeID: project.worktrees[0].id, path: project.path)
+            return BridgeResponse(ok: true, projectID: project.id, worktreeID: project.worktrees.first?.id, path: project.path)
         }
         if request.action == "terminal.close" { return try await closeTerminal(request) }
         let location = location(of: request.directory)
@@ -129,7 +145,9 @@ import AppKit
         let context: TerminalContext
         switch request.action {
         case "terminal.create":
-            let worktreeID = request.worktreeID ?? project.worktrees[0].id
+            guard let worktreeID = request.worktreeID ?? project.worktrees.first?.id else {
+                throw WorkspaceError(message: String(localized: "Worktree not found. Get its UUID with heka list."))
+            }
             context = try store.addTerminal(projectID: projectID, worktreeID: worktreeID, command: request.command, select: false)
             if let name = request.name { store.rename(context.terminal.id, to: name) }
         case "worktree.create":
@@ -165,6 +183,9 @@ import AppKit
             throw WorkspaceError(message: String(localized: "The current folder belongs to the worktree to delete. Run the command from another folder."))
         }
         let branchRemoval = try request.branchRemoval
+        if request.force != true, await hasWorkingAgent(in: worktree, besides: request.callerTerminalID) {
+            throw WorkspaceError(message: String(localized: "An agent is working in the worktree “\(worktree.displayName)”. Wait for it with heka terminal wait, or run again with --force to stop it."))
+        }
         if request.force != true, try await GitService.hasLocalChanges(at: worktree.path) {
             throw WorkspaceError(message: String(localized: "The worktree “\(worktree.displayName)” has uncommitted changes or untracked files. Run again with --force to erase them."))
         }
@@ -180,6 +201,11 @@ import AppKit
             throw WorkspaceError(message: String(localized: "\(error.localizedDescription) Run again with --force-branch to delete it anyway, or without --delete-branch to keep it."))
         }
         return BridgeResponse(deleting: worktree, of: project.id, cleanup: cleanup)
+    }
+
+    private func hasWorkingAgent(in worktree: Worktree, besides callerID: UUID?) async -> Bool {
+        await store.sessions.refreshAgents()
+        return worktree.terminals.contains { $0.id != callerID && store.sessions.session($0.id)?.agentStatus == .working }
     }
 
     private func manageGroup(_ request: BridgeRequest, location: (projectID: UUID, worktreeID: UUID)?) throws -> BridgeResponse {
@@ -321,7 +347,7 @@ import AppKit
         let timeout = request.timeoutSeconds ?? TerminalWait.defaultTimeout
         let idle = request.waitsForExit == true ? nil : request.idleSeconds ?? TerminalWait.defaultIdle
         let start = Date.now
-        while let session = store.sessions.session(id), !session.hasExited {
+        while let session = store.sessions.session(id), !session.hasExited, Self.isRunning(request.callerProcessID) {
             if let idle, Date.now.timeIntervalSince(max(session.lastOutput, start)) >= idle { break }
             guard Date.now.timeIntervalSince(start) < timeout else {
                 var response = await state(of: id)

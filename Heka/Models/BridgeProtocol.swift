@@ -12,6 +12,7 @@ struct BridgeRequest: Codable, Sendable {
     var path: String?
     var directory: String?
     var callerTerminalID: UUID?
+    var callerProcessID: Int32?
     var command: [String]
     var force: Bool?
     var deleteBranch: Bool?
@@ -27,6 +28,8 @@ struct BridgeRequest: Codable, Sendable {
     var waitsForExit: Bool?
     var timeoutSeconds: Double?
 
+    static let longestResponseTimeout = TerminalWait.maximumTimeout + 30
+
     var responseTimeout: Double {
         action == "terminal.wait" ? (timeoutSeconds ?? TerminalWait.defaultTimeout) + 30 : 120
     }
@@ -41,6 +44,44 @@ struct BridgeRequest: Codable, Sendable {
             }
             return forceBranch == true ? .force : .merged(confirmed: nil)
         }
+    }
+
+    func validate() throws {
+        if let lines, !(1...TerminalWait.maximumLines).contains(lines) { throw Self.invalidLines }
+        if let messages, !(1...TerminalWait.maximumMessages).contains(messages) { throw Self.invalidMessages }
+        try Self.validate(seconds: idleSeconds, option: "--idle")
+        try Self.validate(seconds: timeoutSeconds, option: "--timeout")
+        if let unknown = keys?.first(where: { TerminalKey(name: $0) == nil }) { throw Self.unknownKey(unknown) }
+        if let keys, keys.count > TerminalKey.maximumCount {
+            throw WorkspaceError(message: String(localized: "Too many keys: \(TerminalKey.maximumCount) at most."))
+        }
+        if waitsForExit == true, idleSeconds != nil {
+            throw WorkspaceError(message: String(localized: "Use either --idle or --exit, not both."))
+        }
+        if [lines != nil, reply == true, messages != nil].filter({ $0 }).count > 1 {
+            throw WorkspaceError(message: String(localized: "Use only one of --lines, --reply and --messages."))
+        }
+    }
+
+    static var invalidLines: WorkspaceError {
+        WorkspaceError(message: String(localized: "--lines must be a whole number from 1 to \(TerminalWait.maximumLines)."))
+    }
+
+    static var invalidMessages: WorkspaceError {
+        WorkspaceError(message: String(localized: "--messages must be a whole number from 1 to \(TerminalWait.maximumMessages)."))
+    }
+
+    static func invalidSeconds(option: String) -> WorkspaceError {
+        WorkspaceError(message: String(localized: "\(option) must be a number of seconds greater than 0 and at most \(Int(TerminalWait.maximumTimeout))."))
+    }
+
+    static func unknownKey(_ name: String) -> WorkspaceError {
+        WorkspaceError(message: String(localized: "Unknown key: \(name). Use \(TerminalKey.names)."))
+    }
+
+    private static func validate(seconds: Double?, option: String) throws {
+        guard let seconds else { return }
+        guard seconds.isFinite, seconds > 0, seconds <= TerminalWait.maximumTimeout else { throw invalidSeconds(option: option) }
     }
 }
 

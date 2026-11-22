@@ -30,7 +30,7 @@ enum AgentCLI {
     worktree delete closes its terminals and erases its folder; by default, the branch and its commits stay in the repository.
     With --delete-branch, the branch is deleted too if it’s merged into the repository’s main branch; otherwise nothing is removed. Add --force-branch to delete it even if it isn’t, losing its unmerged commits.
     The repository’s main branch and a branch checked out elsewhere are never deleted.
-    Without --force, a worktree with uncommitted changes or untracked files is kept; --force never deletes an unmerged branch.
+    Without --force, a worktree with uncommitted changes or untracked files, or with an agent working in another terminal, is kept; --force never deletes an unmerged branch.
     A project’s main folder can’t be deleted. From its own worktree, the command replies once everything is checked, then closes the current terminal and deletes the worktree.
     terminal send types TEXT into another terminal, or the standard input with --stdin. With --enter, the text is submitted as one message, like pressing Return; --enter alone just presses Return.
     --key presses keys one after the other, in order: enter, escape, tab, shift-tab, backspace, delete, space, up, down, left, right, home, end, page-up, page-down, ctrl-a … ctrl-z.
@@ -56,6 +56,7 @@ enum AgentCLI {
             let directory = try instanceDirectory(environment: environment)
             var request = try parse(arguments, environment: environment, currentDirectory: FileManager.default.currentDirectoryPath)
             if request.action == "terminal.send", request.text == nil, arguments.contains("--stdin") { request.text = try standardInput() }
+            request.callerProcessID = getpid()
             let requestURL = directory.appendingPathComponent("\(request.id.uuidString).request")
             let responseURL = directory.appendingPathComponent("\(request.id.uuidString).response")
             defer { try? FileManager.default.removeItem(at: responseURL) }
@@ -63,7 +64,7 @@ enum AgentCLI {
             let watcher = try? FileSystemWatcher(directory, queue: .global(qos: .userInitiated)) { _ in changes.signal() }
             defer { watcher?.cancel() }
             let recheck: DispatchTimeInterval = watcher == nil ? .milliseconds(50) : .seconds(1)
-            try JSONEncoder().encode(request).write(to: requestURL, options: .atomic)
+            try send(request, to: requestURL)
             let deadline = DispatchTime.now() + request.responseTimeout
             while DispatchTime.now() < deadline {
                 if FileManager.default.fileExists(atPath: responseURL.path) {
@@ -85,12 +86,22 @@ enum AgentCLI {
         }
     }
 
+    private static func send(_ request: BridgeRequest, to file: URL) throws {
+        do { try JSONEncoder().encode(request).write(to: file, options: .atomic) }
+        catch { throw WorkspaceError(message: String(localized: "Couldn’t send the request to Heka: \(error.localizedDescription) If this command runs in a sandbox, run heka outside it.")) }
+    }
+
     private static func standardInput() throws -> String {
         let data = FileHandle.standardInput.readDataToEndOfFile()
         guard let text = String(data: data, encoding: .utf8) else {
             throw WorkspaceError(message: String(localized: "The standard input isn’t UTF-8 text."))
         }
-        return text.hasSuffix("\n") ? String(text.dropLast()) : text
+        return withoutFinalLineBreak(text)
+    }
+
+    static func withoutFinalLineBreak(_ text: String) -> String {
+        guard let last = text.last, last == "\n" || last == "\r\n" else { return text }
+        return String(text.dropLast())
     }
 
     static func instanceDirectory(environment: [String: String]) throws -> URL {
@@ -104,26 +115,28 @@ enum AgentCLI {
     }
 
     static func runningInstance(in registry: URL) -> URL? {
-        let entries = (try? FileManager.default.contentsOfDirectory(at: registry, includingPropertiesForKeys: [.contentModificationDateKey])) ?? []
-        let running = entries.filter { entry in
+        liveInstances(in: registry).max { creationDate(of: $0) < creationDate(of: $1) }
+    }
+
+    @discardableResult static func liveInstances(in registry: URL) -> [URL] {
+        let keys: [URLResourceKey] = [.creationDateKey, .isDirectoryKey]
+        let entries = (try? FileManager.default.contentsOfDirectory(at: registry, includingPropertiesForKeys: keys)) ?? []
+        return entries.filter { entry in
             guard let pid = pid_t(entry.lastPathComponent) else { return false }
-            guard isRunning(pid), let path = try? String(contentsOf: entry, encoding: .utf8),
-                  FileManager.default.fileExists(atPath: path) else {
+            guard isRunning(pid) else {
                 try? FileManager.default.removeItem(at: entry)
                 return false
             }
-            return true
+            return (try? entry.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true
         }
-        let newest = running.max { modificationDate(of: $0) < modificationDate(of: $1) }
-        return newest.flatMap { try? String(contentsOf: $0, encoding: .utf8) }.map { URL(fileURLWithPath: $0) }
     }
 
-    private static func isRunning(_ pid: pid_t) -> Bool {
+    static func isRunning(_ pid: pid_t) -> Bool {
         pid > 0 && (kill(pid, 0) == 0 || errno == EPERM)
     }
 
-    private static func modificationDate(of url: URL) -> Date {
-        (try? url.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate) ?? .distantPast
+    private static func creationDate(of url: URL) -> Date {
+        (try? url.resourceValues(forKeys: [.creationDateKey]).creationDate) ?? .distantPast
     }
 
     static func parse(_ arguments: [String], environment: [String: String], currentDirectory: String? = nil) throws -> BridgeRequest {
@@ -257,21 +270,18 @@ enum AgentCLI {
                 guard let id = UUID(uuidString: value) else { throw WorkspaceError(message: String(localized: "Invalid terminal UUID.")) }
                 request.terminalID = id
             case ("terminal.read", "--lines"):
-                guard let lines = Int(value), (1...TerminalWait.maximumLines).contains(lines) else {
-                    throw WorkspaceError(message: String(localized: "--lines must be a whole number from 1 to \(TerminalWait.maximumLines).")) }
+                guard let lines = Int(value) else { throw BridgeRequest.invalidLines }
                 request.lines = lines
             case ("terminal.read", "--messages"):
-                guard let count = Int(value), (1...TerminalWait.maximumMessages).contains(count) else {
-                    throw WorkspaceError(message: String(localized: "--messages must be a whole number from 1 to \(TerminalWait.maximumMessages).")) }
+                guard let count = Int(value) else { throw BridgeRequest.invalidMessages }
                 request.messages = count
             case ("terminal.send", "--key"):
-                guard TerminalKey(name: value) != nil else {
-                    throw WorkspaceError(message: String(localized: "Unknown key: \(value). Use \(TerminalKey.names).")) }
+                guard TerminalKey(name: value) != nil else { throw BridgeRequest.unknownKey(value) }
                 request.keys = (request.keys ?? []) + [value]
             case ("terminal.wait", "--idle"):
-                request.idleSeconds = try seconds(value, option: option, maximum: TerminalWait.maximumTimeout)
+                request.idleSeconds = try seconds(value, option: option)
             case ("terminal.wait", "--timeout"):
-                request.timeoutSeconds = try seconds(value, option: option, maximum: TerminalWait.maximumTimeout)
+                request.timeoutSeconds = try seconds(value, option: option)
             default: throw WorkspaceError(message: String(localized: "Unknown option: \(option)"))
             }
             index += 2
@@ -279,20 +289,10 @@ enum AgentCLI {
         guard let target = request.terminalID else {
             throw WorkspaceError(message: String(localized: "Specify the terminal: --terminal UUID (see heka list)."))
         }
-        if request.waitsForExit == true, request.idleSeconds != nil {
-            throw WorkspaceError(message: String(localized: "Use either --idle or --exit, not both."))
+        if request.keys != nil, request.text != nil || readsInput || request.pressesEnter == true {
+            throw WorkspaceError(message: String(localized: "--key can’t be combined with text, --stdin or --enter. Send them in separate commands, or add --key enter."))
         }
-        if [request.lines != nil, request.reply == true, request.messages != nil].filter({ $0 }).count > 1 {
-            throw WorkspaceError(message: String(localized: "Use only one of --lines, --reply and --messages."))
-        }
-        if let keys = request.keys {
-            guard request.text == nil, !readsInput, request.pressesEnter != true else {
-                throw WorkspaceError(message: String(localized: "--key can’t be combined with text, --stdin or --enter. Send them in separate commands, or add --key enter."))
-            }
-            guard keys.count <= TerminalKey.maximumCount else {
-                throw WorkspaceError(message: String(localized: "Too many keys: \(TerminalKey.maximumCount) at most."))
-            }
-        }
+        try request.validate()
         if readsInput, request.text != nil {
             throw WorkspaceError(message: String(localized: "Use either --stdin or text after --, not both."))
         }
@@ -305,10 +305,8 @@ enum AgentCLI {
         return request
     }
 
-    private static func seconds(_ value: String, option: String, maximum: Double) throws -> Double {
-        guard let seconds = Double(value), seconds.isFinite, seconds > 0, seconds <= maximum else {
-            throw WorkspaceError(message: String(localized: "\(option) must be a number of seconds greater than 0 and at most \(Int(maximum))."))
-        }
+    private static func seconds(_ value: String, option: String) throws -> Double {
+        guard let seconds = Double(value) else { throw BridgeRequest.invalidSeconds(option: option) }
         return seconds
     }
 }

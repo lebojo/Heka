@@ -38,9 +38,10 @@ def start():
     shutil.rmtree(instances, ignore_errors=True)
     app = subprocess.Popen([str(binary), '-AppleLanguages', '(en)'], env=os.environ | {'HEKA_STATE_DIRECTORY': str(state)},
                            stdout=open(root / 'app.log', 'a'), stderr=subprocess.STDOUT)
-    registered = lambda: [entry for entry in instances.iterdir() if entry.name.isdigit()] if instances.is_dir() else []
+    registered = lambda: [entry for entry in instances.iterdir() if entry.name.isdigit() and (entry / 'bin/heka').exists()] if instances.is_dir() else []
     wait_for(registered, 'app bridge')
-    instance = pathlib.Path(registered()[0].read_text())
+    instance = registered()[0]
+    assert instance.stat().st_mode & 0o777 == 0o700, oct(instance.stat().st_mode)
 
 def request(action, **kwargs):
     ident = str(uuid.uuid4()).upper()
