@@ -1,20 +1,5 @@
 import SwiftUI
 
-enum WorkspaceSheet: Identifiable, Equatable {
-    case folder(parentID: UUID?)
-    case rename(UUID, String)
-    case worktree(UUID, String)
-    case worktreeGroup(projectID: UUID, worktreeID: UUID?)
-    var id: String {
-        switch self {
-        case .folder(let parentID): "folder-\(parentID?.uuidString ?? "root")"
-        case .rename(let id, _): "rename-\(id)"
-        case .worktree(let id, _): "worktree-\(id)"
-        case .worktreeGroup(let projectID, let worktreeID): "worktree-group-\(projectID)-\(worktreeID?.uuidString ?? "empty")"
-        }
-    }
-}
-
 struct WorkspaceEditor: View {
     @Environment(\.dismiss) private var dismiss
 
@@ -84,12 +69,12 @@ struct WorkspaceEditor: View {
                 Text(title)
             } icon: {
                 Image(systemName: appearance?.displaySymbol.systemName ?? symbol)
-                    .foregroundStyle(appearance?.color ?? Palette.accent)
+                    .foregroundStyle(appearance?.color ?? Color.accentColor)
             }
-            .font(Typography.title)
-            Text(explanation).foregroundStyle(Palette.textSecondary).font(Typography.body).fixedSize(horizontal: false, vertical: true)
+            .font(Font.sheetTitle)
+            Text(explanation).foregroundStyle(Color.textSecondary).font(Font.callout).fixedSize(horizontal: false, vertical: true)
             VStack(alignment: .leading, spacing: Spacing.s) {
-                Text(isWorktree ? "Branch" : "Name").font(Typography.label)
+                Text(isWorktree ? "Branch" : "Name").font(Font.label)
                 HStack(spacing: Spacing.s) {
                     TextField(placeholder, text: $name)
                         .textFieldStyle(.roundedBorder).focused($focused)
@@ -113,13 +98,13 @@ struct WorkspaceEditor: View {
                 SidebarAppearancePicker(appearance: appearance)
             }
             if let error {
-                Text(error).font(Typography.body).foregroundStyle(Palette.danger).textSelection(.enabled)
+                Text(error).font(Font.callout).foregroundStyle(Color.danger).textSelection(.enabled)
                     .fixedSize(horizontal: false, vertical: true)
             }
             HStack {
                 if submitting {
                     ProgressView().controlSize(.small)
-                    if isWorktree { Text("Creating worktree…").font(Typography.caption).foregroundStyle(Palette.textSecondary) }
+                    if isWorktree { Text("Creating worktree…").font(Font.caption).foregroundStyle(Color.textSecondary) }
                 }
                 Spacer()
                 Button(submitting ? "Stop" : "Cancel") {
@@ -189,15 +174,5 @@ struct WorkspaceEditor: View {
             branches = await store.availableBranches(projectID: project)
             fetching = false
         }
-    }
-}
-
-private struct EditorSheetFrame: ViewModifier {
-    func body(content: Content) -> some View {
-        #if os(macOS)
-        content.frame(width: Dimension.Sheet.width)
-        #else
-        ScrollView { content }.presentationDetents([.medium, .large])
-        #endif
     }
 }

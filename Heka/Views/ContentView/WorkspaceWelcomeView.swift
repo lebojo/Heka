@@ -1,5 +1,4 @@
 import SwiftUI
-import AppKit
 
 struct WorkspaceWelcomeView: View {
     @Environment(WorkspaceStore.self) private var store
@@ -7,18 +6,20 @@ struct WorkspaceWelcomeView: View {
 
     var body: some View {
         VStack(spacing: Spacing.xl) {
-            Image(systemName: "terminal").font(Typography.heroSymbol).foregroundStyle(Palette.textSecondary)
-            Text("A home for your projects").font(Typography.display)
+            Image(systemName: "terminal").font(Font.heroSymbol).foregroundStyle(Color.textSecondary)
+            Text("A home for your projects").font(Font.display)
             Text("Group your projects, open terminals\nand work on several branches at once.")
-                .font(Typography.l).foregroundStyle(Palette.textSecondary).multilineTextAlignment(.center).lineSpacing(Spacing.xs)
+                .font(Font.l).foregroundStyle(Color.textSecondary).multilineTextAlignment(.center).lineSpacing(Spacing.xs)
             HStack(spacing: Spacing.l) {
                 Button("Add Project…") { store.chooseProjects() }.buttonStyle(.borderedProminent)
                 Button("Import Folder…") { store.chooseFolder() }
-            }.padding(.top, Spacing.s)
-            Button("Create a Virtual Folder") { presentation.sheet = .folder(parentID: nil) }.buttonStyle(.link).font(Typography.m)
+            }
+            .padding(.top, Spacing.s)
+            .disabled(!store.canImport)
+            Button("Create a Virtual Folder") { presentation.sheet = .folder(parentID: nil) }.buttonStyle(.link).font(Font.m)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Palette.surface)
+        .background(Color.surface)
         .navigationTitle("Heka")
     }
 }

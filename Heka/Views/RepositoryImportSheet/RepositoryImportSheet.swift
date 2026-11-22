@@ -16,34 +16,35 @@ struct RepositoryImportSheet: View {
             Label {
                 Text("Import “\(plan.destinationName)”")
             } icon: {
-                Image(systemName: "square.and.arrow.down").foregroundStyle(Palette.accent)
+                Image(systemName: "square.and.arrow.down").foregroundStyle(Color.accentColor)
             }
-            .font(Typography.title)
+            .font(Font.sheetTitle)
             Text("\(total) Git repositories found. Choose the ones to add: virtual folders mirror the folder structure on disk. Files stay where they are.")
-                .font(Typography.body).foregroundStyle(Palette.textSecondary)
+                .font(Font.callout).foregroundStyle(Color.textSecondary)
                 .fixedSize(horizontal: false, vertical: true)
             Toggle(isOn: $flattened) {
                 VStack(alignment: .leading, spacing: Spacing.xxs) {
-                    Text("Import Everything at the Same Level").font(Typography.label)
+                    Text("Import Everything at the Same Level").font(Font.label)
                     Text("A single “\(plan.destinationName)” folder, without subfolders.")
-                        .font(Typography.caption).foregroundStyle(Palette.textSecondary)
+                        .font(Font.caption).foregroundStyle(Color.textSecondary)
                 }
             }
             .toggleStyle(.switch)
             List {
                 RepositoryImportRow(selection: $selection, item: plan.preview(flattened: flattened))
             }
-            .listStyle(.bordered(alternatesRowBackgrounds: false))
+            .listStyle(.bordered)
+            .alternatingRowBackgrounds(.disabled)
             .frame(height: Dimension.ImportSheet.listHeight)
             if let warning = plan.warning {
                 Label(warning, systemImage: "exclamationmark.triangle")
-                    .font(Typography.caption).foregroundStyle(Palette.warning)
+                    .font(Font.caption).foregroundStyle(Color.warning)
                     .fixedSize(horizontal: false, vertical: true)
                     .textSelection(.enabled)
             }
             HStack {
                 Text("\(selection.count) of \(total) selected")
-                    .font(Typography.caption).monospacedDigit().foregroundStyle(Palette.textSecondary)
+                    .font(Font.caption).monospacedDigit().foregroundStyle(Color.textSecondary)
                 Spacer()
                 Button("Cancel") { dismiss() }.keyboardShortcut(.cancelAction)
                 Button("Import") { submit() }

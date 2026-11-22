@@ -11,7 +11,7 @@ struct SidebarWorkInProgressList: View {
 
     var body: some View {
         let rows = rows
-        List(selection: Bindable(store).selection) {
+        List(selection: Bindable(store).listSelection) {
             ForEach(rows) { row in
                 SidebarWorkInProgressRow(row: row)
             }
@@ -20,7 +20,7 @@ struct SidebarWorkInProgressList: View {
         .overlay {
             if rows.isEmpty {
                 Text(query.isEmpty ? "No agent is working" : "No Results")
-                    .font(Typography.body).foregroundStyle(Palette.textSecondary)
+                    .font(Font.callout).foregroundStyle(Color.textSecondary)
             }
         }
     }

@@ -16,7 +16,7 @@ extension Color {
 }
 
 extension View {
-    func compactMenuStyle() -> some View { menuStyle(.borderlessButton).fixedSize() }
+    func compactMenuStyle() -> some View { menuStyle(.button).buttonStyle(.borderless).fixedSize() }
 
     func commandInputTraits() -> some View { self }
 
