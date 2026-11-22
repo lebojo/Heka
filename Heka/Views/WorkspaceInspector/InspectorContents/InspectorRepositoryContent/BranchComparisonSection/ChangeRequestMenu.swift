@@ -47,7 +47,7 @@ struct ChangeRequestMenu: View {
     }
 
     var body: some View {
-        if let branch {
+        if branch != nil {
             Menu(title, systemImage: "arrow.triangle.pull") {
                 if let worktree {
                     Button(askAgentTitle, systemImage: "sparkles") {

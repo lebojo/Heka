@@ -39,7 +39,7 @@ import Observation
     private func observePolicy() {
         withObservationTracking {
             _ = settings?.keepAwake
-        } onChange: {
+        } onChange: { [weak self] in
             Task { @MainActor [weak self] in
                 self?.refresh()
                 self?.observePolicy()

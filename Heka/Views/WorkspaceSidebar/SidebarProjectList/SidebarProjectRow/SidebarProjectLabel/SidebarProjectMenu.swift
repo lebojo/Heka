@@ -38,6 +38,6 @@ struct SidebarProjectMenu: View {
     }
 
     private func move(to folderID: UUID?) {
-        store.perform { try await store.moveProject(project.id, to: folderID) }
+        store.moveProject(project.id, to: folderID)
     }
 }
