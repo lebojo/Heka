@@ -179,7 +179,69 @@ enum ConversationTests {
             INSERT INTO session VALUES ('ses_new', NULL, '\(path)', 'Fresh session', 1, 1799000000000, NULL);
             """)
         try require(await index.conversations(at: path).first?.id == "opencode:ses_new", "A changed OpenCode database is read again")
+        try testTitlesBetweenHeadAndTail(in: claude, path: path)
+        try await testRunningRecheck(home: home, path: path)
+        try await testFreshLoadStartsItsOwnCheck(home: home, path: path)
         print("PASS conversation index")
+    }
+
+    private static func testTitlesBetweenHeadAndTail(in claude: URL, path: String) throws {
+        let filler = String(repeating: #"{"type":"assistant","message":{"content":"\#(String(repeating: "x", count: 100))"}}"# + "\n", count: 100)
+        let prompt = #"{"type":"user","cwd":"\#(path)","message":{"role":"user","content":"Middle session"}}"# + "\n"
+        let renamed = claude.appendingPathComponent("renamed-middle.jsonl")
+        try (prompt + filler + #"{"type":"custom-title","customTitle":"Renamed in the middle"}"# + "\n" + filler
+             + #"{"type":"ai-title","aiTitle":"Generated later"}"# + "\n" + filler).write(to: renamed, atomically: true, encoding: .utf8)
+        try require(ClaudeTranscript.read(renamed, tailLength: 4_096).title == "Renamed in the middle",
+                    "A custom title between the head and the tail is read on a cold read and wins over a later AI title")
+        let generated = claude.appendingPathComponent("generated-middle.jsonl")
+        try (prompt + filler + #"{"type":"ai-title","aiTitle":"Generated in the middle"}"# + "\n" + filler)
+            .write(to: generated, atomically: true, encoding: .utf8)
+        try require(ClaudeTranscript.read(generated, tailLength: 4_096).title == "Generated in the middle",
+                    "An AI title between the head and the tail replaces the first prompt on a cold read")
+    }
+
+    private static func testRunningRecheck(home: URL, path: String) async throws {
+        let checks = RunningChecks([["titled"], [], []])
+        let index = ConversationIndex(home: home, environment: [:], runningTimes: .init(recheckDelay: .milliseconds(200), maximumAge: .seconds(60)),
+                                      listRunningSessions: { _ in await checks.next() })
+        try require(await index.load(at: path, fresh: false).first { $0.id == "claude:titled" }?.isRunning == true, "A running session is shown as open")
+        try await Task.sleep(for: .milliseconds(300))
+        try require(await index.load(at: path, fresh: false).first { $0.id == "claude:titled" }?.isRunning == false,
+                    "A session that ended without touching its journal is re-checked after the short delay")
+        try await Task.sleep(for: .milliseconds(300))
+        _ = await index.load(at: path, fresh: false)
+        try require(await checks.count == 2, "An idle folder with no running session and unchanged journals keeps its check")
+    }
+
+    private static func testFreshLoadStartsItsOwnCheck(home: URL, path: String) async throws {
+        let checks = RunningChecks([["titled"], []], delays: [.milliseconds(400), .zero])
+        let index = ConversationIndex(home: home, environment: [:], listRunningSessions: { _ in await checks.next() })
+        let older = Task { await index.load(at: path, fresh: false) }
+        try await Task.sleep(for: .milliseconds(100))
+        let fresh = await index.load(at: path, fresh: true)
+        try require(fresh.first { $0.id == "claude:titled" }?.isRunning == false, "A fresh load does not join an older in-flight check")
+        _ = await older.value
+        try require(await index.load(at: path, fresh: false).first { $0.id == "claude:titled" }?.isRunning == false,
+                    "An older check finishing late does not replace a newer result")
+        try require(await checks.count == 2, "The fresh load ran its own check")
+    }
+
+    private actor RunningChecks {
+        private let results: [Set<String>]
+        private let delays: [Duration]
+        private(set) var count = 0
+
+        init(_ results: [Set<String>], delays: [Duration] = []) {
+            self.results = results
+            self.delays = delays
+        }
+
+        func next() async -> Set<String>? {
+            let index = count
+            count += 1
+            if index < delays.count { try? await Task.sleep(for: delays[index]) }
+            return index < results.count ? results[index] : results.last
+        }
     }
 
     private static func writeCopilot(_ directory: URL, _ workspace: [String], events: [String]) throws {

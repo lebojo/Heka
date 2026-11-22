@@ -125,20 +125,30 @@ struct ClaudeTranscript: Equatable, Sendable {
     static func read(_ url: URL, continuing previous: ClaudeTranscript? = nil,
                      headLimit: Int = 8_388_608, tailLength: Int = 1_048_576) -> ClaudeTranscript {
         var transcript = previous ?? ClaudeTranscript()
-        var offset = transcript.scannedLength
-        if !transcript.hasHead {
-            offset = JSONLines.forEach(url, from: offset, limit: headLimit) { line in
-                transcript.consume(line)
-                return !transcript.hasHead
-            }
-        }
+        let headEnd = transcript.readHead(of: url, limit: headLimit)
         let size = (try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? 0
-        let tailStart = max(offset, size - tailLength)
-        transcript.scannedLength = JSONLines.forEach(url, from: tailStart, skippingPartialLine: tailStart > offset, limit: .max) { line in
+        let tailStart = max(headEnd, size - tailLength)
+        if tailStart > headEnd { transcript.readTitles(of: url, from: headEnd, to: tailStart) }
+        transcript.scannedLength = JSONLines.forEach(url, from: tailStart, skippingPartialLine: tailStart > headEnd, limit: .max) { line in
             transcript.consume(line)
             return true
         }
         return transcript
+    }
+
+    private mutating func readHead(of url: URL, limit: Int) -> Int {
+        guard !hasHead else { return scannedLength }
+        return JSONLines.forEach(url, from: scannedLength, limit: limit) { line in
+            consume(line)
+            return !hasHead
+        }
+    }
+
+    private mutating func readTitles(of url: URL, from start: Int, to end: Int) {
+        JSONLines.forEach(url, from: start, limit: end - start) { line in
+            if JSONLines.line(line, contains: "-title\"") { consume(line) }
+            return true
+        }
     }
 
     private mutating func consume(_ data: Data) {

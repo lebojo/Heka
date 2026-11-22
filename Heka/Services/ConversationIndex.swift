@@ -2,8 +2,6 @@ import Foundation
 
 actor ConversationIndex {
     static let shared = ConversationIndex()
-    static let runningRecheckDelay = Duration.seconds(15)
-    static let runningMaximumAge = Duration.seconds(120)
 
     private struct Stamp: Equatable {
         let modified: Date
@@ -21,16 +19,28 @@ actor ConversationIndex {
         let directories: [URL]
     }
 
+    struct RunningTimes: Sendable {
+        var recheckDelay = Duration.seconds(15)
+        var maximumAge = Duration.seconds(120)
+    }
+
     private struct RunningCheck {
         let started: ContinuousClock.Instant
-        let journals: Set<String>
+        let journals: [String: Date]
         let sessions: Set<String>
 
-        func isCurrent(for journals: Set<String>) -> Bool {
-            let age = started.duration(to: .now)
-            guard age < ConversationIndex.runningMaximumAge else { return false }
-            return journals == self.journals || age < ConversationIndex.runningRecheckDelay
+        var age: Duration { started.duration(to: .now) }
+
+        func isCurrent(for journals: [String: Date], times: RunningTimes) -> Bool {
+            guard age < times.maximumAge else { return false }
+            return age < times.recheckDelay || (journals == self.journals && sessions.isEmpty)
         }
+    }
+
+    private struct RunningRun {
+        let id = UUID()
+        let started = ContinuousClock.now
+        let task: Task<Set<String>?, Never>
     }
 
     private let home: URL
@@ -43,12 +53,18 @@ actor ConversationIndex {
     private var copilotPromptCache: [String: Cached<String?>] = [:]
     private var openCodeCache: (stamps: [Stamp?], sessions: [OpenCodeSessions.Session])?
     private var runningChecks: [String: RunningCheck] = [:]
-    private var runningTasks: [String: Task<Set<String>?, Never>] = [:]
+    private var runningRuns: [String: RunningRun] = [:]
+    private let runningTimes: RunningTimes
+    private let listRunningSessions: @Sendable (String) async -> Set<String>?
 
     init(home: URL = FileManager.default.homeDirectoryForCurrentUser,
-         environment: [String: String] = ProcessInfo.processInfo.environment) {
+         environment: [String: String] = ProcessInfo.processInfo.environment,
+         runningTimes: RunningTimes = RunningTimes(),
+         listRunningSessions: @escaping @Sendable (String) async -> Set<String>? = ConversationIndex.runningClaudeSessions(at:)) {
         self.home = home
         claudeConfig = ClaudeTranscript.configDirectory(home: home, environment: environment)
+        self.runningTimes = runningTimes
+        self.listRunningSessions = listRunningSessions
     }
 
     static var watchedDirectories: [String] { shared.watchedDirectories }
@@ -64,7 +80,7 @@ actor ConversationIndex {
 
     func load(at path: String, fresh: Bool) async -> [AgentConversation] {
         let conversations = conversations(at: path)
-        let journals = Set(conversations.filter { $0.agent == .claude }.map(\.sessionID))
+        let journals = Dictionary(conversations.filter { $0.agent == .claude }.map { ($0.sessionID, $0.updatedAt) }, uniquingKeysWith: max)
         let active = await runningSessions(at: path, journals: journals, fresh: fresh)
         return conversations.map { conversation in
             var conversation = conversation
@@ -236,27 +252,31 @@ actor ConversationIndex {
         return Stamp(modified: modified, size: values.fileSize ?? 0)
     }
 
-    func runningSessions(at path: String, journals: Set<String>, fresh: Bool) async -> Set<String> {
+    func runningSessions(at path: String, journals: [String: Date], fresh: Bool) async -> Set<String> {
         let previous = runningChecks[path]
-        if !fresh, let previous, previous.isCurrent(for: journals) { return previous.sessions }
-        let started = ContinuousClock.now
-        let checked = await runningCheck(at: path)
-        let sessions = checked ?? previous?.sessions ?? []
-        runningChecks = runningChecks.filter { $0.value.started.duration(to: .now) < Self.runningMaximumAge }
-        runningChecks[path] = RunningCheck(started: started, journals: journals, sessions: sessions)
+        if !fresh, let previous, previous.isCurrent(for: journals, times: runningTimes) { return previous.sessions }
+        let run = runningRun(at: path, joining: !fresh)
+        let sessions = await run.task.value ?? previous?.sessions ?? []
+        if runningRuns[path]?.id == run.id { runningRuns[path] = nil }
+        record(RunningCheck(started: run.started, journals: journals, sessions: sessions), at: path)
         return sessions
     }
 
-    private func runningCheck(at path: String) async -> Set<String>? {
-        if let running = runningTasks[path] { return await running.value }
-        let task = Task { await Self.runningClaudeSessions(at: path) }
-        runningTasks[path] = task
-        let sessions = await task.value
-        runningTasks[path] = nil
-        return sessions
+    private func runningRun(at path: String, joining: Bool) -> RunningRun {
+        if joining, let run = runningRuns[path] { return run }
+        let list = listRunningSessions
+        let run = RunningRun(task: Task { await list(path) })
+        runningRuns[path] = run
+        return run
     }
 
-    private static func runningClaudeSessions(at path: String) async -> Set<String>? {
+    private func record(_ check: RunningCheck, at path: String) {
+        runningChecks = runningChecks.filter { $0.value.age < runningTimes.maximumAge }
+        if let current = runningChecks[path], current.started > check.started { return }
+        runningChecks[path] = check
+    }
+
+    static func runningClaudeSessions(at path: String) async -> Set<String>? {
         struct Session: Decodable {
             let sessionId: String
         }
