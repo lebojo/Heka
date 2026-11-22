@@ -29,14 +29,18 @@ import AppKit
         try await InspectorService.comparison(with: base, at: root)
     }
     func conversations(at path: String, fresh: Bool) async throws -> [AgentConversation] {
-        await ConversationIndex.load(at: path, runningMaximumAge: fresh ? .zero : .seconds(10))
+        await ConversationIndex.load(at: path, fresh: fresh)
     }
     func repositoryChanges(at path: String) async -> AsyncStream<Void> { await FileEvents.repositoryChanges(at: path) }
     func conversationChanges() async -> AsyncStream<Void> {
         FileEvents.changes(in: ConversationIndex.watchedDirectories, latency: .seconds(1), every: .seconds(15))
     }
     func resume(_ conversation: AgentConversation, context: TerminalContext) async throws {
-        try store.resume(conversation, projectID: context.project.id, worktreeID: context.worktree.id)
+        let available = await ConversationIndex.load(at: context.worktree.path, fresh: true)
+        guard let actual = available.first(where: { $0.id == conversation.id }), !actual.isRunning else {
+            throw WorkspaceError(message: String(localized: "This conversation is no longer available or is already open."))
+        }
+        try store.resume(actual, projectID: context.project.id, worktreeID: context.worktree.id)
     }
     func perform(_ action: GitAction, at root: String) async throws { try await InspectorService.perform(action, at: root) }
     func runAgent(_ request: AgentRequest, name: String, in worktree: InspectedWorktree) {

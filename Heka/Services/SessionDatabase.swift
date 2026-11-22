@@ -1,7 +1,6 @@
 import Foundation
 import SQLite3
 
-/// A short-lived, read-only snapshot of an agent's database, including its WAL.
 final class SessionDatabase {
     private var connection: OpaquePointer?
 

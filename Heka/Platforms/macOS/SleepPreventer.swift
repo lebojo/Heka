@@ -5,6 +5,7 @@ import Observation
     private(set) var isPreventingSleep = false
     @ObservationIgnored private var activity: NSObjectProtocol?
     @ObservationIgnored private var expiry: Task<Void, Never>?
+    @ObservationIgnored private var expiryDeadline: ContinuousClock.Instant?
     @ObservationIgnored private var lastActivity = ContinuousClock.now
     @ObservationIgnored private var lastDisconnection = ContinuousClock.now
     @ObservationIgnored private var isConnected = false
@@ -56,26 +57,35 @@ import Observation
 
     private func refresh() {
         guard let deadline else {
-            expiry?.cancel()
-            expiry = nil
+            cancelExpiry()
             setPreventing(true)
             return
         }
         guard deadline > .now else {
-            expiry?.cancel()
-            expiry = nil
+            cancelExpiry()
             setPreventing(false)
             return
         }
         setPreventing(true)
-        guard expiry == nil else { return }
+        scheduleExpiry(at: deadline)
+    }
+
+    private func scheduleExpiry(at deadline: ContinuousClock.Instant) {
+        if expiry != nil, let expiryDeadline, expiryDeadline <= deadline { return }
+        expiry?.cancel()
+        expiryDeadline = deadline
         expiry = Task { [weak self] in
-            while let self, let deadline = self.deadline, deadline > .now {
-                do { try await Task.sleep(until: deadline) } catch { return }
-            }
+            do { try await Task.sleep(until: deadline) } catch { return }
             self?.expiry = nil
+            self?.expiryDeadline = nil
             self?.refresh()
         }
+    }
+
+    private func cancelExpiry() {
+        expiry?.cancel()
+        expiry = nil
+        expiryDeadline = nil
     }
 
     private func setPreventing(_ prevent: Bool) {

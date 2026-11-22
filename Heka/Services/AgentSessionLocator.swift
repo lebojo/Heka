@@ -33,7 +33,6 @@ enum AgentSessionLocator {
                 guard let id = row["id"], let path = row["rollout_path"], FileManager.default.fileExists(atPath: path) else { return nil }
                 return Match(id: id, path: path)
             }
-            // Never attach a different terminal's conversation just because it was updated last.
             return candidates.count == 1 ? candidates[0] : nil
         }
         return nil

@@ -29,7 +29,10 @@ import Observation
             }
         }
         catch is CancellationError { return }
-        catch { self.error = error.localizedDescription }
+        catch {
+            guard !Task.isCancelled else { return }
+            self.error = error.localizedDescription
+        }
         self.request = nil
     }
 

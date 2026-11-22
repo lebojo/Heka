@@ -48,6 +48,18 @@ enum ConversationTests {
             #"{"type":"user","cwd":"\#(other.path)","message":{"role":"user","content":"Elsewhere"}}"#
         ])
 
+        try write(claude.appendingPathComponent("renamed-after-ai.jsonl"), [
+            #"{"type":"user","cwd":"\#(path)","message":{"role":"user","content":"Tidy the settings"}}"#,
+            #"{"type":"ai-title","aiTitle":"Settings cleanup"}"#,
+            #"{"type":"custom-title","customTitle":"My settings"}"#,
+            #"{"type":"ai-title","aiTitle":"Later generated title"}"#
+        ])
+        try write(claude.appendingPathComponent("renamed-twice.jsonl"), [
+            #"{"type":"user","cwd":"\#(path)","message":{"role":"user","content":"Draft the guide"}}"#,
+            #"{"type":"custom-title","customTitle":"First name"}"#,
+            #"{"type":"custom-title","customTitle":"Second name"}"#
+        ])
+
         let codex = home.appendingPathComponent(".codex", isDirectory: true)
         let day = codex.appendingPathComponent("sessions/2026/10/28", isDirectory: true)
         try FileManager.default.createDirectory(at: day, withIntermediateDirectories: true)
@@ -118,6 +130,8 @@ enum ConversationTests {
         try require(titles == [
             "claude:titled": "Login bug fix",
             "claude:untitled": "Write the tests",
+            "claude:renamed-after-ai": "My settings",
+            "claude:renamed-twice": "Second name",
             "codex:thread": "Refactor the sidebar",
             "codex:indexed": "Build the agent bar",
             "copilot:named": "Ship the \"usage\" bar",
@@ -129,7 +143,7 @@ enum ConversationTests {
             "opencode:--dangerously-skip-permissions": "Injected flag",
             "opencode:ses_v2": "OpenCode Conversation"
         ], "Conversations are filtered by cwd and titled, got \(titles)")
-        try require(await index.conversations(at: path.uppercased()).count == 12, "Paths match on case-insensitive volumes")
+        try require(await index.conversations(at: path.uppercased()).count == 14, "Paths match on case-insensitive volumes")
         try require(conversations.map(\.updatedAt) == conversations.map(\.updatedAt).sorted(by: >), "Most recent conversations come first")
         try require(["0b8e1c2a-4f6d-4d1e-9a3b-7c5d2e1f0a9b", "ses_root", "rollout.v2"].allSatisfy(AgentConversation.isValidSessionID)
                     && !["--dangerously-skip-permissions", "-r", "", "a b", "a/b", "é"].contains(where: AgentConversation.isValidSessionID),
@@ -148,6 +162,16 @@ enum ConversationTests {
         ])
         let renamed = await index.conversations(at: path)
         try require(renamed.first { $0.id == "claude:untitled" }?.title == "Renamed session", "A changed transcript is read again")
+        try append(#"{"type":"custom-title","customTitle":"Third name"}"#, to: claude.appendingPathComponent("renamed-twice.jsonl"))
+        let appended = await index.conversations(at: path)
+        try require(appended.first { $0.id == "claude:renamed-twice" }?.title == "Third name", "A rename appended to a read transcript is picked up")
+        let long = claude.appendingPathComponent("long.jsonl")
+        let filler = String(repeating: #"{"type":"assistant","message":{"content":"\#(String(repeating: "x", count: 1_000))"}}"# + "\n", count: 3_000)
+        try (#"{"type":"user","cwd":"\#(path)","message":{"role":"user","content":"Long session"}}"# + "\n"
+             + #"{"type":"ai-title","aiTitle":"Early title"}"# + "\n" + filler
+             + #"{"type":"custom-title","customTitle":"Renamed at the end"}"# + "\n").write(to: long, atomically: true, encoding: .utf8)
+        try require(ClaudeTranscript.read(long).title == "Renamed at the end", "The last title of a long transcript is read from its tail")
+        try require(ClaudeTranscript.read(long).firstPrompt == "Long session", "The first prompt of a long transcript is read from its head")
         let elsewhere = await index.conversations(at: other.path).map(\.id).sorted()
         try require(elsewhere == ["codex:other", "copilot:elsewhere", "opencode:ses_other"], "Encoded directory alone does not match another cwd, got \(elsewhere)")
         try require(await index.conversations(at: accented.path).map(\.id) == ["opencode:ses_accent"], "OpenCode paths match case-insensitively beyond ASCII")
@@ -171,6 +195,13 @@ enum ConversationTests {
         try process.run()
         process.waitUntilExit()
         try require(process.terminationStatus == 0, "sqlite3 fixture")
+    }
+
+    private static func append(_ line: String, to url: URL) throws {
+        let handle = try FileHandle(forWritingTo: url)
+        defer { try? handle.close() }
+        try handle.seekToEnd()
+        try handle.write(contentsOf: Data((line + "\n").utf8))
     }
 
     private static func write(_ url: URL, _ lines: [String], partialLastLine: Bool = false) throws {

@@ -65,6 +65,21 @@ import Foundation
         await monitoring.value
         print("PASS event-driven inspector refresh without self-triggering")
 
+        guard let found = GitRepository.containing(repository.path) else { throw WorkspaceError(message: "FAIL: The event repository is found") }
+        try fm.createDirectory(at: found.gitDirectory.appendingPathComponent("info"), withIntermediateDirectories: true)
+        try "build/\n".write(to: found.gitDirectory.appendingPathComponent("info/exclude"), atomically: true, encoding: .utf8)
+        try fm.createDirectory(at: found.root.appendingPathComponent("build/Debug"), withIntermediateDirectories: true)
+        let filter = RepositoryEventFilter(repository: found)
+        let base = found.root.path, metadata = found.gitDirectory.path
+        let ignoredBuild = await filter.isRelevant([base + "/build/Debug/"])
+        let ignoredDeeper = await filter.isRelevant([base + "/build/Debug/Intermediates/"])
+        let ignoredMetadata = await filter.isRelevant([metadata + "/objects/ab/", metadata + "/logs/refs/heads/"])
+        let besideBuild = await filter.isRelevant([base + "/build/Debug/", base + "/"])
+        let branchUpdate = await filter.isRelevant([metadata + "/refs/heads/"])
+        try CoreTests.require(!ignoredBuild && !ignoredDeeper && !ignoredMetadata, "Writes in ignored folders and Git objects do not refresh Git status")
+        try CoreTests.require(besideBuild && branchUpdate, "Changes outside ignored folders and branch updates refresh Git status")
+        print("PASS repository events under ignored folders are filtered")
+
         let queue = InspectorStore()
         var performed: [String] = []
         let first = Task {

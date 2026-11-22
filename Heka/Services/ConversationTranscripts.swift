@@ -1,15 +1,19 @@
 import Foundation
 
 enum JSONLines {
-    static func forEach(_ url: URL, limit: Int, _ body: (Data) -> Bool) {
-        guard let handle = try? FileHandle(forReadingFrom: url) else { return }
+    @discardableResult
+    static func forEach(_ url: URL, from offset: Int = 0, skippingPartialLine: Bool = false, limit: Int, _ body: (Data) -> Bool) -> Int {
+        guard let handle = try? FileHandle(forReadingFrom: url) else { return offset }
         defer { try? handle.close() }
+        var skipping = skippingPartialLine && offset > 0
+        var consumed = skipping ? offset - 1 : offset
+        guard (try? handle.seek(toOffset: UInt64(consumed))) != nil else { return offset }
         var buffer = Data()
         var read = 0
         while read < limit {
             guard let chunk = try? handle.read(upToCount: 65_536), !chunk.isEmpty else {
-                if !buffer.isEmpty { _ = body(buffer) }
-                return
+                if !buffer.isEmpty, !skipping { _ = body(buffer) }
+                return consumed
             }
             read += chunk.count
             buffer.append(chunk)
@@ -17,10 +21,16 @@ enum JSONLines {
             while let newline = buffer[start...].firstIndex(of: 0x0A) {
                 let line = Data(buffer[start..<newline])
                 start = buffer.index(after: newline)
-                if !line.isEmpty, !body(line) { return }
+                consumed += line.count + 1
+                if skipping {
+                    skipping = false
+                    continue
+                }
+                if !line.isEmpty, !body(line) { return consumed }
             }
             buffer = Data(buffer[start...])
         }
+        return consumed
     }
 
     static func line(_ line: Data, contains marker: String) -> Bool {
@@ -61,9 +71,10 @@ struct ClaudeTranscript: Equatable, Sendable {
     var customTitle: String?
     var aiTitle: String?
     var firstPrompt: String?
+    private(set) var scannedLength = 0
 
     var title: String? { customTitle ?? aiTitle ?? firstPrompt }
-    private var isComplete: Bool { cwd != nil && (customTitle != nil || aiTitle != nil) }
+    private var hasHead: Bool { cwd != nil && (firstPrompt != nil || customTitle != nil || aiTitle != nil) }
 
     private struct Line: Decodable {
         let type: String?
@@ -111,11 +122,21 @@ struct ClaudeTranscript: Equatable, Sendable {
             ?? projects.appendingPathComponent(directoryName(for: cwd), isDirectory: true).appendingPathComponent(file)
     }
 
-    static func read(_ url: URL, limit: Int = 8_388_608) -> ClaudeTranscript {
-        var transcript = ClaudeTranscript()
-        JSONLines.forEach(url, limit: limit) { line in
+    static func read(_ url: URL, continuing previous: ClaudeTranscript? = nil,
+                     headLimit: Int = 8_388_608, tailLength: Int = 1_048_576) -> ClaudeTranscript {
+        var transcript = previous ?? ClaudeTranscript()
+        var offset = transcript.scannedLength
+        if !transcript.hasHead {
+            offset = JSONLines.forEach(url, from: offset, limit: headLimit) { line in
+                transcript.consume(line)
+                return !transcript.hasHead
+            }
+        }
+        let size = (try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? 0
+        let tailStart = max(offset, size - tailLength)
+        transcript.scannedLength = JSONLines.forEach(url, from: tailStart, skippingPartialLine: tailStart > offset, limit: .max) { line in
             transcript.consume(line)
-            return !transcript.isComplete
+            return true
         }
         return transcript
     }
