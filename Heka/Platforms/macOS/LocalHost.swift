@@ -23,7 +23,7 @@ import SystemConfiguration
     }
     private(set) var pairingCode = ""
     private(set) var pairingStorageError: String?
-    private(set) var status = String(localized: "Local Access off")
+    private(set) var status = String(localized: "Mobile Control off")
     private(set) var addresses: [String] = []
     let sleepPreventer = SleepPreventer()
     @ObservationIgnored private let identifier = LocalHost.deviceIdentifier()
@@ -44,6 +44,7 @@ import SystemConfiguration
     private static let maximumConnections = 32
     private static let maximumUnpairedConnections = 64
     private static let maximumConnectionsPerPeer = 16
+    nonisolated private static let maximumListedEntries = 10_000
     private static let incompatibleVersions = String(localized: "Incompatible versions. Update Heka on the Mac and on this device.")
 
     init(pairingStore: any PairingCodeStore = PairingCodeStores.make(account: "localHost.pairingCode")) {
@@ -149,7 +150,7 @@ import SystemConfiguration
 
     private func restart() {
         stop()
-        guard enabled, store != nil else { status = String(localized: "Local Access off"); return }
+        guard enabled, store != nil else { status = String(localized: "Mobile Control off"); return }
         addresses = Self.localAddresses()
         status = String(localized: "Starting…")
         listenerStart = Task { [weak self] in
@@ -182,7 +183,7 @@ import SystemConfiguration
         self.listener = listener
         listener.stateUpdateHandler = { [weak self, weak listener] state in
             Task { @MainActor [weak self, weak listener] in
-                guard let self, self.listener === listener else { return }
+                guard let self, let listener, self.listener === listener else { return }
                 switch state {
                 case .ready: self.status = String(localized: "Ready to accept a connection")
                 case .failed(let error):
@@ -432,19 +433,20 @@ import SystemConfiguration
             guard data.count <= 65_536, (message?.utf8.count ?? 0) <= 65_536 else { throw RemoteError(message: String(localized: "Message too long.")) }
             try await startedSession(id).send(data, message: message, from: .remote)
             return try .success(true)
-        case .newTerminal(let project, let worktree):
+        case .newTerminal(let project, let worktree, let opensShell):
             try requireWritable()
             let launch = settings?.agentLaunch ?? AgentLaunch()
             let id = try store.addTerminal(projectID: project, worktreeID: worktree,
-                                           command: launch.command(on: .newTerminal), select: false)
+                                           command: opensShell == true ? [] : launch.command(on: .newTerminal), select: false)
             return try .success(id.terminal.id)
         case .children(let id, let path):
-            return try .fitting(await InspectorService.children(at: validatedURL(path, terminal: id))) { ExplorerListing(entries: $0, omitted: $1) }
+            let entries = try await InspectorService.children(at: validatedURL(path, terminal: id))
+            return try await Self.reply(fitting: entries, limit: Self.maximumListedEntries) { ExplorerListing(entries: $0, omitted: $1) }
         case .text(let id, let path):
             return try await .success(InspectorService.textFile(validatedURL(path, terminal: id)))
         case .git(let id):
             let local = try await InspectorService.localGit(at: context(id).worktree.path)
-            return try .fitting(local.changes, local.limited(to:omitting:))
+            return try await Self.reply(fitting: local.changes, local.limited(to:omitting:))
         case .github(let id):
             let local = try await InspectorService.localGit(at: context(id).worktree.path, changesIn: [])
             return try await .success(InspectorService.remote(for: local))
@@ -460,7 +462,7 @@ import SystemConfiguration
         case .comparison(let id, let base):
             let root = try await comparableRoot(terminal: id, base: base)
             let comparison = try await InspectorService.comparison(with: base, at: root)
-            return try .fitting(comparison.changes) {
+            return try await Self.reply(fitting: comparison.changes) {
                 BranchComparison(base: base, commits: comparison.commits, changes: $0, omittedChanges: comparison.omittedChanges + $1)
             }
         case .comparisonDiff(let id, let base, let change):
@@ -473,7 +475,7 @@ import SystemConfiguration
             _ = try validatedURL(URL(fileURLWithPath: root).appendingPathComponent(actual.path).path, within: root)
             return try await .success(RemoteDiff(InspectorService.comparisonDiff(actual, base: base, at: root)))
         case .conversations(let id, let fresh):
-            return try await .success(ConversationIndex.load(at: context(id).worktree.path, runningMaximumAge: fresh ? .zero : .seconds(10)))
+            return try await .success(ConversationIndex.load(at: context(id).worktree.path, fresh: fresh))
         case .launchAgent(let id, let agent):
             try requireWritable()
             let session = try startedSession(id)
@@ -482,7 +484,7 @@ import SystemConfiguration
         case .resume(let id, let conversation):
             try requireWritable()
             let context = try context(id)
-            let available = await ConversationIndex.load(at: context.worktree.path, runningMaximumAge: .zero)
+            let available = await ConversationIndex.load(at: context.worktree.path, fresh: true)
             guard let actual = available.first(where: { $0.id == conversation.id }), !actual.isRunning else {
                 throw RemoteError(message: String(localized: "This conversation is no longer available or is already open."))
             }
@@ -513,7 +515,7 @@ import SystemConfiguration
             }.value
             return try .success(created.terminal.id)
         case .projectBranches(let project):
-            return try .fitting(await store.availableBranches(projectID: project)) { branches, _ in branches }
+            return try await Self.reply(fitting: await store.availableBranches(projectID: project)) { branches, _ in branches }
         case .fetchRemotes(let project):
             try requireWritable()
             try await store.fetchRemotes(projectID: project)
@@ -543,7 +545,7 @@ import SystemConfiguration
             return try .success(true)
         case .deletableBranch(let removal):
             return try .success(await store.deletableBranch(for: removal))
-        case .remove(.orphanWorktree, _):
+        case .remove(.orphanWorktree, _), .remove(_, .force):
             throw RemoteError(message: String(localized: "Invalid request."))
         case .remove(let removal, let branch):
             try requireWritable()
@@ -553,6 +555,12 @@ import SystemConfiguration
     }
 
     private var isWritable: Bool { store?.isReadOnly != true }
+
+    @concurrent private nonisolated static func reply<Element: Sendable, Value: Encodable>(
+        fitting elements: [Element], limit: Int = .max, _ value: @Sendable ([Element], Int) -> Value
+    ) async throws -> RemoteReply {
+        try RemoteReply.fitting(elements, limit: limit, value)
+    }
 
     private func validatedRemote(_ remote: String?, of branch: String, in project: UUID) async throws -> String? {
         guard let remote else { return nil }

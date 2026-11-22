@@ -10,21 +10,21 @@ struct MobileSavedHostsSection: View {
     var body: some View {
         Section {
             ForEach(store.savedHosts) { host in
-                Button { select(host) } label: { MobileHostRow(host: host) }
+                Button { select(host) } label: { MobileHostRow(host: host, isSelected: store.selectedHostID == host.id) }
             }
             .onDelete(perform: forget)
             if MobileQRScanner.isSupported {
                 Button("Scan QR Code", systemImage: "qrcode.viewfinder") { scannerVisible = true }
             } else {
                 Label("This device can’t scan QR codes. Add the Mac manually below.", systemImage: "qrcode")
-                    .foregroundStyle(Palette.textSecondary)
+                    .foregroundStyle(Color.textSecondary)
             }
             if store.status == .connecting {
                 HStack { ProgressView(); Text("Connecting to the Mac…") }
             } else if store.selectedHost != nil {
-                Text(store.statusText).foregroundStyle(Palette.textSecondary)
+                Text(store.statusText).foregroundStyle(Color.textSecondary)
             }
-            if let error { Text(error).foregroundStyle(Palette.danger) }
+            if let error { Text(error).foregroundStyle(Color.danger) }
             if store.wantsConnection {
                 Button("Disconnect", role: .destructive) { store.disconnect() }
             }

@@ -49,6 +49,13 @@ import Foundation
         try require(saved.pairingAccount.hasSuffix(saved.id.uuidString), "Each saved host keeps its own keychain account")
         let persisted = try JSONDecoder().decode(SavedHost.self, from: JSONEncoder().encode(saved))
         try require(persisted == saved, "Saved host persists")
+        let legacyHost = try JSONDecoder().decode(SavedHost.self, from: Data(#"{"id":"\#(saved.id.uuidString)","name":"Mac","addresses":["192.168.1.42"],"pairingAccount":"remotePairingCode"}"#.utf8))
+        try require(!legacyHost.isScanned && legacyHost.pairingAccount == "remotePairingCode", "A host saved before scanned hosts were recorded decodes as added by address")
+        let otherMac = PairingInvitation(hostID: UUID(), name: "Other Mac", addresses: ["192.168.1.42"], code: RemotePairing.newCode())
+        let scannedMac = SavedHost(id: invitation.hostID, name: invitation.name, addresses: invitation.addresses, isScanned: true)
+        try require(saved.matches(otherMac), "A Mac added by address merges with the scanned Mac sharing its address")
+        try require(!scannedMac.matches(otherMac), "A scanned Mac is never replaced by another Mac sharing its address")
+        try require(scannedMac.matches(invitation), "A scanned Mac is updated by its own QR code")
         let interfaces = [LocalAddress(interface: "bridge100", value: "192.168.64.1"), LocalAddress(interface: "utun4", value: "10.8.0.2"),
                           LocalAddress(interface: "en10", value: "10.0.0.9"), LocalAddress(interface: "en1", value: "192.168.1.60"),
                           LocalAddress(interface: "en0", value: "192.168.1.42"), LocalAddress(interface: "en0", value: "169.254.3.4")]
@@ -187,7 +194,24 @@ import Foundation
         let kept = try fitted.decode([String].self)
         try require(kept.count > 10_000, "A trimmed list keeps as many entries as fit")
         try require(Int(kept[0]).map { $0 + kept.count - 1 } == entries.count, "A trimmed list reports how many entries were left out")
+        let limited = try RemoteReply.fitting(entries, limit: 100) { kept, omitted in [String(omitted)] + kept }.decode([String].self)
+        try require(limited.count == 101 && limited[0] == String(entries.count - 100), "A capped list keeps the limit and reports the rest as omitted")
         print("PASS version rejections and oversized lists fit the mobile protocol")
+
+        let oversized = RemoteTerminalSnapshot(identity: UUID(), isChat: false, output: Data(), columns: 100_000, rows: -3, transcript: [],
+                                               transcriptDropped: 0, transcriptStart: 0, transcriptAppend: nil, hasExited: false, exitCode: nil)
+        try require(oversized.mirroredColumns == RemoteTerminalSnapshot.maximumColumns && oversized.mirroredRows == 1, "The phone bounds the grid it mirrors")
+        let wide = RemoteTerminalSnapshot(identity: UUID(), isChat: false, output: Data(), columns: 640, rows: 180, transcript: [],
+                                          transcriptDropped: 0, transcriptStart: 0, transcriptAppend: nil, hasExited: false, exitCode: nil)
+        try require(wide.mirroredColumns == 640 && wide.mirroredRows == 180, "The phone mirrors a full-screen Mac grid unchanged")
+        print("PASS the mirrored terminal grid stays within bounds")
+
+        let olderPhone = Data(#"{"newTerminal":{"project":"\#(UUID().uuidString)","worktree":"\#(UUID().uuidString)"}}"#.utf8)
+        guard case .newTerminal(_, _, let opensShell) = try JSONDecoder().decode(RemoteRequest.self, from: olderPhone) else {
+            throw RemoteError(message: "FAIL: A new terminal request from an older phone must decode")
+        }
+        try require(opensShell == nil, "An older phone's new terminal request keeps the Mac's launch setting")
+        print("PASS new terminal requests stay compatible with older phones")
 
         try testRemoteGridRequests()
         print("PASS a phone grid applies until the Mac takes it back, and only typing on the phone claims it again")

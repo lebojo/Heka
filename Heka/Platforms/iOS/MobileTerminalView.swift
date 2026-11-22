@@ -63,8 +63,8 @@ import Observation
         applyingOutput = true
         defer { applyingOutput = false }
         let terminal = view.getTerminal()
-        if terminal.cols != snapshot.columns || terminal.rows != snapshot.rows {
-            terminal.resize(cols: snapshot.columns, rows: snapshot.rows)
+        if terminal.cols != snapshot.mirroredColumns || terminal.rows != snapshot.mirroredRows {
+            terminal.resize(cols: snapshot.mirroredColumns, rows: snapshot.mirroredRows)
         }
         updateCanvasSize()
         if !snapshot.output.isEmpty { view.feed(byteArray: Array(snapshot.output)[...]) }

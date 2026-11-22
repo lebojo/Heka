@@ -91,7 +91,7 @@ enum RemoteRequest: Codable, Sendable {
     case resizeTerminal(terminal: UUID, size: TerminalGridSize)
     case workspace(version: Int)
     case input(id: UUID, data: Data, message: String?)
-    case newTerminal(project: UUID, worktree: UUID)
+    case newTerminal(project: UUID, worktree: UUID, opensShell: Bool?)
     case children(terminal: UUID, path: String)
     case text(terminal: UUID, path: String)
     case git(terminal: UUID)
@@ -148,8 +148,8 @@ struct RemoteReply: Codable, Sendable {
         return Self(payload: payload)
     }
 
-    static func fitting<Element>(_ elements: [Element], _ value: ([Element], Int) -> some Encodable) throws -> Self {
-        var count = elements.count
+    static func fitting<Element>(_ elements: [Element], limit: Int = .max, _ value: ([Element], Int) -> some Encodable) throws -> Self {
+        var count = min(elements.count, limit)
         while true {
             let payload = try JSONEncoder().encode(value(Array(elements.prefix(count)), elements.count - count))
             if payload.count <= RemoteProtocol.maximumPayload { return Self(payload: payload) }

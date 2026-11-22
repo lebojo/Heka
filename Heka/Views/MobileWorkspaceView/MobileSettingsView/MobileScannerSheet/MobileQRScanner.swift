@@ -3,9 +3,9 @@ import Vision
 import VisionKit
 
 struct MobileQRScanner: UIViewControllerRepresentable {
-    static var isSupported: Bool { DataScannerViewController.isSupported }
-
     let scanned: (Result<String, Error>) -> Void
+
+    static var isSupported: Bool { DataScannerViewController.isSupported }
 
     func makeUIViewController(context: Context) -> DataScannerViewController {
         let scanner = DataScannerViewController(recognizedDataTypes: [.barcode(symbologies: [.qr])],
@@ -18,7 +18,7 @@ struct MobileQRScanner: UIViewControllerRepresentable {
     func updateUIViewController(_ scanner: DataScannerViewController, context: Context) {
         context.coordinator.scanned = scanned
         guard !scanner.isScanning else { return }
-        do { try scanner.startScanning() } catch { scanned(.failure(error)) }
+        do { try scanner.startScanning() } catch { context.coordinator.reportAfterUpdate(error) }
     }
 
     static func dismantleUIViewController(_ scanner: DataScannerViewController, coordinator: Coordinator) {
@@ -35,6 +35,10 @@ struct MobileQRScanner: UIViewControllerRepresentable {
 
         init(scanned: @escaping (Result<String, Error>) -> Void) {
             self.scanned = scanned
+        }
+
+        func reportAfterUpdate(_ error: Error) {
+            Task { scanned(.failure(error)) }
         }
 
         func dataScanner(_ dataScanner: DataScannerViewController, didAdd addedItems: [RecognizedItem], allItems: [RecognizedItem]) {

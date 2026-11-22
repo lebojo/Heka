@@ -72,7 +72,7 @@ enum KeychainError: Error, Equatable, LocalizedError, Sendable {
     var errorDescription: String? {
         switch self {
         case .unexpectedStatus(let status): String(localized: "Couldn’t save the pairing code to the keychain (error \(status)).")
-        case .unreadable(let status): String(localized: "Couldn’t read the pairing code from the keychain (error \(status)). Unlock the keychain, then turn Local Access back on.")
+        case .unreadable(let status): String(localized: "Couldn’t read the pairing code from the keychain (error \(status)). Unlock the keychain, then turn Mobile Control back on.")
         case .undeletable(let status): String(localized: "Couldn’t remove the pairing code from the keychain (error \(status)).")
         }
     }

@@ -82,7 +82,7 @@ enum RemoteChannel {
     }
 
     private static var unresponsiveHost: RemoteError {
-        RemoteError(message: String(localized: "The Mac isn’t responding. Check its IP address, the local network and its Local Access settings."))
+        RemoteError(message: String(localized: "The Mac isn’t responding. Check its IP address, the local network and its Mobile Control settings."))
     }
 
     @concurrent static func send(_ value: some Encodable & Sendable, on connection: NWConnection) async throws {

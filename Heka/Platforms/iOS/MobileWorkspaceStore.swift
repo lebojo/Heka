@@ -31,7 +31,9 @@ import Observation
     private(set) var repositoryRevision = 0
     private(set) var conversationRevision = 0
     private(set) var installedAgents: [ConversationAgent] = []
-    private(set) var activity = SidebarActivity()
+    private(set) var activity = SidebarActivity() {
+        didSet { refreshActivityValues() }
+    }
     private var expanded: Set<UUID> = []
     private(set) var agentLaunch = AgentLaunch()
     private(set) var busyProjects: Set<UUID> = []
@@ -50,6 +52,9 @@ import Observation
     @ObservationIgnored private var inputTimeouts: [UUID: Task<Void, Never>] = [:]
     @ObservationIgnored private var queuedInputs: [QueuedInput] = []
     @ObservationIgnored private var streamReady = false
+    @ObservationIgnored private var latestActivity = SidebarActivity()
+    @ObservationIgnored private var terminalSummaries: [UUID: MobileObservedValue<TerminalSummary>] = [:]
+    @ObservationIgnored private var branches: [String: MobileObservedValue<GitBranch>] = [:]
 
     init(pairingStores: @escaping @Sendable (String) -> any PairingCodeStore = PairingCodeStores.make(account:)) {
         self.pairingStores = pairingStores
@@ -91,10 +96,10 @@ import Observation
     }
 
     func pair(with invitation: PairingInvitation) throws {
-        let matches = savedHosts.filter { $0.id == invitation.hostID || !Set($0.addresses).isDisjoint(with: invitation.addresses) }
+        let matches = savedHosts.filter { $0.matches(invitation) }
         let known = matches.first { $0.id == invitation.hostID } ?? matches.first
         var saved = SavedHost(id: invitation.hostID, name: invitation.name, addresses: invitation.addresses,
-                              pairingAccount: known?.pairingAccount)
+                              pairingAccount: known?.pairingAccount, isScanned: true)
         if let working = known?.addresses.first, saved.addresses.contains(working) { saved = saved.preferring(working) }
         try pairingStores(saved.pairingAccount).save(invitation.code)
         for duplicate in matches where duplicate.pairingAccount != saved.pairingAccount {
@@ -377,6 +382,32 @@ import Observation
         return try await operation()
     }
 
+    func terminalSummary(_ id: UUID) -> TerminalSummary? {
+        if let summary = terminalSummaries[id] { return summary.value }
+        let summary = MobileObservedValue(latestActivity.terminals[id])
+        terminalSummaries[id] = summary
+        return summary.value
+    }
+
+    func branch(at path: String) -> GitBranch? {
+        if let branch = branches[path] { return branch.value }
+        let branch = MobileObservedValue(latestActivity.branches[path])
+        branches[path] = branch
+        return branch.value
+    }
+
+    private func refreshActivityValues() {
+        latestActivity = activity
+        for (id, summary) in terminalSummaries {
+            summary.update(activity.terminals[id])
+            if activity.terminals[id] == nil { terminalSummaries[id] = nil }
+        }
+        for (path, branch) in branches {
+            branch.update(activity.branches[path])
+            if activity.branches[path] == nil { branches[path] = nil }
+        }
+    }
+
     func isExpanded(_ id: UUID) -> Bool { expanded.contains(id) }
 
     func setExpanded(_ id: UUID, _ isExpanded: Bool) {
@@ -387,9 +418,9 @@ import Observation
         await newTerminal(projectID: context.project.id, worktreeID: context.worktree.id)
     }
 
-    func newTerminal(projectID: UUID, worktreeID: UUID) async {
+    func newTerminal(projectID: UUID, worktreeID: UUID, opensShell: Bool = false) async {
         do {
-            let id: UUID = try await RemoteChannel.call(.newTerminal(project: projectID, worktree: worktreeID),
+            let id: UUID = try await RemoteChannel.call(.newTerminal(project: projectID, worktree: worktreeID, opensShell: opensShell),
                                                         host: host, key: try await requiredPairingKey())
             selection = id
         } catch { self.error = error.localizedDescription }
@@ -397,46 +428,48 @@ import Observation
 }
 
 @MainActor struct MobileInspectorSource: InspectorSource {
-    let host: String
-    let terminal: UUID
+    let hostID: UUID?
+    let worktree: UUID
     let store: MobileWorkspaceStore
 
-    private func request<Value: Decodable & Sendable>(_ request: RemoteRequest) async throws -> Value {
-        guard store.wantsConnection, store.host == host else { throw RemoteError(message: String(localized: "The Mac is disconnected.")) }
-        return try await RemoteChannel.call(request, host: host, key: try await store.requiredPairingKey())
+    private func request<Value: Decodable & Sendable>(_ request: (UUID) -> RemoteRequest) async throws -> Value {
+        guard store.wantsConnection, store.selectedHostID == hostID, let context = store.context, context.worktree.id == worktree else {
+            throw RemoteError(message: String(localized: "The Mac is disconnected."))
+        }
+        return try await RemoteChannel.call(request(context.terminal.id), host: store.host, key: try await store.requiredPairingKey())
     }
 
     func children(at url: URL) async throws -> ExplorerListing {
-        try await request(.children(terminal: terminal, path: url.path))
+        try await request { .children(terminal: $0, path: url.path) }
     }
     func textFile(_ url: URL) async throws -> String {
-        try await request(.text(terminal: terminal, path: url.path))
+        try await request { .text(terminal: $0, path: url.path) }
     }
     func localGit(at path: String) async throws -> LocalGitSnapshot {
-        try await request(.git(terminal: terminal))
+        try await request { .git(terminal: $0) }
     }
     func remote(_ snapshot: LocalGitSnapshot) async throws -> RemoteSnapshot {
-        try await request(.github(terminal: terminal))
+        try await request { .github(terminal: $0) }
     }
     func diff(_ change: GitChange, in scope: GitChangeScope, at root: String) async throws -> GitDiff {
         let value: RemoteDiff = switch scope {
-        case .staged: try await request(.diff(terminal: terminal, change: change, including: [.staged]))
-        case .unstaged: try await request(.diff(terminal: terminal, change: change, including: [.unstaged]))
-        case .branch(let base): try await request(.comparisonDiff(terminal: terminal, base: base, change: change))
+        case .staged: try await request { .diff(terminal: $0, change: change, including: [.staged]) }
+        case .unstaged: try await request { .diff(terminal: $0, change: change, including: [.unstaged]) }
+        case .branch(let base): try await request { .comparisonDiff(terminal: $0, base: base, change: change) }
         }
         return value.diff
     }
     func branches(at root: String) async throws -> GitBranchList {
-        try await request(.branches(terminal: terminal))
+        try await request { .branches(terminal: $0) }
     }
     func comparison(with base: ComparisonBranch, at root: String) async throws -> BranchComparison {
-        try await request(.comparison(terminal: terminal, base: base))
+        try await request { .comparison(terminal: $0, base: base) }
     }
     func conversations(at path: String, fresh: Bool) async throws -> [AgentConversation] {
-        try await request(.conversations(terminal: terminal, fresh: fresh))
+        try await request { .conversations(terminal: $0, fresh: fresh) }
     }
     func resume(_ conversation: AgentConversation, context: TerminalContext) async throws {
-        let id: UUID = try await request(.resume(terminal: terminal, conversation: conversation))
+        let id: UUID = try await request { .resume(terminal: $0, conversation: conversation) }
         store.selection = id
     }
     func repositoryChanges(at path: String) async -> AsyncStream<Void> {

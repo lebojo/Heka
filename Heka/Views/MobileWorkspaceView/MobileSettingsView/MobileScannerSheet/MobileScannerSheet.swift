@@ -24,12 +24,12 @@ struct MobileScannerSheet: View {
                         .ignoresSafeArea(edges: .bottom)
                         .safeAreaInset(edge: .bottom) {
                             Text(hint)
-                                .font(Typography.body)
-                                .foregroundStyle(error == nil ? Palette.textPrimary : Palette.danger)
+                                .font(Font.callout)
+                                .foregroundStyle(error == nil ? Color.textPrimary : Color.danger)
                                 .multilineTextAlignment(.center)
                                 .padding(Spacing.l)
                                 .frame(maxWidth: .infinity)
-                                .background(Palette.bar)
+                                .background(Material.bar)
                         }
                 case .denied:
                     ContentUnavailableView {

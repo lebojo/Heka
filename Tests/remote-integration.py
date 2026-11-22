@@ -6,6 +6,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import re
 import socket
 import ssl
 import struct
@@ -15,6 +16,8 @@ import tempfile
 import time
 import uuid
 
+if not hasattr(ssl.SSLContext, "set_psk_client_callback"):
+    sys.exit(f"TLS-PSK needs Python 3.13 or later (this is {sys.version.split()[0]}); run it with a newer python3.")
 binary = Path(sys.argv[1])
 root = Path(tempfile.mkdtemp(prefix="heka-remote-tests-"))
 state = root / "state"
@@ -28,7 +31,7 @@ subprocess.run(["/usr/bin/git", "-C", str(repo), "-c", "user.name=Test", "-c", "
 app = None
 instance = None
 PAIRING_CODE = "ABCD-EFGH-JKLM"
-NOTIFICATIONS = ("repositoryChanged", "conversationsChanged", "installedAgents", "terminalAgents")
+NOTIFICATIONS = ("repositoryChanged", "conversationsChanged", "installedAgents", "activity", "agentLaunch")
 # Never connect integration clients to the user's running host on the default port.
 with socket.socket() as reservation:
     reservation.bind(("127.0.0.1", 0))
@@ -111,7 +114,7 @@ def rpc(action, **kwargs):
         return json.loads(base64.b64decode(reply["payload"]))
 
 
-PROTOCOL = 7
+PROTOCOL = int(re.search(r"static let version = (\d+)", (Path(__file__).resolve().parent.parent / "Heka/Models/Data/RemoteProtocol.swift").read_text())[1])
 
 
 def watch(terminal=None, chat=True):
@@ -389,9 +392,10 @@ try:
                 event = read(sock, notifications=True)
             except socket.timeout:
                 continue
-            if "terminalAgents" in event:
-                pairs = event["terminalAgents"]["_0"]
-                if dict(zip(pairs[::2], pairs[1::2])).get(agent) == "claude":
+            if "activity" in event:
+                pairs = event["activity"]["_0"]["terminals"]
+                summaries = dict(zip(pairs[::2], pairs[1::2]))
+                if summaries.get(agent, {}).get("agent") == "claude":
                     break
     print("PASS Claude structured journal over TCP, multiline paste, no duplicate input or TUI scraping", flush=True)
 
