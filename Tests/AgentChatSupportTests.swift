@@ -69,6 +69,9 @@ extension ChatJournalTests {
         try require(afterItem == "- ☐ a\n  ```\n  x\n  ```\ntext\n\n    - [ ] code", "A line after the end of an item leaves the list")
         let breaks = SessionTaskList.replacingCheckboxes(in: "- [ ] a\n* * *\n#123 fixed\n    - [ ] b")
         try require(breaks == "- ☐ a\n* * *\n#123 fixed\n    - [ ] b", "A thematic break isn't a list item and #123 is paragraph text")
+        let ordered = SessionTaskList.replacingCheckboxes(in: "12) [x] a\n3.\t[ ] b\n-[ ] c\n# Title\n- [ ] d\n####### e\n    - [ ] f")
+        try require(ordered == "12) ☑ a\n3.\t☐ b\n-[ ] c\n# Title\n- ☐ d\n####### e\n    - ☐ f",
+                    "Ordered markers and tab spacing start list items, a marker needs spacing and a heading ends a paragraph")
         let literal = SlashCommandDiscovery.command(name: "x", markdown: "---\r\ndescription: |\r\n  one\r\n  two\r\n---\r\n")
         try require(literal?.summary == "one\ntwo", "CRLF block scalars keep their lines")
         try require(tasks == "- ☑ Done\n- ☐ Todo\n```\n- [ ] code\n```", "Task list items get checkboxes outside code blocks")
@@ -253,7 +256,81 @@ extension ChatJournalTests {
         try require(SessionCodeTokens.parse("x = nil ?? null ?? false", language: "swift").map(\.kind) == [.keyword, .keyword, .keyword], "Booleans and nil literals are coloured")
         print("PASS syntax highlighting tokens and Unicode ranges")
         try codeBlocksReachHekaHighlighter()
+        try composerDrafts()
+        try await sessionChatActions()
+        try composerImageCleanup()
+    }
 
+    @MainActor static func composerDrafts() throws {
+        let drafts = ChatDrafts()
+        let left = UUID(), right = UUID()
+        drafts[terminal: left].text = "Corrige le test"
+        drafts[terminal: left].images = [URL(filePath: "/tmp/a.png")]
+        drafts[terminal: right].text = "Autre"
+        try require(drafts[terminal: left].text == "Corrige le test" && drafts[terminal: right].text == "Autre", "Each terminal keeps its own draft")
+        let sent = drafts[terminal: left]
+        drafts[terminal: left].text = "Corrige le test et la doc"
+        drafts.clear(sent, of: left)
+        try require(drafts[terminal: left] == ChatDraft(text: "Corrige le test et la doc"), "Sending keeps text typed meanwhile and drops sent images")
+        drafts.clear(drafts[terminal: right], of: right)
+        try require(drafts[terminal: right] == ChatDraft(), "A sent draft is cleared")
+        try require(ChatDraft(text: " \n").isBlank && !ChatDraft(images: [URL(filePath: "/tmp/a.png")]).isBlank, "Blank drafts cannot be sent")
+        print("PASS chat drafts per terminal")
+    }
+
+    @MainActor final class RecordingChannel: SessionChannel {
+        let terminalID = UUID()
+        var sent: [String] = []
+        var commands: [AgentCommand] = []
+        var fails = false
+
+        func sendMessage(_ text: String) async throws {
+            if fails { throw NSError(domain: "offline", code: 1) }
+            sent.append(text)
+        }
+
+        func sendControl(_ data: Data) async throws {}
+
+        func runCommand(_ command: AgentCommand) async throws {
+            if fails { throw NSError(domain: "busy", code: 1) }
+            commands.append(command)
+        }
+    }
+
+    @MainActor static func sessionChatActions() async throws {
+        let channel = RecordingChannel()
+        let chat = SessionChat(channel: channel)
+        try require(chat.terminal == channel.terminalID, "The chat targets its channel's terminal")
+        let sent = await chat.send("hello")
+        try require(sent && channel.sent == ["hello"] && chat.awaitsAgent && !chat.isSending, "A sent message waits for the agent")
+        let reported = AgentOptions()
+        chat[model: reported] = .haiku
+        try require(chat.shownOptions(reported) == AgentOptions(model: .haiku, effort: .automatic), "A requested model shows before the agent reports it")
+        try await eventually("model command runs") { channel.commands == [AgentModel.haiku.command] }
+        channel.fails = true
+        chat[effort: reported] = .high
+        try await eventually("failed request is forgotten") { chat.requestedOptions == nil && chat.error != nil }
+        let failed = await chat.send("again")
+        try require(!failed && channel.sent == ["hello"], "A failed send reports its error and keeps the draft")
+        print("PASS session chat actions through an environment model")
+    }
+
+    static func composerImageCleanup() throws {
+        let directory = FileManager.default.temporaryDirectory.appending(path: "heka-pasted-\(UUID())", directoryHint: .isDirectory)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let old = directory.appending(path: "old.png"), recent = directory.appending(path: "recent.png")
+        try Data([1]).write(to: old)
+        try Data([2]).write(to: recent)
+        try FileManager.default.setAttributes([.modificationDate: Date.now.addingTimeInterval(-2 * ComposerImageStore.retention)], ofItemAtPath: old.path)
+        ComposerImageStore.prune(directory, before: .now.addingTimeInterval(-ComposerImageStore.retention))
+        try require(!FileManager.default.fileExists(atPath: old.path) && FileManager.default.fileExists(atPath: recent.path),
+                    "Pasted images older than the retention period are pruned")
+        try require(ComposerImageStore.owns(recent, in: directory) && !ComposerImageStore.owns(URL(filePath: "/tmp/recent.png"), in: directory),
+                    "Only copies inside the pasted images folder are deleted")
+        try require(ComposerImageStore.isImage(URL(filePath: "/tmp/a.PNG")) && !ComposerImageStore.isImage(URL(string: "https://example.com/a.png")!),
+                    "Remote image links are refused")
+        print("PASS pasted image cleanup")
     }
 
     static func codeBlocksReachHekaHighlighter() throws {
@@ -285,7 +362,6 @@ extension ChatJournalTests {
             "result": ["content": "Task completed", "detailedContent": "Internal acknowledgement"]]])
         let expected = SessionMessage(id: "tool:done", kind: .assistant, text: summary)
 
-        // A persisted journal can include both declarations, or start after the request.
         for declarations in [[request, start], [request], [start]] {
             var decoder = CopilotChatDecoder()
             for (offset, event) in declarations.enumerated() { decoder.consume(event, offset: UInt64(offset)) }

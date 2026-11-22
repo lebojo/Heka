@@ -18,7 +18,7 @@ extension View {
 
     func submitsChatMessage(perform submit: @escaping () -> Void) -> some View { self }
 
-    func pastesImages(isEnabled: Bool, add: @escaping ([URL]) -> Void) -> some View { self }
+    func pastesImages(isEnabled: Bool, isFocused: Bool, add: @escaping ([URL]) -> Void) -> some View { self }
 
     func previewSheetFrame(_ kind: PreviewSheetKind) -> some View {
         frame(idealWidth: kind.defaultSize.width, idealHeight: kind.defaultSize.height)

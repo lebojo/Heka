@@ -4,25 +4,23 @@ struct SessionComposer: View {
     @AppStorage("recentSlashCommands") private var recentCommands = ""
     @AppStorage(BorderBeamAppearance.storageKey) private var beam = BorderBeamAppearance()
 
+    @Environment(ChatDrafts.self) private var drafts
+    @Environment(SessionChat.self) private var chat
+
     @State private var commandMatches: [SlashCommandMatch] = []
     @State private var commandSelection = 0
     @State private var isCommandNavigated = false
 
     @FocusState private var isFocused: Bool
 
-    @Binding var draft: String
-    @Binding var images: [URL]
-
     let source: SessionChatSource
     let options: AgentOptions
     let commands: [SlashCommand]
-    let sending: Bool
     let isEnabled: Bool
     let isBusy: Bool
     let isWorking: Bool
-    let submit: () -> Void
-    let control: (Data) -> Void
-    let run: (AgentCommand) async -> Bool
+
+    private var draft: ChatDraft { drafts[terminal: chat.terminal] }
 
     private var prompt: String {
         source.agent.map { String(localized: "Message \($0.title)") } ?? String(localized: "Message or command")
@@ -33,72 +31,63 @@ struct SessionComposer: View {
     }
 
     private var pendingArgument: String? {
-        commands.first { SlashCommandMatcher.insertion(for: $0) == draft }?.argument
+        commands.first { SlashCommandMatcher.insertion(for: $0) == draft.text }?.argument
     }
 
     private var acceptsImages: Bool { isEnabled && source.agent != nil }
 
-    private var canSend: Bool {
-        !sending && !(draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && images.isEmpty)
+    private var canSend: Bool { !chat.isSending && !draft.isBlank }
+
+    private var sendShortcut: KeyboardShortcut? {
+        isFocused ? ShortcutStore.shared.combination(for: .sendMessage).keyboardShortcut : nil
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.m) {
-            if !images.isEmpty {
-                SessionComposerImages(images: $images)
+            if !draft.images.isEmpty {
+                SessionComposerImages(images: draft.images)
             }
-            TextField(prompt, text: $draft, axis: .vertical)
-                .font(.body)
+            TextField(prompt, text: Bindable(drafts)[terminal: chat.terminal].text, axis: .vertical)
+                .font(Font.chatInput)
                 .autocorrectionDisabled()
                 .commandInputTraits()
                 .submitsChatMessage(perform: submit)
                 .lineLimit(3...8).textFieldStyle(.plain)
                 .focused($isFocused)
                 .onKeyPress(keys: [.upArrow, .downArrow, .tab, .return, .escape], action: handleCommandKey)
-                .onChange(of: draft, initial: true, refreshCommandMatches)
+                .onChange(of: draft.text, initial: true, refreshCommandMatches)
                 .onChange(of: commands, refreshCommandMatches)
                 .accessibilityLabel(prompt)
                 .padding(.horizontal, Spacing.xs)
 
             HStack(spacing: Spacing.m) {
                 if source.supportsAgentOptions {
-                    SessionAgentOptions(source: source, reported: options, isBusy: isBusy, run: run)
+                    SessionAgentOptions(source: source, reported: options, isBusy: isBusy)
                 }
-                SessionComposerControls(source: source, isBusy: isBusy, control: control, run: run)
+                SessionComposerControls(source: source, isBusy: isBusy)
                 Spacer(minLength: Spacing.s)
                 if let pendingArgument {
                     Text("Add \(pendingArgument)")
-                        .font(Typography.captionMono).foregroundStyle(Palette.textTertiary)
+                        .font(Font.captionMono).foregroundStyle(Color.textTertiary)
                         .lineLimit(1)
                 }
                 #if os(macOS)
                 Text("⇧Return for a new line")
-                    .font(Typography.xs).foregroundStyle(Palette.textTertiary)
+                    .font(Font.xs).foregroundStyle(Color.textTertiary)
                     .lineLimit(1)
                     .layoutPriority(-1)
                 #endif
-                Button(action: submit) {
-                    Group {
-                        if sending { ProgressView().controlSize(.mini) }
-                        else { Image(systemName: "arrow.up").font(Typography.label.weight(.semibold)) }
-                    }
-                    .frame(width: Dimension.Chat.sendSize, height: Dimension.Chat.sendSize)
-                    .contentShape(.circle)
-                }
-                .buttonStyle(.borderedProminent).buttonBorderShape(.circle)
-                .controlSize(.small)
-                .keyboardShortcut(.sendMessage)
-                .accessibilityLabel("Send to Session")
-                .help("Send to Session")
-                .disabled(!canSend)
+                SessionSendButton(isSending: chat.isSending, action: submit)
+                    .keyboardShortcut(sendShortcut)
+                    .disabled(!canSend)
             }
         }
-        .pastesImages(isEnabled: acceptsImages && isFocused) { images.append(contentsOf: $0) }
+        .pastesImages(isEnabled: acceptsImages, isFocused: isFocused, add: attach)
         .padding(Spacing.l)
-        .background(Palette.control, in: RoundedRectangle(cornerRadius: Radius.l))
+        .background(Color.control, in: RoundedRectangle(cornerRadius: Radius.l))
         .overlay {
             RoundedRectangle(cornerRadius: Radius.l)
-                .strokeBorder(isFocused ? Palette.accent : Palette.textTertiary.opacity(0.4), lineWidth: Stroke.hairline)
+                .strokeBorder(isFocused ? Color.accentColor : Color.textTertiary.opacity(0.4), lineWidth: Stroke.hairline)
         }
         .borderBeam(isActive: isWorking && beam.isEnabled, cornerRadius: Radius.l, color: beam.beamColor(for: source.agent))
         .overlay(alignment: .top) {
@@ -110,14 +99,28 @@ struct SessionComposer: View {
         .frame(maxWidth: Dimension.Chat.readableWidth)
         .padding(Spacing.xl)
         .frame(maxWidth: .infinity)
-        .background(Palette.surface)
+        .background(Color.surface)
         .disabled(!isEnabled)
+    }
+
+    private func submit() {
+        let sent = draft
+        guard isEnabled, !chat.isSending, !sent.isBlank else { return }
+        let message = source.agent?.prompt(sent.text, attaching: sent.images) ?? sent.text
+        let terminal = chat.terminal
+        Task {
+            if await chat.send(message) { drafts.clear(sent, of: terminal) }
+        }
+    }
+
+    private func attach(_ images: [URL]) {
+        drafts[terminal: chat.terminal].images.append(contentsOf: images)
     }
 
     private func refreshCommandMatches() {
         commandSelection = 0
         isCommandNavigated = false
-        guard let query = SlashCommandMatcher.query(in: draft) else { return commandMatches = [] }
+        guard let query = SlashCommandMatcher.query(in: draft.text) else { return commandMatches = [] }
         commandMatches = SlashCommandMatcher.matches(for: query, in: commands, recent: recentCommandNames)
     }
 
@@ -139,7 +142,7 @@ struct SessionComposer: View {
     }
 
     private func acceptOnReturn() -> KeyPress.Result {
-        guard let command = SlashCommandMatcher.commandToAcceptOnReturn(draft: draft, matches: commandMatches,
+        guard let command = SlashCommandMatcher.commandToAcceptOnReturn(draft: draft.text, matches: commandMatches,
                                                                           selection: commandSelection,
                                                                           isNavigated: isCommandNavigated) else { return .ignored }
         accept(command)
@@ -147,43 +150,8 @@ struct SessionComposer: View {
     }
 
     private func accept(_ command: SlashCommand) {
-        draft = SlashCommandMatcher.insertion(for: command)
+        drafts[terminal: chat.terminal].text = SlashCommandMatcher.insertion(for: command)
         recentCommands = SlashCommandMatcher.remembering(command, in: recentCommandNames).joined(separator: "\n")
         isFocused = true
-    }
-}
-
-private struct SessionComposerControls: View {
-    let source: SessionChatSource
-    let isBusy: Bool
-    let control: (Data) -> Void
-    let run: (AgentCommand) async -> Bool
-
-    private var modelLabel: String {
-        String(localized: "Model", comment: "Menu that picks the agent's model in the chat composer")
-    }
-
-    var body: some View {
-        HStack(spacing: Spacing.s) {
-            if source == .terminal {
-                Button("Ctrl-C") { control(Data([3])) }
-            }
-            Button { control(Data([27])) } label: {
-                Label("Interrupt", systemImage: "stop")
-            }
-            if let command = source.modelPickerCommand {
-                Button { Task { _ = await run(command) } } label: {
-                    Label(modelLabel, systemImage: "cpu")
-                }
-                .help("Open the agent's model picker")
-                .disabled(isBusy)
-            }
-            if source == .terminal {
-                Button("Return") { control(Data([13])) }
-            }
-        }
-        .font(Typography.caption)
-        .buttonStyle(.borderless)
-        .foregroundStyle(Palette.textSecondary)
     }
 }

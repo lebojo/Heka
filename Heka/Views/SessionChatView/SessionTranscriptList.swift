@@ -4,13 +4,13 @@ struct SessionTranscriptList: View {
     @State private var followsLatest = true
     @State private var lastContentOrigin: CGFloat?
     @State private var expansion = SessionTranscriptExpansion()
+    @State private var items: [SessionTranscriptItem] = []
 
     let messages: [SessionMessage]
     let source: SessionChatSource
     let showsTypingIndicator: Bool
 
     var body: some View {
-        let items = SessionTranscriptItem.items(from: messages)
         GeometryReader { viewport in
             ScrollViewReader { proxy in
                 ScrollView {
@@ -21,10 +21,7 @@ struct SessionTranscriptList: View {
                                                    description: Text(source.agent == nil ? "Write to continue working on the Mac." : "Messages from this session will appear here. Interactive menus are available in Terminal."))
                         }
                         ForEach(items) { item in
-                            switch item {
-                            case .message(let message): SessionMessageRow(message: message, agent: source.agent).equatable()
-                            case .toolGroup(let run): SessionToolGroup(run: run, agent: source.agent)
-                            }
+                            SessionTranscriptRow(item: item, agent: source.agent)
                         }
                         TypingIndicatorSlot(isVisible: showsTypingIndicator)
                         Color.clear.frame(height: 1).id("latest")
@@ -32,20 +29,17 @@ struct SessionTranscriptList: View {
                     .frame(maxWidth: Dimension.Chat.readableWidth)
                     .padding(Spacing.xl)
                     .frame(maxWidth: .infinity)
-                    .background(GeometryReader { geometry in
-                        Color.clear.preference(key: TranscriptFrame.self, value: geometry.frame(in: .named("transcript")))
-                    })
+                    .onGeometryChange(for: CGRect.self) { $0.frame(in: .named("transcript")) } action: { frame in
+                        if lastContentOrigin == nil || abs((lastContentOrigin ?? 0) - frame.minY) > 0.5 {
+                            followsLatest = frame.maxY <= viewport.size.height + 60
+                        }
+                        lastContentOrigin = frame.minY
+                    }
                 }
-                .coordinateSpace(name: "transcript")
+                .coordinateSpace(.named("transcript"))
                 .defaultScrollAnchor(.bottom)
                 .scrollDismissesKeyboard(.interactively)
-                .onPreferenceChange(TranscriptFrame.self) { frame in
-                    guard let frame else { return }
-                    if lastContentOrigin == nil || abs((lastContentOrigin ?? 0) - frame.minY) > 0.5 {
-                        followsLatest = frame.maxY <= viewport.size.height + 60
-                    }
-                    lastContentOrigin = frame.minY
-                }
+                .onChange(of: messages, initial: true) { items = SessionTranscriptItem.items(from: messages) }
                 .onChange(of: messages) { old, _ in
                     if old.isEmpty || followsLatest { proxy.scrollTo("latest", anchor: .bottom) }
                 }
@@ -55,16 +49,11 @@ struct SessionTranscriptList: View {
                     if !followsLatest {
                         Button { followsLatest = true; proxy.scrollTo("latest", anchor: .bottom) } label: {
                             Label("Latest Messages", systemImage: "arrow.down")
-                        }.buttonStyle(.borderedProminent).font(Typography.caption).padding()
+                        }.buttonStyle(.borderedProminent).font(Font.caption).padding()
                     }
                 }
             }
         }
         .environment(expansion)
     }
-}
-
-private struct TranscriptFrame: PreferenceKey {
-    static let defaultValue: CGRect? = nil
-    static func reduce(value: inout CGRect?, nextValue: () -> CGRect?) { value = nextValue() }
 }

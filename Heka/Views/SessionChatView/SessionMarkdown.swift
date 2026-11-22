@@ -10,14 +10,14 @@ struct SessionMarkdown: View {
 
     private var inlineStyle: InlineStyle {
         InlineStyle()
-            .code(.monospaced, .backgroundColor(Palette.fill.opacity(0.4)))
-            .link(.foregroundColor(Palette.accent))
+            .code(.monospaced, .backgroundColor(Color.fill.opacity(0.4)))
+            .link(.foregroundColor(Color.accentColor))
     }
 
     var body: some View {
         StructuredText(text, parser: SessionMarkdownParser())
-            .font(.system(size: Typography.chatBodySize))
-            .foregroundStyle(Palette.textPrimary)
+            .font(Font.chatBody)
+            .foregroundStyle(Color.textPrimary)
             .textual.inlineStyle(inlineStyle)
             .textual.codeBlockStyle(SessionCodeBlockStyle())
             .textual.tableStyle(SessionTableStyle())

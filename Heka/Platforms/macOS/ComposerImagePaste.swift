@@ -1,56 +1,31 @@
 import SwiftUI
 import AppKit
 
-struct ComposerImagePaste: ViewModifier {
-    @State private var monitor: Any?
-
+struct ComposerImagePaste: NSViewRepresentable {
     let isEnabled: Bool
-    let add: ([URL]) -> Void
+    let add: @MainActor ([URL]) -> Void
 
-    func body(content: Content) -> some View {
-        content
-            .onChange(of: isEnabled, initial: true) { updateMonitor() }
-            .onDisappear(perform: removeMonitor)
+    func makeNSView(context: Context) -> ComposerPasteView {
+        ComposerPasteView()
     }
 
-    private func updateMonitor() {
-        removeMonitor()
-        guard isEnabled else { return }
-        monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
-            guard event.modifierFlags.intersection(.deviceIndependentFlagsMask) == .command,
-                  event.charactersIgnoringModifiers == "v" else { return event }
-            let images = Self.pastedImages(from: .general)
-            guard !images.isEmpty else { return event }
-            add(images)
-            return nil
-        }
+    func updateNSView(_ view: ComposerPasteView, context: Context) {
+        view.add = add
+        view.isEnabled = isEnabled
     }
 
-    private func removeMonitor() {
-        if let monitor { NSEvent.removeMonitor(monitor) }
-        monitor = nil
-    }
-
-    static func pastedImages(from pasteboard: NSPasteboard) -> [URL] {
-        let files = (pasteboard.readObjects(forClasses: [NSURL.self], options: [.urlReadingFileURLsOnly: true]) as? [URL] ?? [])
-            .filter(ComposerImageStore.isImage)
-        if !files.isEmpty { return files.compactMap { try? ComposerImageStore.store(copyOf: $0) } }
-        guard pasteboard.string(forType: .string) == nil,
-              let image = NSImage(pasteboard: pasteboard),
-              let tiff = image.tiffRepresentation,
-              let png = NSBitmapImageRep(data: tiff)?.representation(using: .png, properties: [:]),
-              let file = try? ComposerImageStore.store(png: png) else { return [] }
-        return [file]
+    static func dismantleNSView(_ view: ComposerPasteView, coordinator: ()) {
+        view.isEnabled = false
     }
 }
 
 extension View {
-    func pastesImages(isEnabled: Bool, add: @escaping ([URL]) -> Void) -> some View {
-        modifier(ComposerImagePaste(isEnabled: isEnabled, add: add))
+    func pastesImages(isEnabled: Bool, isFocused: Bool, add: @escaping @MainActor ([URL]) -> Void) -> some View {
+        background(ComposerImagePaste(isEnabled: isEnabled && isFocused, add: add))
             .dropDestination(for: URL.self) { urls, _ in
-                let images = urls.filter(ComposerImageStore.isImage).compactMap { try? ComposerImageStore.store(copyOf: $0) }
+                let images = urls.filter(ComposerImageStore.isImage)
                 guard isEnabled, !images.isEmpty else { return false }
-                add(images)
+                Task { @MainActor in add(await ComposerImageStore.copies(of: images)) }
                 return true
             }
     }

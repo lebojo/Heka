@@ -67,14 +67,16 @@ struct SessionMessage: Identifiable, Codable, Equatable, Sendable {
     }
 }
 
-struct SessionUserQuestion: Decodable, Equatable, Sendable {
+struct SessionUserQuestion: Decodable, Equatable, Identifiable, Sendable {
     struct Request: Decodable, Sendable {
         let questions: [SessionUserQuestion]
     }
 
-    struct Option: Decodable, Equatable, Sendable {
+    struct Option: Decodable, Equatable, Identifiable, Sendable {
         let label: String
         let description: String?
+
+        var id: String { label }
 
         var detail: String? { description?.isEmpty == false ? description : nil }
     }
@@ -84,6 +86,7 @@ struct SessionUserQuestion: Decodable, Equatable, Sendable {
     let multiSelect: Bool?
     let options: [Option]?
 
+    var id: String { question }
     var heading: String? { header?.isEmpty == false ? header : nil }
     var choices: [Option] { options ?? [] }
     var choiceSymbol: String { multiSelect == true ? "square" : "circle" }

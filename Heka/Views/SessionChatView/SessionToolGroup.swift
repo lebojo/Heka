@@ -6,12 +6,8 @@ struct SessionToolGroup: View {
     let run: SessionToolRun
     let agent: ConversationAgent?
 
-    private var isExpanded: Binding<Bool> {
-        Binding { expansion.isGroupExpanded(run.memberIDs) } set: { expansion.setGroup(run.memberIDs, expanded: $0) }
-    }
-
     var body: some View {
-        DisclosureGroup(isExpanded: isExpanded) {
+        DisclosureGroup(isExpanded: Bindable(expansion)[groupExpanded: run.memberIDs]) {
             LazyVStack(alignment: .leading, spacing: Spacing.m) {
                 ForEach(run.messages) { SessionMessageRow(message: $0, agent: agent).equatable() }
             }
@@ -36,9 +32,9 @@ struct SessionToolGroup: View {
                         .accessibilityValue(Text(verbatim: "\(run.failureCount)"))
                     }
                 }
-                .font(Typography.caption)
+                .font(Font.caption)
                 if let detail = run.latestDetail {
-                    Text(verbatim: detail).font(Typography.code).foregroundStyle(Palette.textSecondary)
+                    Text(verbatim: detail).font(Font.code).foregroundStyle(Color.textSecondary)
                         .lineLimit(2).frame(maxWidth: .infinity, alignment: .leading)
                 }
             }

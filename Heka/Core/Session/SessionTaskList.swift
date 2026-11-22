@@ -32,16 +32,34 @@ enum SessionTaskList {
             indent = SessionTaskList.column(after: indentation, from: 0)
             text = line.dropFirst(indentation.count)
             isThematicBreak = text.first.map { "-*_".contains($0) } == true && Self.isThematicBreak(text)
-            listContent = isThematicBreak ? nil : text.prefixMatch(of: /^(?:[-*+]|\d+[.)])[ \t]+/).map { [indent, text] marker in
-                (SessionTaskList.column(after: marker.output, from: indent), text[marker.range.upperBound...])
+            listContent = isThematicBreak ? nil : Self.listMarker(in: text).map { [indent, text] marker in
+                (SessionTaskList.column(after: marker, from: indent), text[marker.endIndex...])
             }
         }
 
         var isBlank: Bool { text.allSatisfy(\.isWhitespace) }
 
-        var isSingleLineBlock: Bool { text.prefixMatch(of: /#{1,6}(?:[ \t]|$)/) != nil || isThematicBreak }
+        var isSingleLineBlock: Bool { isHeading || isThematicBreak }
+
+        private var isHeading: Bool {
+            let level = text.prefix { $0 == "#" }.count
+            return (1...6).contains(level) && text.dropFirst(level).first.map(Self.isSpacing) != false
+        }
 
         var startsBlock: Bool { listContent != nil || isSingleLineBlock || text.hasPrefix(">") || Fence(text, container: 0) != nil }
+
+        private static func listMarker(in text: Substring) -> Substring? {
+            let digits = text.prefix { $0.isASCII && $0.isNumber }.count
+            let markerLength = digits == 0 ? 1 : digits + 1
+            guard let delimiter = text.dropFirst(markerLength - 1).first,
+                  digits == 0 ? "-*+".contains(delimiter) : ".)".contains(delimiter) else { return nil }
+            let spacing = text.dropFirst(markerLength).prefix(while: isSpacing).count
+            return spacing == 0 ? nil : text.prefix(markerLength + spacing)
+        }
+
+        private static func isSpacing(_ character: Character) -> Bool {
+            character == " " || character == "\t"
+        }
 
         private static func isThematicBreak(_ text: Substring) -> Bool {
             let marks = text.filter { !$0.isWhitespace }

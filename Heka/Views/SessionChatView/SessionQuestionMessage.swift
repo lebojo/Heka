@@ -6,8 +6,8 @@ struct SessionQuestionMessage: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.l) {
-            ForEach(questions.indices, id: \.self) { index in
-                SessionQuestionContent(question: questions[index])
+            ForEach(questions) { question in
+                SessionQuestionContent(question: question)
             }
             if let answer = message.questionAnswer {
                 Divider()
@@ -17,6 +17,6 @@ struct SessionQuestionMessage: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(Spacing.l)
-        .background(Palette.accent.opacity(0.08), in: RoundedRectangle(cornerRadius: Radius.l))
+        .background(Color.accentColor.opacity(0.08), in: RoundedRectangle(cornerRadius: Radius.l))
     }
 }

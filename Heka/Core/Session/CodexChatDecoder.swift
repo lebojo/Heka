@@ -5,6 +5,7 @@ struct CodexChatDecoder: ChatJournalDecoder {
     private static let injectedContextTags = ["environment_context", "user_instructions", "turn_aborted", "subagent_notification",
                                               "permissions instructions", "apps_instructions", "skills_instructions", "collaboration_mode", "image"]
     private static let userReplyTag = "send_user_message_question_reply"
+    private static let exitCodePrefixes = ["Process exited with code ", "Exit code: "]
 
     private var log = ChatMessageLog()
 
@@ -80,10 +81,16 @@ struct CodexChatDecoder: ChatJournalDecoder {
         let chunks = execChunks(raw)
         let body = chunks?.text ?? raw
         if header.first?.hasPrefix("Script running") == true { return (body, .running) }
-        let failed = chunks?.failed == true
-            || header.contains { $0.hasPrefix("Process exited with code ") && !$0.hasSuffix(" 0") }
-            || header.first?.localizedCaseInsensitiveContains("failed") == true
+        let failed = chunks?.failed == true || isFailure(header)
         return (body, failed ? .failed : .completed)
+    }
+
+    private static func isFailure(_ header: [Substring]) -> Bool {
+        let reportsExitCode = header.contains { line in
+            exitCodePrefixes.contains { line.hasPrefix($0) && line.dropFirst($0.count).trimmingCharacters(in: .whitespaces) != "0" }
+        }
+        guard let status = header.first else { return reportsExitCode }
+        return reportsExitCode || status.hasPrefix("Script terminated") || status.localizedCaseInsensitiveContains("failed")
     }
 
     private static func execChunks(_ body: String) -> (text: String, failed: Bool)? {

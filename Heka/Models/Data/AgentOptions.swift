@@ -64,7 +64,7 @@ extension AgentEffort: Comparable {
     }
 }
 
-struct AgentOptions: Codable, Equatable, Sendable {
+struct AgentOptions: Codable, Hashable, Sendable {
     var model = AgentModel.automatic
     var effort = AgentEffort.automatic
 
