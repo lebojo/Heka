@@ -42,6 +42,36 @@ import Foundation
             try require(LoginShell.running("command -v claude", shell: shell).executable == LoginShell.scriptRunner, "Scripts never run in a non-POSIX shell")
         }
         try require(LoginShell.isPOSIX("/bin/sh") && LoginShell.isPOSIX("/opt/homebrew/bin/bash") && !LoginShell.isPOSIX("/bin/tcsh"), "Recognise POSIX shells")
+        let fishPath = "/Users/me/.local/bin:/opt/homebrew/bin:/usr/bin:/bin"
+        try require(LoginShell.variableProbe("PATH", marker: "HEKA-1", shell: "/opt/homebrew/bin/fish")
+                    == LoginShell.Invocation(executable: "/opt/homebrew/bin/fish", arguments: ["-l", "-i", "-c", "echo HEKA-1; printenv PATH"])
+                    && LoginShell.variableProbe("PATH", marker: "HEKA-1", shell: "/bin/tcsh")
+                    == LoginShell.Invocation(executable: "/bin/tcsh", arguments: ["-c", "echo HEKA-1; printenv PATH"])
+                    && LoginShell.variableProbe("PATH", marker: "HEKA-1", shell: "/bin/zsh")
+                    == LoginShell.Invocation(executable: "/bin/zsh", arguments: ["-l", "-i", "-c", "printf '%s' \"$1\"; printenv \"$2\"", "heka", "HEKA-1", "PATH"]),
+                    "PATH is read from the user's own shell, fish and tcsh included")
+        try require(LoginShell.value(after: "HEKA-1", in: "Welcome to fish\nHEKA-1\n\(fishPath)\n") == fishPath
+                    && LoginShell.value(after: "HEKA-1", in: "HEKA-1\n") == nil && LoginShell.value(after: "HEKA-1", in: fishPath) == nil,
+                    "Read the variable printed after the marker, ignoring startup output")
+        try require(LoginShell.running("command -v claude", shell: "/opt/homebrew/bin/fish", searchPath: fishPath)
+                    == LoginShell.Invocation(executable: "/usr/bin/env", arguments: ["PATH=" + fishPath, LoginShell.scriptRunner, "-l", "-i", "-c", "command -v claude"])
+                    && LoginShell.running("command -v claude", shell: "/bin/bash", searchPath: fishPath)
+                    == LoginShell.Invocation(executable: "/bin/bash", arguments: ["-l", "-i", "-c", "command -v claude"]),
+                    "The zsh runner of a non-POSIX shell receives the PATH read from that shell")
+        try require(LoginShell.combinedPath("/heka/bin:/usr/bin:/bin", adding: fishPath) == "/heka/bin:" + fishPath
+                    && LoginShell.combinedPath("/heka/bin:/usr/bin", adding: nil) == "/heka/bin:/usr/bin"
+                    && LoginShell.combinedPath(nil, adding: fishPath) == fishPath,
+                    "A launched command keeps Heka's own PATH entries and adds the shell's")
+        try require(LoginShell.cachedSearchPath(shell: "/nonexistent/fish") == nil, "No PATH is cached before it was read")
+        let resumed = LoginShell.SessionShell(command: ["claude", "--resume", "x"], keepingShell: true)
+        try require(resumed == .afterCommand
+                    && !resumed.isRunning { ["/bin/zsh", "-l", "-i", "-c", "\"$@\"; exec \"$0\" -l", "/bin/zsh", "claude", "--resume", "x"] }
+                    && resumed.isRunning { ["/bin/zsh", "-l"] } && resumed.isRunning { ["/opt/homebrew/bin/fish", "-l"] }
+                    && !resumed.isRunning { [] },
+                    "A resumed session is at the shell prompt only once the resume command ended")
+        try require(LoginShell.SessionShell(command: [], keepingShell: false).isRunning { ["/bin/zsh", "-l", "-i", "-c", "x"] }
+                    && !LoginShell.SessionShell(command: ["codex"], keepingShell: false).isRunning { ["/bin/zsh", "-l"] },
+                    "A plain terminal is a shell, a command terminal never is")
         print("PASS login shell invocations")
 
         try require("ls\u{1b}[201~; rm -rf ~\u{07}\u{9b}\u{7f}\tok\r\nnext é".bracketedPasteSafe == "ls[201~; rm -rf ~\tok\r\nnext é",
@@ -54,6 +84,12 @@ import Foundation
         try Data("#!/bin/sh\n".utf8).write(to: script)
         try fm.setAttributes([.posixPermissions: 0o755], ofItemAtPath: script.path)
         try Data("text".utf8).write(to: linkFolder.appendingPathComponent("open.command"))
+        let refused = ["Tool.jar", "Main.class", "Run.scpt", "Run.applescript", "Setup.pkg", "Setup.mpkg", "Disk.dmg", "Saver.saver", "Profile.mobileconfig"]
+        let documents = ["README.md", "notes.txt", "Report.pdf", "Photo.png", "main.swift"]
+        for name in refused + documents { try Data("text".utf8).write(to: linkFolder.appendingPathComponent(name)) }
+        try require(refused.allSatisfy { TerminalLink(linkFolder.appendingPathComponent($0).path) == nil },
+                    "Files whose default application runs code never open")
+        try require(documents.allSatisfy { TerminalLink(linkFolder.appendingPathComponent($0).path) != nil }, "Documents and source files open")
         try require(TerminalLink("https://example.com/a?b=1") == .web(URL(string: "https://example.com/a?b=1")!)
                     && TerminalLink("HTTP://example.com")?.url.absoluteString == "HTTP://example.com", "Web links open")
         try require(TerminalLink(note.path + ":12:4") == .file(URL(fileURLWithPath: note.path)) && TerminalLink(note.absoluteString) == .file(URL(fileURLWithPath: note.path))
@@ -1160,6 +1196,11 @@ import Foundation
                     "Moving keeps the layout normalised")
         try require(nested.moving(d, beside: b, edge: .bottom) ≈ .split(.horizontal, [.terminal(a), .split(.vertical, [.terminal(b), .terminal(d), .terminal(c)])]),
                     "Moving out of a nested split collapses it into its parent")
+        try require(pair.moving(b, beside: a, edge: .trailing) == pair && pair.moving(a, beside: b, edge: .leading) == pair
+                    && nested.moving(d, beside: c, edge: .trailing) == nested && nested.moving(c, beside: d, edge: .leading) == nested,
+                    "A move that leaves the panes in place keeps the layout and its split identifiers")
+        let moved = nested.moving(b, beside: a, edge: .leading)
+        try require(moved.id == nested.id, "A real move keeps the identity of the surviving split")
         try require(pair.moving(c, beside: a, edge: .top) ≈ .split(.horizontal, [.split(.vertical, [.terminal(c), .terminal(a)]), .terminal(b)]),
                     "Moving a terminal from elsewhere inserts it")
         let legacy = #"{"split":{"_0":"horizontal","_1":[{"terminal":{"_0":"\#(a.uuidString)"}},{"terminal":{"_0":"\#(b.uuidString)"}}]}}"#

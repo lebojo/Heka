@@ -135,7 +135,19 @@ indirect enum TerminalLayout: Codable, Equatable, Identifiable, Sendable {
 
     func moving(_ id: UUID, beside target: UUID, edge: DropEdge) -> TerminalLayout {
         guard id != target, contains(target), let remaining = removing(id) else { return self }
-        return remaining.inserting(id, beside: target, edge: edge)
+        let moved = remaining.inserting(id, beside: target, edge: edge)
+        return moved.hasShape(of: self) ? self : moved
+    }
+
+    private func hasShape(of other: TerminalLayout) -> Bool {
+        switch (self, other) {
+        case (.terminal(let id), .terminal(let otherID)):
+            id == otherID
+        case (.split(let axis, let children, _), .split(let otherAxis, let otherChildren, _)):
+            axis == otherAxis && children.count == otherChildren.count && zip(children, otherChildren).allSatisfy { $0.hasShape(of: $1) }
+        default:
+            false
+        }
     }
 
     private static func normalised(_ axis: SplitAxis, _ children: [TerminalLayout], id: UUID) -> TerminalLayout? {

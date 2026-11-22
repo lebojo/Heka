@@ -1,10 +1,22 @@
 import Foundation
+#if os(macOS)
+import AppKit
+#endif
 
 enum TerminalLink: Equatable, Sendable {
     case web(URL)
     case file(URL)
 
-    private static let launcherExtensions: Set<String> = ["app", "command", "tool", "terminal", "fileloc", "inetloc", "webloc"]
+    private static let launcherExtensions: Set<String> = [
+        "app", "command", "tool", "terminal", "fileloc", "inetloc", "webloc", "jar", "class", "jnlp", "scpt", "scptd", "applescript",
+        "workflow", "action", "pkg", "mpkg", "dmg", "prefpane", "kext", "saver", "qlgenerator", "mdimporter", "plugin", "bundle",
+        "osax", "xpc", "appex", "shortcut", "mobileconfig", "systemextension", "dext"
+    ]
+    private static let launcherApplications: Set<String> = [
+        "com.apple.JarLauncher", "org.python.PythonLauncher", "com.apple.installer", "com.apple.Terminal", "com.googlecode.iterm2",
+        "com.apple.AutomatorInstaller", "com.apple.DiskImageMounter", "com.apple.systempreferences", "com.apple.ScriptEditor2",
+        "com.apple.shortcuts", "com.apple.Automator"
+    ]
 
     var url: URL {
         switch self {
@@ -41,7 +53,17 @@ enum TerminalLink: Equatable, Sendable {
         let values = try? url.resourceValues(forKeys: [.isPackageKey, .isApplicationKey])
         guard values?.isPackage != true, values?.isApplication != true,
               !launcherExtensions.contains(url.pathExtension.lowercased()),
-              isDirectory.boolValue || !fileManager.isExecutableFile(atPath: path) else { return nil }
+              isDirectory.boolValue || !fileManager.isExecutableFile(atPath: path),
+              isDirectory.boolValue || !opensInLauncher(url) else { return nil }
         return url
+    }
+
+    private static func opensInLauncher(_ url: URL) -> Bool {
+        #if os(macOS)
+        guard let application = NSWorkspace.shared.urlForApplication(toOpen: url) else { return false }
+        return Bundle(url: application)?.bundleIdentifier.map(launcherApplications.contains) ?? false
+        #else
+        false
+        #endif
     }
 }

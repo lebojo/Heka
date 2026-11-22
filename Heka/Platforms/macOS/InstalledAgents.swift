@@ -24,7 +24,8 @@ import Observation
 
     @concurrent private static func detect() async -> [ConversationAgent]? {
         let lookups = ConversationAgent.allCases.map { "command -v \($0.rawValue) >/dev/null 2>&1 && echo \($0.rawValue)" }
-        let shell = LoginShell.running((lookups + ["true"]).joined(separator: "; "))
+        let searchPath = await LoginShell.loadSearchPath()
+        let shell = LoginShell.running((lookups + ["true"]).joined(separator: "; "), searchPath: searchPath)
         guard let output = try? await CommandRunner.run(URL(fileURLWithPath: shell.executable), shell.arguments, at: NSHomeDirectory(),
                                                         timeout: 15, limit: 65_536, readOnly: true) else { return nil }
         let names = Set(String(decoding: output, as: UTF8.self).split(whereSeparator: \.isNewline)

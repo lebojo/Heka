@@ -244,6 +244,9 @@ private final class ChangeFlag: @unchecked Sendable {
                     "Dropping a terminal on itself changes nothing")
         try require(split.moveTerminal(pane2, beside: first, edge: .trailing) && split.layout(for: first) ≈ .split(.horizontal, [.terminal(first), .terminal(pane2)])
                     && split.selection == pane2, "Dropping a standalone terminal splits the target and selects it")
+        let paired = split.projects
+        try require(split.moveTerminal(pane2, beside: first, edge: .trailing) && split.projects == paired,
+                    "Dropping the second pane of a pair where it already is keeps the split identity")
         try require(split.moveTerminal(pane3, beside: pane2, edge: .top)
                     && split.layout(for: first) ≈ .split(.horizontal, [.terminal(first), .split(.vertical, [.terminal(pane3), .terminal(pane2)])]),
                     "Dropping on an edge inserts before the target")

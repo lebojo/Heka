@@ -19,7 +19,7 @@ import Observation
     let transcript = SessionTranscript()
     private(set) var outputRevision = 0
     private(set) var isLaunchingAgent = false
-    @ObservationIgnored private let runsShell: Bool
+    @ObservationIgnored private let sessionShell: LoginShell.SessionShell
     @ObservationIgnored private var mirrorModes = TerminalMirrorModes()
     @ObservationIgnored private var cachedScreen: TerminalScreen?
     @ObservationIgnored private var screenRevision = -1
@@ -50,7 +50,7 @@ import Observation
         terminalID = context.terminal.id
         isFloating = context.isFloating
         currentDirectory = context.worktree.path
-        runsShell = command.isEmpty || keepsShell
+        sessionShell = LoginShell.SessionShell(command: command, keepingShell: keepsShell)
         view = ActivityTerminalView(frame: NSRect(x: 0, y: 0, width: 800, height: 500))
         super.init()
         view.receiver = self
@@ -70,7 +70,9 @@ import Observation
         env["HEKA_WORKTREE_ID"] = workspaceContext?.worktree.id.uuidString
         env["HEKA_TERMINAL_ID"] = workspaceContext?.terminal.id.uuidString
         if env["LANG"] == nil { env["LANG"] = "en_US.UTF-8" }
-        let shell = LoginShell.session(running: command, keepingShell: keepsShell, shell: LoginShell.path(environment: env))
+        let userShell = LoginShell.path(environment: env)
+        if !command.isEmpty { env["PATH"] = LoginShell.combinedPath(env["PATH"], adding: LoginShell.cachedSearchPath(shell: userShell)) }
+        let shell = LoginShell.session(running: command, keepingShell: keepsShell, shell: userShell)
         view.process.startProcess(executable: shell.executable, args: shell.arguments, environment: env.map { "\($0.key)=\($0.value)" }, currentDirectory: path)
         guard view.process.running else {
             hasExited = true
@@ -87,7 +89,7 @@ import Observation
     }
 
     private var hasLeftResumeCommand: Bool {
-        !AgentProcess.arguments(of: view.process.shellPid).contains("-c")
+        LoginShell.hasLeftCommand(AgentProcess.arguments(of: view.process.shellPid))
     }
 
     func terminalReceived(_ slice: ArraySlice<UInt8>) {
@@ -201,7 +203,8 @@ import Observation
     }
 
     private var isShellInForeground: Bool {
-        runsShell && !hasExited && tcgetpgrp(view.process.childfd) == view.process.shellPid
+        guard !hasExited, tcgetpgrp(view.process.childfd) == view.process.shellPid else { return false }
+        return sessionShell.isRunning { AgentProcess.arguments(of: view.process.shellPid) }
     }
 
     private func waitForForegroundCommand() async throws {
