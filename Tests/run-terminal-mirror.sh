@@ -15,7 +15,7 @@ cleanup() {
 }
 trap cleanup EXIT
 xcrun swiftc -parse-as-library -I "$mac_build" \
-  Heka/Core/Session/TerminalMirrorModes.swift Heka/Core/Session/TerminalScreen.swift Heka/Core/Session/TerminalContentSource.swift \
+  Heka/Core/Session/TerminalMirrorModes.swift Heka/Core/Session/TerminalMirrorAttributes.swift Heka/Core/Session/TerminalScreen.swift Heka/Core/Session/TerminalContentSource.swift \
   Tests/TerminalMirrorTests.swift "$mac_build/SwiftTerm.o" -o "$fixture/mirror-tests"
 "$fixture/mirror-tests"
 xcrun swiftc -parse-as-library -swift-version 6 -I "$mac_build" \

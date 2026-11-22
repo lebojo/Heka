@@ -25,14 +25,16 @@ import Observation
     private(set) var host: String
     private(set) var pairingCode: String
     private(set) var status: Status = .disconnected
-    private(set) var workspace = Workspace()
+    private(set) var workspace = Workspace() {
+        didSet { activityValues.keep(workspace) }
+    }
     private(set) var session: MobileTerminalSession?
     private(set) var connectionID = UUID()
     private(set) var repositoryRevision = 0
     private(set) var conversationRevision = 0
     private(set) var installedAgents: [ConversationAgent] = []
     private(set) var activity = SidebarActivity() {
-        didSet { refreshActivityValues() }
+        didSet { activityValues.update(activity) }
     }
     private var expanded: Set<UUID> = []
     private(set) var agentLaunch = AgentLaunch()
@@ -52,9 +54,7 @@ import Observation
     @ObservationIgnored private var inputTimeouts: [UUID: Task<Void, Never>] = [:]
     @ObservationIgnored private var queuedInputs: [QueuedInput] = []
     @ObservationIgnored private var streamReady = false
-    @ObservationIgnored private var latestActivity = SidebarActivity()
-    @ObservationIgnored private var terminalSummaries: [UUID: MobileObservedValue<TerminalSummary>] = [:]
-    @ObservationIgnored private var branches: [String: MobileObservedValue<GitBranch>] = [:]
+    @ObservationIgnored private let activityValues = MobileActivityValues()
 
     init(pairingStores: @escaping @Sendable (String) -> any PairingCodeStore = PairingCodeStores.make(account:)) {
         self.pairingStores = pairingStores
@@ -383,29 +383,11 @@ import Observation
     }
 
     func terminalSummary(_ id: UUID) -> TerminalSummary? {
-        if let summary = terminalSummaries[id] { return summary.value }
-        let summary = MobileObservedValue(latestActivity.terminals[id])
-        terminalSummaries[id] = summary
-        return summary.value
+        activityValues.terminalSummary(id)
     }
 
     func branch(at path: String) -> GitBranch? {
-        if let branch = branches[path] { return branch.value }
-        let branch = MobileObservedValue(latestActivity.branches[path])
-        branches[path] = branch
-        return branch.value
-    }
-
-    private func refreshActivityValues() {
-        latestActivity = activity
-        for (id, summary) in terminalSummaries {
-            summary.update(activity.terminals[id])
-            if activity.terminals[id] == nil { terminalSummaries[id] = nil }
-        }
-        for (path, branch) in branches {
-            branch.update(activity.branches[path])
-            if activity.branches[path] == nil { branches[path] = nil }
-        }
+        activityValues.branch(at: path)
     }
 
     func isExpanded(_ id: UUID) -> Bool { expanded.contains(id) }

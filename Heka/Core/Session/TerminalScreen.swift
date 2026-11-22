@@ -77,15 +77,26 @@ struct TerminalScreen {
         tail += "\u{1b}[\(modes.newline ? "20h" : "20l")"
         let style = (CursorStyle.allCases.firstIndex(of: cursorStyle) ?? 0) + 1
         tail += "\u{1b}[\(style) q"
-        if modes.modes[69] == true { tail += mode(69, true) }
-        tail += mode(6, modes.modes[6] == true)
-        let x = min(columns - 1, content.cursorColumn)
-        let y = content.cursorRow - top
+        let margins = Self.margins(modes.margins, columns: columns, rows: rows)
+        let leftRight = modes.modes[69] == true
+        tail += "\u{1b}[\(margins.top + 1);\(margins.bottom + 1)r"
+        if leftRight { tail += mode(69, true) + "\u{1b}[\(margins.left + 1);\(margins.right + 1)s" }
+        let origin = modes.modes[6] == true
+        tail += mode(6, origin)
+        let x = min(columns - 1, content.cursorColumn) - (origin && leftRight ? margins.left : 0)
+        let y = content.cursorRow - top - (origin ? margins.top : 0)
         tail += "\u{1b}[\(max(0, y) + 1);\(max(0, x) + 1)H"
         tail += mode(7, modes.modes[7] ?? true)
         tail += "\u{1b}[\(modes.insert ? "4h" : "4l")"
-        tail += "\u{1b}[0m"
+        tail += modes.attributes.sequence
         state = tail
+    }
+
+    private static func margins(_ margins: TerminalMirrorModes.Margins, columns: Int, rows: Int) -> (top: Int, bottom: Int, left: Int, right: Int) {
+        let bottom = min(rows - 1, margins.bottom ?? rows - 1)
+        let right = min(columns - 1, margins.right ?? columns - 1)
+        let region = margins.top < bottom ? (top: margins.top, bottom: bottom) : (top: 0, bottom: rows - 1)
+        return (region.top, region.bottom, min(margins.left, right), right)
     }
 
     private func encodedHistory(of line: TerminalContentRowSnapshot) -> String? {

@@ -283,6 +283,8 @@ import Observation
     }
 
     func terminalResized() {
+        let size = view.terminalDimensions
+        mirrorModes.resize(columns: size.cols, rows: size.rows)
         outputRevision += 1
         scheduleTranscriptRefresh()
     }

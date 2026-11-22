@@ -1,5 +1,6 @@
 import CoreImage
 import Foundation
+import Observation
 
 @main struct RemoteTests {
     static func require(_ value: @autoclosure () -> Bool, _ message: String) throws {
@@ -217,6 +218,7 @@ import Foundation
         print("PASS a phone grid applies until the Mac takes it back, and only typing on the phone claims it again")
         try testPinnedFrameSize()
         print("PASS the pinned terminal frame makes SwiftTerm compute exactly the phone grid")
+        try testActivityValues()
     }
 
     static func testRemoteGridRequests() throws {
@@ -292,5 +294,17 @@ import Foundation
         }
         try require(TerminalGridSize(columns: 80, rows: 24).frameSize(scaling: .zero, columns: 0, rows: 0, scrollerWidth: 15) == nil,
                     "An empty terminal has no pinned frame")
+    }
+
+    @MainActor static func testActivityValues() throws {
+        let values = MobileActivityValues()
+        let terminal = UUID()
+        nonisolated(unsafe) var notified = false
+        withObservationTracking { _ = values.terminalSummary(terminal) } onChange: { notified = true }
+        values.update(SidebarActivity())
+        values.update(SidebarActivity(terminals: [terminal: TerminalSummary(agent: .claude)]))
+        try require(notified && values.terminalSummary(terminal)?.agent == .claude,
+                    "A terminal observed before it has a summary is notified when its agent starts")
+        print("PASS phone sidebar activity values")
     }
 }

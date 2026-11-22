@@ -45,7 +45,7 @@ xcrun swiftc "${swift_flags[@]}" \
   Heka/Models/Data/RemoteProtocol.swift Heka/Models/Data/RemoteTerminalSnapshot.swift Heka/Models/Data/TerminalGridSize.swift Heka/Models/Data/SessionMessage.swift Heka/Models/Data/AgentOptions.swift \
   Heka/Models/Data/RemoteGridRequests.swift "Heka/Extensions/Collection+TerminalReport.swift" Heka/Models/Removal.swift Heka/Models/WorktreeBranch.swift Heka/Models/AgentLaunch.swift Heka/Models/Data/SidebarActivity.swift Heka/Models/AgentStatus.swift Heka/Models/Subagent.swift \
   Heka/Models/Data/PairingInvitation.swift Heka/Models/Data/SavedHost.swift Heka/Models/Data/LocalAddress.swift Heka/Core/Remote/QRCode.swift \
-  Heka/Core/Session/SessionTranscript.swift \
+  Heka/Core/Session/SessionTranscript.swift Heka/Platforms/iOS/MobileObservedValue.swift Heka/Platforms/iOS/MobileActivityValues.swift \
   Tests/RemoteTests.swift -o "$remote_binary"
 "$remote_binary"
 
