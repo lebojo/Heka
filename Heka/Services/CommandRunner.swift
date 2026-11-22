@@ -9,7 +9,7 @@ enum CommandRunner {
 
     private static let registry = Registry()
     private static let diagnosticLimit = 65_536
-    private static let diagnosticTail = 16_384
+    private static let diagnosticSize = 4096
     private static let terminationGrace: DispatchTimeInterval = .seconds(2)
 
     static func terminateAll(within grace: Duration = .milliseconds(500)) { registry.terminateAll(within: grace) }
@@ -65,7 +65,11 @@ enum CommandRunner {
                             base: [String: String] = ProcessInfo.processInfo.environment) -> [String: String] {
         var environment = base
         environment["GIT_TERMINAL_PROMPT"] = "0"
-        if readOnly { environment["GIT_OPTIONAL_LOCKS"] = "0" }
+        if readOnly {
+            environment["GIT_OPTIONAL_LOCKS"] = "0"
+            environment["GIT_NO_LAZY_FETCH"] = "1"
+            environment["GIT_ALLOW_PROTOCOL"] = ""
+        }
         environment["GH_PROMPT_DISABLED"] = "1"
         environment["GH_PAGER"] = "cat"
         environment["NO_COLOR"] = "1"
@@ -76,76 +80,92 @@ enum CommandRunner {
     @concurrent private static func execute(_ job: Job, executable: URL, arguments: [String], at path: String,
                                             timeout: TimeInterval, limit: Int, readOnly: Bool, overflow: OutputOverflow,
                                             gitConfiguration: [String: String]) async throws -> Output {
-        let directory = FileManager.default.temporaryDirectory.appendingPathComponent("heka-command-\(UUID())")
-        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
-        defer { try? FileManager.default.removeItem(at: directory) }
-        let outURL = directory.appendingPathComponent("stdout"), errURL = directory.appendingPathComponent("stderr")
-        FileManager.default.createFile(atPath: outURL.path, contents: nil, attributes: [.posixPermissions: 0o600])
-        FileManager.default.createFile(atPath: errURL.path, contents: nil, attributes: [.posixPermissions: 0o600])
-        let output = try FileHandle(forUpdating: outURL), error = try FileHandle(forUpdating: errURL)
-        defer { try? output.close(); try? error.close() }
-        _ = fcntl(output.fileDescriptor, F_SETFL, O_APPEND)
-        _ = fcntl(error.fileDescriptor, F_SETFL, O_APPEND)
-        let pid = try job.start(executable: executable.path, arguments: arguments,
+        let outPipe = try CapturePipe()
+        let errPipe: CapturePipe
+        do { errPipe = try CapturePipe() } catch { outPipe.close(); throw error }
+        let pid: pid_t
+        do {
+            pid = try job.start(executable: executable.path, arguments: arguments,
                                 environment: environment(readOnly: readOnly, gitConfiguration: gitConfiguration),
-                                directory: path, output: output.fileDescriptor, error: error.fileDescriptor)
+                                directory: path, output: outPipe.writeEnd, error: errPipe.writeEnd)
+        } catch {
+            outPipe.close(); errPipe.close()
+            throw error
+        }
+        outPipe.closeWriteEnd(); errPipe.closeWriteEnd()
         let queue = DispatchQueue(label: "Heka.command", qos: .utility)
+        let keepsTail = overflow == .discard
+        let output = OSAllocatedUnfairLock(initialState: Capture(capacity: keepsTail ? diagnosticSize : limit + 1, keepsTail: keepsTail))
+        let errors = OSAllocatedUnfairLock(initialState: Capture(capacity: diagnosticSize, keepsTail: keepsTail))
+        let outSource = capture(outPipe.readEnd, into: output, on: queue), errSource = capture(errPipe.readEnd, into: errors, on: queue)
         let timer = DispatchSource.makeTimerSource(queue: queue)
         let deadline = DispatchTime.now() + timeout
-        let outFD = output.fileDescriptor, errFD = error.fileDescriptor, diagnosticLimit = Self.diagnosticLimit
-        let outStart = OSAllocatedUnfairLock<off_t>(initialState: 0), errStart = OSAllocatedUnfairLock<off_t>(initialState: 0)
+        let diagnosticLimit = Self.diagnosticLimit
         timer.schedule(deadline: .now() + .milliseconds(50), repeating: .milliseconds(50))
         timer.setEventHandler {
             job.killIfStillRunning(after: terminationGrace)
-            var outStat = stat(), errStat = stat()
-            let outOverflows = fstat(outFD, &outStat) == 0 && outStat.st_size > limit
-            let errOverflows = fstat(errFD, &errStat) == 0 && errStat.st_size > diagnosticLimit
-            if overflow == .discard {
-                let outSize = outStat.st_size, errSize = errStat.st_size
-                outStart.withLock { $0 = discardHead(of: outFD, size: outSize, keptFrom: $0) }
-                errStart.withLock { $0 = discardHead(of: errFD, size: errSize, keptFrom: $0) }
-            } else if overflow == .truncate, outOverflows {
-                return job.stop(.truncated)
-            } else if outOverflows || errOverflows {
-                return job.stop(.outputLimit)
+            let outOverflows = output.withLock { $0.total } > limit
+            let errOverflows = readOnly && errors.withLock { $0.total } > diagnosticLimit
+            switch overflow {
+            case .discard: break
+            case .truncate where outOverflows: return job.stop(.truncated)
+            default: if outOverflows || errOverflows { return job.stop(.outputLimit) }
             }
             if DispatchTime.now() >= deadline { job.stop(.timeout) }
         }
         timer.resume()
         if await !waitForExit(of: pid, on: queue) { job.stop(.waitFailure) }
         timer.cancel()
-        queue.sync {}
+        queue.sync {
+            drainRemaining(outSource, descriptor: outPipe.readEnd, into: output)
+            drainRemaining(errSource, descriptor: errPipe.readEnd, into: errors)
+            outSource.cancel()
+            errSource.cancel()
+        }
         var status: Int32 = 0
         let isTruncated = try job.finish(status: &status)
-        let reader = try FileHandle(forReadingFrom: outURL)
-        defer { try? reader.close() }
-        try reader.seek(toOffset: UInt64(outStart.withLock { $0 }))
-        let data = try reader.read(upToCount: limit + 1) ?? Data()
-        guard data.count <= limit || overflow != .stop else { throw ReadCommandError(message: String(localized: "The output exceeds the display limit. Open this content in your editor.")) }
+        let out = output.withLock { $0 }
+        guard out.total <= limit || overflow != .stop else { throw ReadCommandError(message: String(localized: "The output exceeds the display limit. Open this content in your editor.")) }
         guard status == 0 || isTruncated else {
-            let errors = try diagnostic(at: errURL, fromEnd: overflow == .discard)
-            let diagnostic = errors.isEmpty ? try diagnostic(at: outURL, fromEnd: true) : errors
+            let errorText = diagnostic(errors.withLock { $0 }, fromEnd: keepsTail)
+            let diagnostic = errorText.isEmpty ? diagnostic(out, fromEnd: true) : errorText
             throw ReadCommandError(message: diagnostic.isEmpty ? ExitStatus(waitStatus: status).failureMessage : diagnostic)
         }
-        let exceedsLimit = data.count > limit
-        return Output(data: exceedsLimit ? Data(data.prefix(limit)) : data, isTruncated: isTruncated || exceedsLimit)
+        return Output(data: Data(out.data.prefix(limit)), isTruncated: isTruncated || out.total > limit)
     }
 
-    private static func diagnostic(at url: URL, fromEnd: Bool) throws -> String {
-        let reader = try FileHandle(forReadingFrom: url)
-        defer { try? reader.close() }
-        if fromEnd, let end = try? reader.seekToEnd(), end > 4096 { try reader.seek(toOffset: end - 4096) }
-        else { try reader.seek(toOffset: 0) }
-        return String(decoding: try reader.read(upToCount: 4096) ?? Data(), as: UTF8.self).trimmingCharacters(in: .whitespacesAndNewlines)
+    private static func diagnostic(_ capture: Capture, fromEnd: Bool) -> String {
+        let bytes = fromEnd ? capture.data.suffix(diagnosticSize) : capture.data.prefix(diagnosticSize)
+        return String(decoding: bytes, as: UTF8.self).trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
-    private static func discardHead(of descriptor: Int32, size: off_t, keptFrom start: off_t) -> off_t {
-        var volume = statfs()
-        guard size - start > diagnosticLimit, fstatfs(descriptor, &volume) == 0, volume.f_bsize > 0 else { return start }
-        let block = off_t(volume.f_bsize)
-        let end = (size - off_t(diagnosticTail)) / block * block
-        var hole = fpunchhole_t(fp_flags: 0, reserved: 0, fp_offset: start, fp_length: end - start)
-        return end > start && fcntl(descriptor, F_PUNCHHOLE, &hole) == 0 ? end : start
+    private static func capture(_ descriptor: Int32, into capture: OSAllocatedUnfairLock<Capture>, on queue: DispatchQueue) -> DispatchSourceRead {
+        let source = DispatchSource.makeReadSource(fileDescriptor: descriptor, queue: queue)
+        source.setEventHandler {
+            if readChunk(from: descriptor, into: capture) == .end { source.cancel() }
+        }
+        source.setCancelHandler { Darwin.close(descriptor) }
+        source.resume()
+        return source
+    }
+
+    private static func drainRemaining(_ source: DispatchSourceRead, descriptor: Int32, into capture: OSAllocatedUnfairLock<Capture>) {
+        guard !source.isCancelled else { return }
+        var reads = 0
+        while reads < 16, readChunk(from: descriptor, into: capture) == .data { reads += 1 }
+    }
+
+    private enum ChunkRead { case data, empty, end }
+
+    private static func readChunk(from descriptor: Int32, into capture: OSAllocatedUnfairLock<Capture>) -> ChunkRead {
+        var buffer = [UInt8](repeating: 0, count: 65_536)
+        let count = read(descriptor, &buffer, buffer.count)
+        if count > 0 {
+            let chunk = buffer[..<count]
+            capture.withLock { $0.append(chunk) }
+            return .data
+        }
+        return count < 0 && (errno == EAGAIN || errno == EINTR) ? .empty : .end
     }
 
     private static func waitForExit(of pid: pid_t, on queue: DispatchQueue) async -> Bool {
@@ -180,6 +200,49 @@ enum CommandRunner {
     }
 
     private enum StopReason { case cancelled, quit, timeout, outputLimit, truncated, waitFailure }
+
+    private struct Capture: Sendable {
+        let capacity: Int
+        let keepsTail: Bool
+        private(set) var data = Data()
+        private(set) var total = 0
+
+        init(capacity: Int, keepsTail: Bool) {
+            self.capacity = capacity
+            self.keepsTail = keepsTail
+        }
+
+        mutating func append(_ chunk: ArraySlice<UInt8>) {
+            total += chunk.count
+            if keepsTail {
+                data.append(contentsOf: chunk)
+                if data.count > capacity { data = Data(data.suffix(capacity)) }
+            } else if data.count < capacity {
+                data.append(contentsOf: chunk.prefix(capacity - data.count))
+            }
+        }
+    }
+
+    private struct CapturePipe {
+        let readEnd: Int32
+        let writeEnd: Int32
+
+        init() throws {
+            var descriptors: [Int32] = [-1, -1]
+            guard pipe(&descriptors) == 0 else { throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO) }
+            descriptors.forEach { _ = fcntl($0, F_SETFD, FD_CLOEXEC) }
+            _ = fcntl(descriptors[0], F_SETFL, O_NONBLOCK)
+            readEnd = descriptors[0]
+            writeEnd = descriptors[1]
+        }
+
+        func closeWriteEnd() { Darwin.close(writeEnd) }
+
+        func close() {
+            Darwin.close(readEnd)
+            Darwin.close(writeEnd)
+        }
+    }
 
     private final class Registry: Sendable {
         private let jobs = OSAllocatedUnfairLock<[UUID: Job]>(initialState: [:])

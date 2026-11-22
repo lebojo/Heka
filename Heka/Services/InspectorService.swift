@@ -152,7 +152,7 @@ enum InspectorService {
         return GitDiff(path: change.path, sections: [section].compactMap { $0 })
     }
 
-    private static let diffFlags = ["--literal-pathspecs", "--no-pager", "diff", "--no-ext-diff", "--no-textconv", "--no-color", "--ignore-submodules=dirty"]
+    private static let diffFlags = ["--literal-pathspecs", "--no-pager", "diff", "--no-ext-diff", "--no-textconv", "--no-color", "--ignore-submodules=dirty", "--submodule=short"]
 
     private static func validate(_ base: ComparisonBranch) throws {
         guard base.isBranchReference else { throw ReadCommandError(message: String(localized: "Choose a branch to compare with.")) }

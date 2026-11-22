@@ -68,7 +68,7 @@ import Observation
         isRefreshing = true
         defer { isRefreshing = false }
         await load(providers)
-        lastRefresh = Date()
+        if !Task.isCancelled { lastRefresh = Date() }
     }
 
     private func load(_ providers: [UsageProvider]) async {
@@ -77,7 +77,7 @@ import Observation
             for provider in providers {
                 group.addTask { (provider, await Result { try await query(provider) }) }
             }
-            for await (provider, result) in group where self.providers.contains(provider) {
+            for await (provider, result) in group where self.providers.contains(provider) && !Task.isCancelled {
                 apply(result, to: provider)
             }
         }
@@ -88,7 +88,7 @@ import Observation
         case .success(let usage?): states[provider] = .loaded(usage)
         case .success(nil): states[provider] = .signedOut
         case .failure(let error):
-            guard !(error is CancellationError) else { return }
+            guard !(error is CancellationError), (error as? URLError)?.code != .cancelled else { return }
             states[provider] = .failed(error.localizedDescription, last: state(for: provider).usage)
         }
     }

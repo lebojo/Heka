@@ -36,7 +36,7 @@ import Foundation
         try CoreTests.require(previews.isLoading && previews.request == .file(previewFile), "A second preview request is ignored while one is loading")
         await loadPreview()
         guard case .file(let loadedFile)? = previews.current else { throw WorkspaceError(message: "FAIL: file preview not loaded") }
-        try CoreTests.require(loadedFile.text == "hello\n" && !previews.isLoading && previews.error == nil, "A loaded preview is presented and clears the request")
+        try CoreTests.require(loadedFile.lines.map(\.text) == ["hello", ""] && !previews.isLoading && previews.error == nil, "A loaded preview is presented and clears the request")
         previews.open(root.appendingPathComponent("missing.txt"))
         await loadPreview()
         try CoreTests.require(previews.error != nil && !previews.isLoading, "A failed preview reports its error and clears the request")
@@ -66,6 +66,11 @@ import Foundation
         _ = try await GitService.run(["-c", "protocol.file.allow=always", "submodule", "add", submodule.path, "nested"], at: untrusted.path)
         _ = try await GitService.run(["-c", "user.name=Tests", "-c", "user.email=tests@example.invalid", "commit", "-m", "submodule"], at: untrusted.path)
         let nested = untrusted.appendingPathComponent("nested")
+        try "moved\n".write(to: nested.appendingPathComponent("other.txt"), atomically: true, encoding: .utf8)
+        _ = try await GitService.run(["add", "other.txt"], at: nested.path)
+        _ = try await GitService.run(["-c", "user.name=Tests", "-c", "user.email=tests@example.invalid", "commit", "-m", "moved"], at: nested.path)
+        _ = try await GitService.run(["config", "diff.submodule", "diff"], at: untrusted.path)
+        _ = try await GitService.run(["config", "diff.external", "\(payload.path) submodule-external"], at: nested.path)
         for (repository, name, driver) in [(untrusted, "parent", "payload"), (nested, "submodule", "nestedpayload")] {
             _ = try await GitService.run(["config", "core.fsmonitor", "\(payload.path) \(name)-fsmonitor"], at: repository.path)
             _ = try await GitService.run(["config", "filter.\(driver).clean", "\(payload.path) \(name)-clean"], at: repository.path)
@@ -79,7 +84,7 @@ import Foundation
         _ = try await GitService.existingWorktrees(project: Project(url: untrusted))
         let triggered = try fm.contentsOfDirectory(atPath: markers.path).sorted()
         try CoreTests.require(triggered.isEmpty, "Repository and submodule commands never run during automatic Git reads, got \(triggered)")
-        try CoreTests.require(untrustedSnapshot.changes == [modified], "Status still reports real changes with filters disabled, got \(untrustedSnapshot.changes.map(\.path))")
+        try CoreTests.require(untrustedSnapshot.changes.contains(modified), "Status still reports real changes with filters disabled, got \(untrustedSnapshot.changes.map(\.path))")
 
         let fields: [String] = [
             "global", "file:/home/.gitconfig", "filter.lfs.process\ngit-lfs filter-process",
@@ -92,12 +97,29 @@ import Foundation
             "local", "file:.git/config", "core.bare\nfalse",
             "local", "file:.git/config", "include.path\n../shared.cfg",
             "local", "file:.git/config", "includeif.onbranch:main.path\n~/later.cfg",
+            "local", "file:.git/config", "filter.\u{301}lead.clean\nrun",
+            "local", "file:.git/config", "filter.\u{903}mark.clean\nrun",
+            "local", "file:.git/config", "filter.\u{200D}joiner.process\nrun",
+            "worktree", "file:.git/config.worktree", "filter.x\u{600}.clean\nrun",
+            "local", "file:.git/config", "filter.y\u{605}.smudge\nrun",
             "local", "file:.git/config", "core.multiline\nfirst\nsecond"
         ]
         let listing = GitConfiguration.entries(in: Data((fields.joined(separator: "\0") + "\0").utf8))
         try CoreTests.require(listing.last?.value == "first\nsecond", "Multi-line values stay attached to their key")
-        let drivers = GitConfiguration.untrustedFilterDrivers(in: listing)
-        try CoreTests.require(drivers == ["payload", "Tree.v2", "other"], "Only repository-scoped filter drivers are disabled, got \(drivers)")
+        let drivers = try GitConfiguration.untrustedFilterDrivers(in: listing)
+        try CoreTests.require(drivers == ["payload", "Tree.v2", "other", "\u{301}lead", "\u{903}mark", "\u{200D}joiner", "x\u{600}", "y\u{605}"],
+                              "Only repository-scoped filter drivers are disabled, whatever characters they contain, got \(drivers)")
+        let trustedInvalid = GitConfiguration.entries(in: Data("global\0file:/home/.gitconfig\0filter.x".utf8) + Data([0xFF]) + Data(".clean\nrun\0".utf8))
+        let trustedDrivers = try GitConfiguration.untrustedFilterDrivers(in: trustedInvalid)
+        try CoreTests.require(trustedDrivers.isEmpty, "A trusted driver name is never refused")
+        let invalid = Data("local\0file:.git/config\0filter.x".utf8) + Data([0xFF]) + Data(".clean\nrun\0".utf8)
+        let equivalent = Data("local\0file:.git/config\0filter.caf\u{e9}.clean\nrun\0local\0file:.git/config\0filter.cafe\u{301}.clean\nrun\0".utf8)
+        for unreadable in [invalid, equivalent] {
+            do {
+                _ = try GitConfiguration.untrustedFilterDrivers(in: GitConfiguration.entries(in: unreadable))
+                throw WorkspaceError(message: "FAIL: an unrepresentable filter driver was accepted")
+            } catch is GitConfiguration.UnreadableFilterError {}
+        }
         let configFiles = GitConfiguration.files(in: listing, root: "/repo")
         try CoreTests.require(configFiles == ["/home/.gitconfig", "/etc/gitconfig", "/repo/.git/config", "/repo/.git/config.worktree", "/opt/gitconfig",
                                               "/repo/shared.cfg", NSHomeDirectory() + "/later.cfg"],
@@ -115,6 +137,29 @@ import Foundation
                                   "An invalid inherited GIT_CONFIG_COUNT (\(bogus)) cannot cancel the hardening")
         }
         print("PASS repository-controlled fsmonitor, filter and submodule commands are disabled")
+
+        let promisor = root.appendingPathComponent("promisor-repo")
+        let uploadPack = root.appendingPathComponent("upload-pack.sh")
+        try "#!/bin/sh\ntouch '\(markers.path)/promisor-fetch'\nexit 1\n".write(to: uploadPack, atomically: true, encoding: .utf8)
+        try fm.setAttributes([.posixPermissions: 0o700], ofItemAtPath: uploadPack.path)
+        try fm.createDirectory(at: promisor, withIntermediateDirectories: true)
+        _ = try await GitService.run(["init", "-b", "main"], at: promisor.path)
+        try "lazy\n".write(to: promisor.appendingPathComponent("file.txt"), atomically: true, encoding: .utf8)
+        _ = try await GitService.run(["add", "."], at: promisor.path)
+        _ = try await GitService.run(["-c", "user.name=Tests", "-c", "user.email=tests@example.invalid", "commit", "-m", "fixture"], at: promisor.path)
+        let tree = try await GitService.run(["rev-parse", "HEAD^{tree}"], at: promisor.path)
+        for (key, value) in [("core.repositoryformatversion", "1"), ("extensions.partialClone", "origin"), ("remote.origin.url", repo.path),
+                             ("remote.origin.promisor", "true"), ("remote.origin.uploadpack", uploadPack.path)] {
+            _ = try await GitService.run(["config", key, value], at: promisor.path)
+        }
+        try fm.removeItem(at: promisor.appendingPathComponent(".git/objects/\(tree.prefix(2))/\(tree.dropFirst(2))"))
+        let lazyMarker = markers.appendingPathComponent("promisor-fetch")
+        _ = try? await InspectorService.localGit(at: promisor.path)
+        _ = try? await GitService.availableBranches(project: Project(url: promisor))
+        try CoreTests.require(!fm.fileExists(atPath: lazyMarker.path), "Automatic Git reads never fetch missing objects from a promisor remote")
+        _ = try? await GitService.run(["status"], at: promisor.path, timeout: 20)
+        try CoreTests.require(fm.fileExists(atPath: lazyMarker.path), "The promisor fixture does fetch when lazy fetching is allowed")
+        print("PASS automatic Git reads never run a promisor remote's upload-pack")
 
         let hook = repo.appendingPathComponent(".git/hooks/post-checkout")
         let marker = root.appendingPathComponent("hook-pid")

@@ -1,23 +1,6 @@
 import SwiftUI
 
 struct WorkspaceMonitors: ViewModifier {
-    private struct RepositoryWatch: Equatable {
-        let worktreePaths: [String]
-        let isVisible: Bool
-    }
-
-    private struct WorktreeFolderWatch: Equatable {
-        let creationDirectory: URL
-        let directories: [URL]
-        let isVisible: Bool
-    }
-
-    private struct WorktreeFolderScan: Equatable {
-        let directories: [URL]
-        let knownPaths: [String]
-        let isVisible: Bool
-    }
-
     @Environment(AppVisibility.self) private var visibility
     @Environment(SettingsStore.self) private var settings
     @Environment(UsageStore.self) private var usage
@@ -33,6 +16,7 @@ struct WorkspaceMonitors: ViewModifier {
         WorktreeFolderWatch(creationDirectory: settings.creationWorktreesDirectory,
                             directories: settings.watchedWorktreesDirectories, isVisible: visibility.isVisible)
     }
+
     private var worktreeFolderScan: WorktreeFolderScan {
         let projects = store.projects
         return WorktreeFolderScan(directories: settings.watchedWorktreesDirectories,
@@ -65,6 +49,8 @@ struct WorkspaceMonitors: ViewModifier {
     private func watchRepositories(_ watch: RepositoryWatch) async {
         gitActionQueues.prune(keepingRootsOf: watch.worktreePaths)
         await GitRootCache.shared.prune(keepingPathsIn: watch.worktreePaths)
+        await GitFilterGuard.shared.prune(keepingRootsOf: watch.worktreePaths)
+        await BranchMergeCache.shared.prune(keepingRootsOf: watch.worktreePaths)
         guard watch.isVisible else { return }
         let repositories = await GitRepository.repositories(containing: watch.worktreePaths)
         let metadata = Array(Set(repositories.map(\.commonDirectory.path)))

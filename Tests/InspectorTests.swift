@@ -65,6 +65,12 @@ enum InspectorTests {
         let noisy = "yes hook output | head -c 200000 >&2; sleep 0.3"
         let kept = try await CommandRunner.run(shell, ["-c", noisy + "; echo done"], at: root.path, timeout: 10, limit: 1024, readOnly: false, overflow: .discard)
         try require(String(decoding: kept, as: UTF8.self) == "done\n", "Write commands keep running when a hook prints a lot")
+        let parsed = try await CommandRunner.run(shell, ["-c", noisy + "; echo done"], at: root.path, timeout: 10, limit: 1024, readOnly: false)
+        try require(String(decoding: parsed, as: UTF8.self) == "done\n", "A write command whose output is read is not stopped by a long diagnostic")
+        let piped = try await CommandRunner.run(shell, ["-c", "test -p /dev/stdout && test -p /dev/stderr && ! { : <&3; } 2>/dev/null && echo piped"],
+                                                at: root.path, timeout: 10, limit: 1024, readOnly: true)
+        try require(String(decoding: piped, as: UTF8.self) == "piped\n",
+                    "Output is captured through pipes, never through a file, and no other descriptor reaches the command")
         do {
             _ = try await CommandRunner.run(shell, ["-c", noisy + "; echo hook failed >&2; exit 1"], at: root.path, timeout: 10, limit: 1024,
                                             readOnly: false, overflow: .discard)
@@ -143,6 +149,7 @@ enum InspectorTests {
 
         try await branchComparison(root: root)
         try changeTree()
+        try previewModels()
         try await workingTreeActions(root: root)
         try await publishing(root: root)
         try await porcelainStatus(root: root)
@@ -306,6 +313,24 @@ enum InspectorTests {
 
     private static func porcelainEntry(_ kind: String, _ codes: String, _ fields: Int, _ path: String) -> String {
         ([kind, codes] + Array(repeating: "x", count: fields - 2) + [path]).joined(separator: " ")
+    }
+
+    private static func previewModels() throws {
+        let require = CoreTests.require
+        let preview = TextPreview(title: "notes.txt", text: "first\r\n\nthird\n", url: nil)
+        try require(preview.lines.map(\.text) == ["first", "", "third", ""] && preview.lines.map(\.id) == [1, 2, 3, 4]
+                    && preview.lines[1].displayText == " ", "A text preview is split into numbered lines that keep blank lines")
+        let json = #"{"number":1,"title":"T","url":"u","state":"OPEN","isDraft":false,"headRefName":"h","headRefOid":"o","baseRefName":"b","statusCheckRollup":[{"name":"Build"},{"name":"Build"},{"name":"Build","detailsUrl":"d"}]}"#
+        let request = try JSONDecoder().decode(ChangeRequest.self, from: Data(json.utf8))
+        let ids = request.statusCheckRollup?.map(\.id) ?? []
+        try require(ids.count == 3 && Set(ids).count == 3 && request.reviewDecision == nil, "Checks sharing a name and URL get distinct ids")
+        let roundTrip = try JSONDecoder().decode(ChangeRequest.self, from: JSONEncoder().encode(request))
+        try require(roundTrip == request, "Check ids survive a round trip to the phone")
+        var recording: ShortcutAction? = .splitRight
+        recording[selecting: .newTerminal] = true
+        recording[selecting: .splitRight] = false
+        try require(recording == .newTerminal, "Starting to record a shortcut stops the other row, and a stale row cannot clear it")
+        print("PASS preview lines, check identity and single shortcut recording")
     }
 
     private static func changeTree() throws {

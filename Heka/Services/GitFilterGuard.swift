@@ -33,13 +33,13 @@ actor GitFilterGuard {
         let isBare: Bool
         let worktree: String?
 
-        init(entries: [GitConfiguration.Entry]) {
-            overrides = GitConfiguration.disabling(filterDrivers: GitConfiguration.untrustedFilterDrivers(in: entries))
+        init(entries: [GitConfiguration.Entry]) throws {
+            overrides = GitConfiguration.disabling(filterDrivers: try GitConfiguration.untrustedFilterDrivers(in: entries))
             remotes = GitRemoteConfiguration(entries: entries.compactMap { entry in
-                entry.value.map { (key: String(entry.key), value: String($0)) }
+                entry.value.map { (key: entry.key, value: $0) }
             })
             isBare = entries.last { $0.key == "core.bare" }.map { GitConfiguration.isTrue($0.value) } ?? false
-            worktree = entries.last { $0.key == "core.worktree" }?.value.map(String.init)
+            worktree = entries.last { $0.key == "core.worktree" }?.value
         }
     }
 
@@ -57,13 +57,17 @@ actor GitFilterGuard {
         self.list = list
     }
 
+    func prune(keepingRootsOf worktreePaths: [String]) {
+        snapshots = snapshots.filter { root, _ in worktreePaths.contains { $0 == root || $0.hasPrefix(root + "/") } }
+    }
+
     func configuration(at root: String) async throws -> Configuration {
         if let snapshot = snapshots[root], snapshot.stamps.allSatisfy({ FileStamp($0.key) == $0.value }) {
             return snapshot.configuration
         }
         let started = Int64(Date().timeIntervalSince1970 * 1_000_000_000)
         let entries = GitConfiguration.entries(in: try await list(root))
-        let configuration = Configuration(entries: entries)
+        let configuration = try Configuration(entries: entries)
         let stamps = Dictionary(uniqueKeysWithValues: Self.files(in: entries, root: root).map { ($0, FileStamp($0)) })
         if stamps.values.allSatisfy({ $0.changed < started }) {
             snapshots[root] = Snapshot(stamps: stamps, configuration: configuration)

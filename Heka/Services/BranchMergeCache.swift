@@ -27,6 +27,10 @@ actor BranchMergeCache {
         self.merged = merged
     }
 
+    func prune(keepingRootsOf worktreePaths: [String]) {
+        entries = entries.filter { root, _ in worktreePaths.contains { $0 == root || $0.hasPrefix(root + "/") } }
+    }
+
     func state(of branch: String, headSHA: String, in repository: GitRepository, at root: String, remoteNames: [String]) async -> BranchMergeState {
         let key = Key(branch: branch, headSHA: headSHA)
         if let entry = entries[root], entry.key == key, entry.stamps.allSatisfy({ FileStamp($0.key) == $0.value }) {

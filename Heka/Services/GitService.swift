@@ -1,9 +1,19 @@
 import Foundation
 
 enum GitService {
-    @concurrent static func run(_ arguments: [String], at path: String, timeout: TimeInterval = 90) async throws -> String {
+    @concurrent static func run(_ arguments: [String], at path: String, timeout: TimeInterval = 90,
+                                overflow: CommandRunner.OutputOverflow = .stop) async throws -> String {
+        try await git(arguments, at: path, timeout: timeout, readOnly: false, overflow: overflow)
+    }
+
+    @concurrent static func read(_ arguments: [String], at path: String, timeout: TimeInterval = 20) async throws -> String {
+        try await git(arguments, at: path, timeout: timeout, readOnly: true, overflow: .stop)
+    }
+
+    private static func git(_ arguments: [String], at path: String, timeout: TimeInterval, readOnly: Bool,
+                            overflow: CommandRunner.OutputOverflow) async throws -> String {
         let data = try await CommandRunner.run(URL(fileURLWithPath: "/usr/bin/git"), arguments, at: path,
-                                                timeout: timeout, limit: 4_194_304, readOnly: false)
+                                                timeout: timeout, limit: 4_194_304, readOnly: readOnly, overflow: overflow)
         return String(decoding: data, as: UTF8.self).trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
@@ -18,14 +28,14 @@ enum GitService {
         }
         if source == .new { _ = try await run(["rev-parse", "--verify", "HEAD"], at: project.path, timeout: 10) }
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
-        let destination = availableDestination(in: root, name: "\(project.name)-\(branch.replacingOccurrences(of: "/", with: "-"))")
+        let destination = availableDestination(in: root, name: folderName(project: project.name, branch: branch))
         do {
             let arguments = switch (source, remote) {
             case (.new, _): ["worktree", "add", "-b", branch, destination.path, "HEAD"]
             case (.remote, let remote?): ["worktree", "add", "--track", "-b", branch, destination.path, "\(remote)/\(branch)"]
             default: ["worktree", "add", destination.path, branch]
             }
-            _ = try await run(arguments, at: project.path, timeout: timeout)
+            _ = try await run(arguments, at: project.path, timeout: timeout, overflow: .discard)
         } catch {
             let reason = error is CancellationError ? String(localized: "Creation cancelled.") : error.localizedDescription
             throw WorktreeCreationError(path: WorkspacePath.canonical(destination), branch: branch, reason: reason)
@@ -38,9 +48,9 @@ enum GitService {
             throw WorkspaceError(message: String(localized: "The project’s main folder can’t be deleted."))
         }
         if FileManager.default.fileExists(atPath: path) {
-            _ = try await run(["worktree", "remove", "--force", path], at: project.path, timeout: timeout)
+            _ = try await run(["worktree", "remove", "--force", path], at: project.path, timeout: timeout, overflow: .discard)
         } else {
-            _ = try await run(["worktree", "prune"], at: project.path, timeout: 10)
+            _ = try await run(["worktree", "prune"], at: project.path, timeout: 10, overflow: .discard)
         }
     }
 
@@ -51,6 +61,8 @@ enum GitService {
                 entries.append(GitWorktreeEntry(path: WorkspacePath.canonical(URL(fileURLWithPath: String(field.dropFirst("worktree ".count))))))
             } else if field.hasPrefix("branch refs/heads/"), !entries.isEmpty {
                 entries[entries.count - 1].branch = String(field.dropFirst("branch refs/heads/".count))
+            } else if field.hasPrefix("prunable"), !entries.isEmpty {
+                entries[entries.count - 1].isPrunable = true
             }
         }
         return entries
@@ -86,14 +98,14 @@ enum GitService {
     }
 
     private static func requireMerged(_ branch: String, into candidates: [String], at path: String) async throws -> String {
-        let targets = try await mergeTargets(among: candidates, at: path)
+        let targets = try await mergeTargets(among: candidates, at: path).filter { $0 != "refs/heads/" + branch }
         guard !targets.isEmpty else { throw UnmergedBranchError(branch: branch, hasMainBranch: false) }
         guard let tip = try await mergedTip(of: branch, into: targets, at: path) else { throw UnmergedBranchError(branch: branch, hasMainBranch: true) }
         return tip
     }
 
     static func mergeTargets(among candidates: [String], at path: String) async throws -> [String] {
-        let output = try await run(["for-each-ref", "--format=%(refname)%09%(upstream)%09%(upstream:track)"] + candidates, at: path, timeout: 10)
+        let output = try await read(["for-each-ref", "--format=%(refname)%09%(upstream)%09%(upstream:track)"] + candidates, at: path, timeout: 10)
         return DefaultBranch.mergeTargets(in: output, candidates: candidates)
     }
 
@@ -103,7 +115,7 @@ enum GitService {
 
     private static func mergedTip(of branch: String, into targets: [String], at path: String) async throws -> String? {
         let reference = "refs/heads/" + branch
-        let merged = try await run(["for-each-ref", "--format=%(refname)%09%(objectname)"] + targets.map { "--merged=" + $0 } + [reference], at: path, timeout: 20)
+        let merged = try await read(["for-each-ref", "--format=%(refname)%09%(objectname)"] + targets.map { "--merged=" + $0 } + [reference], at: path)
         return listedTip(of: reference, in: merged)
     }
 
@@ -114,7 +126,7 @@ enum GitService {
 
     private static func tip(of branch: String, at path: String) async throws -> String? {
         let reference = "refs/heads/" + branch
-        return listedTip(of: reference, in: try await run(["for-each-ref", "--format=%(refname)%09%(objectname)", reference], at: path, timeout: 10))
+        return listedTip(of: reference, in: try await read(["for-each-ref", "--format=%(refname)%09%(objectname)", reference], at: path, timeout: 10))
     }
 
     static func hasLocalChanges(at path: String) async throws -> Bool {
@@ -127,10 +139,19 @@ enum GitService {
     }
 
     private static func branchSource(_ branch: String, at path: String) async throws -> BranchSource {
-        let local = try await run(["branch", "--list", branch], at: path, timeout: 10)
+        let local = try await read(["branch", "--list", branch], at: path, timeout: 10)
         if let marker = local.first { return marker == "*" || marker == "+" ? .checkedOut : .local }
-        let remote = try await run(["branch", "--remotes", "--list", "*/" + branch], at: path, timeout: 10)
-        return remote.isEmpty ? .new : .remote
+        let remotes = try await read(["remote"], at: path, timeout: 10).split(whereSeparator: \.isNewline)
+        let references = remotes.map { "refs/remotes/\($0)/\(branch)" }
+        guard !references.isEmpty else { return .new }
+        let found = try await read(["for-each-ref", "--format=%(refname)"] + references, at: path, timeout: 10)
+        let existing = Set(found.split(whereSeparator: \.isNewline).map(String.init))
+        return references.contains(where: existing.contains) ? .remote : .new
+    }
+
+    private static func folderName(project: String, branch: String) -> String {
+        let name = "\(project)-\(branch)".replacingOccurrences(of: "/", with: "-").replacingOccurrences(of: ":", with: "-")
+        return String(name.drop { $0 == "." || $0 == "-" })
     }
 
     private static func availableDestination(in root: URL, name: String) -> URL {
@@ -144,14 +165,14 @@ enum GitService {
     }
 
     @concurrent static func availableBranches(project: Project) async throws -> [BranchSuggestion] {
-        let output = try await run(["for-each-ref", "--sort=-committerdate", "--format=%(refname)\t%(worktreepath)", "refs/heads", "refs/remotes"],
-                                   at: project.path, timeout: 10)
-        let remotes = try await run(["remote"], at: project.path, timeout: 10).split(whereSeparator: \.isNewline).map(String.init)
+        let output = try await read(["for-each-ref", "--sort=-committerdate", "--format=%(refname)\t%(worktreepath)", "refs/heads", "refs/remotes"],
+                                    at: project.path, timeout: 10)
+        let remotes = try await read(["remote"], at: project.path, timeout: 10).split(whereSeparator: \.isNewline).map(String.init)
         return branchSuggestions(from: output, remotes: remotes)
     }
 
     @concurrent static func fetchRemotes(project: Project) async throws {
-        _ = try await run(["fetch", "--all", "--quiet"], at: project.path, timeout: 30)
+        _ = try await run(["fetch", "--all", "--quiet"], at: project.path, timeout: 30, overflow: .discard)
     }
 
     static func branchSuggestions(from output: String, remotes: [String]) -> [BranchSuggestion] {
@@ -179,8 +200,11 @@ enum GitService {
     }
 
     @concurrent static func existingWorktrees(project: Project) async throws -> [Worktree] {
-        let output = try await run(["worktree", "list", "--porcelain", "-z"], at: project.path, timeout: 10)
-        return worktreeEntries(in: output).filter { $0.path != project.path }.map { entry in
+        let output = try await read(["worktree", "list", "--porcelain", "-z"], at: project.path, timeout: 10)
+        let entries = worktreeEntries(in: output).filter { entry in
+            entry.path != project.path && !entry.isPrunable && FileManager.default.fileExists(atPath: entry.path)
+        }
+        return entries.map { entry in
             Worktree(name: entry.branch ?? URL(fileURLWithPath: entry.path).lastPathComponent, path: entry.path,
                      terminals: [TerminalRecord(name: "Terminal")])
         }
@@ -190,6 +214,7 @@ enum GitService {
 struct GitWorktreeEntry: Equatable, Sendable {
     let path: String
     var branch: String?
+    var isPrunable = false
 }
 
 struct WorktreeCreationError: LocalizedError {

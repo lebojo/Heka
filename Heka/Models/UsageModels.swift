@@ -149,12 +149,12 @@ extension ProviderUsage {
             .compactMap { limit -> UsageWindow? in
                 guard let name = limit.scope?.model?.displayName, let percent = limit.percent,
                       !windows.contains(where: { $0.kind == .weeklyModel(name) }) else { return nil }
-                return UsageWindow(kind: .weeklyModel(name), usedPercent: percent, resetsAt: limit.resetsAt?.date)
+                return UsageWindow(kind: .weeklyModel(name), usedPercent: min(100, max(0, percent)), resetsAt: limit.resetsAt?.date)
             }
         windows += scoped
         let spend = payload.extraUsage?.spend
         if windows.isEmpty, let spend, spend.limit > 0 {
-            windows.append(UsageWindow(kind: .monthlySpend, usedPercent: spend.spent / spend.limit * 100, resetsAt: nil))
+            windows.append(UsageWindow(kind: .monthlySpend, usedPercent: min(999, max(0, spend.spent / spend.limit * 100)), resetsAt: nil))
         }
         return ProviderUsage(provider: .claude, plan: nil, windows: windows, spend: spend, updatedAt: now)
     }
@@ -181,13 +181,18 @@ private struct UsageTimestamp: Decodable {
     init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
         if let value = try? container.decode(Double.self) {
-            date = Date(timeIntervalSince1970: value > 10_000_000_000 ? value / 1000 : value)
+            date = Self.date(fromEpoch: value)
         } else if let value = try? container.decode(String.self) {
             date = (try? Date(value, strategy: Date.ISO8601FormatStyle(includingFractionalSeconds: true)))
-                ?? Double(value).map { Date(timeIntervalSince1970: $0 > 10_000_000_000 ? $0 / 1000 : $0) }
+                ?? Double(value).flatMap(Self.date(fromEpoch:))
         } else {
             date = nil
         }
+    }
+
+    private static func date(fromEpoch value: Double) -> Date? {
+        let seconds = value > 10_000_000_000 ? value / 1000 : value
+        return seconds.isFinite && abs(seconds) < 10_000_000_000 ? Date(timeIntervalSince1970: seconds) : nil
     }
 }
 
@@ -242,7 +247,7 @@ private struct ClaudeExtraUsagePayload: Decodable {
     }
     var spend: UsageSpend? {
         guard let monthlyLimit else { return nil }
-        let divisor = pow(10, Double(decimalPlaces ?? 2))
+        let divisor = pow(10, Double(min(6, max(0, decimalPlaces ?? 2))))
         return UsageSpend(isEnabled: isEnabled == true, spent: (usedCredits ?? 0) / divisor, limit: monthlyLimit / divisor,
                           currency: currency ?? "USD")
     }
@@ -294,7 +299,7 @@ private struct CodexWindowPayload: Decodable {
     }
     var window: UsageWindow? {
         guard let usedPercent else { return nil }
-        let minutes = Int(((limitWindowSeconds ?? 18_000) / 60).rounded(.up))
+        let minutes = Int((min(limitWindowSeconds ?? 18_000, 31_536_000) / 60).rounded(.up))
         let kind: UsageWindowKind = minutes <= 1440 ? .session(minutes: minutes) : .weekly
         return UsageWindow(kind: kind, usedPercent: min(100, max(0, usedPercent)), resetsAt: resetAt?.date)
     }

@@ -43,6 +43,23 @@ enum UsageTests {
 
         try require(ClaudeCredentials.accessToken(in: Data("{\"claudeAiOauth\":{\"accessToken\":\"abc\"}}\n".utf8)) == "abc", "Keychain JSON yields the access token")
         try require(ClaudeCredentials.accessToken(in: Data("{}".utf8)) == nil, "Missing OAuth credentials mean signed out")
+        try require(ClaudeCredentials.keychainService(environment: [:]) == "Claude Code-credentials"
+                        && ClaudeCredentials.keychainService(environment: ["CLAUDE_CONFIG_DIR": ""]) == "Claude Code-credentials",
+                    "The default Claude configuration uses the plain keychain item")
+        try require(ClaudeCredentials.keychainService(environment: ["CLAUDE_CONFIG_DIR": "/Users/test/.claude-work"]) == "Claude Code-credentials-03abf0ee"
+                        && ClaudeCredentials.keychainService(environment: ["CLAUDE_CONFIG_DIR": "/tmp/cafe\u{301}"]) == "Claude Code-credentials-0873cca0",
+                    "A custom Claude configuration folder reads its own keychain item, named from the NFC folder path")
+        try require(ClaudeCredentials.keychainService(environment: ["CLAUDE_CONFIG_DIR": "/elsewhere", "CLAUDE_SECURESTORAGE_CONFIG_DIR": ""]) == "Claude Code-credentials"
+                        && ClaudeCredentials.keychainService(environment: ["CLAUDE_SECURESTORAGE_CONFIG_DIR": "/Users/test/.claude-work"]) == "Claude Code-credentials-03abf0ee",
+                    "The secure storage folder overrides the configuration folder for the keychain item")
+
+        let extreme = try ProviderUsage.codex(from: Data(#"{"rate_limit":{"primary_window":{"used_percent":5,"limit_window_seconds":1e21,"reset_at":"inf"},"secondary_window":{"used_percent":5,"reset_at":1e25}}}"#.utf8))
+        try require(extreme.windows.allSatisfy { $0.resetsAt == nil } && extreme.weekly != nil, "Absurd reset dates and window lengths are ignored instead of trapping")
+        let extremeClaude = try ProviderUsage.claude(from: Data(#"{"five_hour":{"utilization":5,"resets_at":"nan"},"limits":[{"kind":"weekly_scoped","percent":1e300,"scope":{"model":{"display_name":"Fable"}}}],"extra_usage":{"monthly_limit":1,"used_credits":1e300,"decimal_places":-400}}"#.utf8))
+        try require(extremeClaude.session?.resetsAt == nil && extremeClaude.windows.allSatisfy { $0.usedPercent <= 100 }
+                        && extremeClaude.spend?.limit == 1, "Absurd percentages and decimal places are clamped")
+        let spendOnly = try ProviderUsage.claude(from: Data(#"{"extra_usage":{"monthly_limit":1e-300,"used_credits":1e300}}"#.utf8))
+        try require(spendOnly.windows.first?.usedPercent == 999, "An absurd spend percentage is capped")
 
         try require(UsageCountdown.text(until: now.addingTimeInterval(2 * 3600 + 13 * 60), from: now) == "2h 13", "Hours and minutes countdown")
         try require(UsageCountdown.text(until: now.addingTimeInterval(3 * 3600), from: now) == "3h", "Whole hours countdown")
@@ -70,6 +87,16 @@ enum UsageTests {
         await store.refresh()
         try require(store.state(for: .claude) == .failed("Trop de requêtes.", last: claude), "A failure keeps the last usage")
         try require(store.connectedProviders == [.claude], "A failing provider stays visible")
+        let cancelledStore = UsageStore { _ in
+            try? await Task.sleep(for: .seconds(5))
+            return nil
+        }
+        let cancelledRefresh = Task { await cancelledStore.refresh() }
+        try await Task.sleep(for: .milliseconds(50))
+        cancelledRefresh.cancel()
+        await cancelledRefresh.value
+        try require(cancelledStore.state(for: .claude) == .loading && cancelledStore.state(for: .codex) == .loading && cancelledStore.lastRefresh == nil,
+                    "A cancelled refresh leaves the usage untouched and is retried")
         print("PASS usage store")
 
         let signedIn = Flag()

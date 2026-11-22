@@ -27,6 +27,43 @@ import Foundation
         try require(terminalEnvironment == ["PATH": "/bin", "CLAUDE_CONFIG_DIR": "/c", "HEKA_STATE_DIRECTORY": "/s"], "Terminals drop the agent session variables inherited by Heka")
         print("PASS inherited terminal environment")
 
+        try require(LoginShell.session(running: [], keepingShell: false, shell: "/opt/homebrew/bin/fish")
+                    == LoginShell.Invocation(executable: "/opt/homebrew/bin/fish", arguments: ["-l"]), "A plain terminal starts the user's shell as a login shell")
+        try require(LoginShell.session(running: ["claude", "--resume", "x"], keepingShell: true, shell: "/bin/bash")
+                    == LoginShell.Invocation(executable: "/bin/bash", arguments: ["-l", "-i", "-c", "\"$@\"; exec \"$0\" -l", "/bin/bash", "claude", "--resume", "x"]),
+                    "A POSIX shell runs a resumed command, then stays open")
+        try require(LoginShell.session(running: ["codex"], keepingShell: false, shell: "/bin/zsh")
+                    == LoginShell.Invocation(executable: "/bin/zsh", arguments: ["-l", "-i", "-c", "exec \"$@\"", "heka", "codex"]),
+                    "A POSIX shell runs a command in place")
+        for shell in ["/opt/homebrew/bin/fish", "/bin/tcsh", "/bin/csh", "/usr/local/bin/nu"] {
+            try require(LoginShell.session(running: ["claude"], keepingShell: true, shell: shell)
+                        == LoginShell.Invocation(executable: LoginShell.scriptRunner, arguments: ["-l", "-i", "-c", "\"$@\"; exec \"$0\" -l", shell, "claude"]),
+                        "A non-POSIX shell (\(shell)) runs the command through zsh, then opens itself")
+            try require(LoginShell.running("command -v claude", shell: shell).executable == LoginShell.scriptRunner, "Scripts never run in a non-POSIX shell")
+        }
+        try require(LoginShell.isPOSIX("/bin/sh") && LoginShell.isPOSIX("/opt/homebrew/bin/bash") && !LoginShell.isPOSIX("/bin/tcsh"), "Recognise POSIX shells")
+        print("PASS login shell invocations")
+
+        try require("ls\u{1b}[201~; rm -rf ~\u{07}\u{9b}\u{7f}\tok\r\nnext é".bracketedPasteSafe == "ls[201~; rm -rf ~\tok\r\nnext é",
+                    "A bracketed paste keeps tabs and line breaks and drops other control characters")
+        let linkFolder = root.appendingPathComponent("links")
+        try fm.createDirectory(at: linkFolder.appendingPathComponent("Tool.app"), withIntermediateDirectories: true)
+        let note = linkFolder.appendingPathComponent("note.swift")
+        try Data("text".utf8).write(to: note)
+        let script = linkFolder.appendingPathComponent("run")
+        try Data("#!/bin/sh\n".utf8).write(to: script)
+        try fm.setAttributes([.posixPermissions: 0o755], ofItemAtPath: script.path)
+        try Data("text".utf8).write(to: linkFolder.appendingPathComponent("open.command"))
+        try require(TerminalLink("https://example.com/a?b=1") == .web(URL(string: "https://example.com/a?b=1")!)
+                    && TerminalLink("HTTP://example.com")?.url.absoluteString == "HTTP://example.com", "Web links open")
+        try require(TerminalLink(note.path + ":12:4") == .file(URL(fileURLWithPath: note.path)) && TerminalLink(note.absoluteString) == .file(URL(fileURLWithPath: note.path))
+                    && TerminalLink(linkFolder.path) == .file(URL(fileURLWithPath: linkFolder.path)), "Existing files and folders open")
+        try require(["javascript:alert(1)", "x-apple.systempreferences:com.apple.preference.security", "ssh://host", "vscode://x/y", "mailto:me@example.com",
+                     "http:///nohost", script.path, script.absoluteString, linkFolder.appendingPathComponent("Tool.app").path,
+                     linkFolder.appendingPathComponent("open.command").path, "/bin/ls", "relative/path.swift:3", linkFolder.path + "/missing"]
+                        .allSatisfy { TerminalLink($0) == nil }, "Other schemes, executables, applications and launchers never open")
+        print("PASS terminal paste and links")
+
         let folder = ProjectFolder(name: "Équipe mobile")
         let project = Project(url: children[0], folderID: folder.id)
         let selection = project.worktrees[0].terminals[0].id
@@ -246,6 +283,26 @@ import Foundation
             do { _ = try AgentCLI.parse(arguments, environment: callerEnv); throw WorkspaceError(message: "FAIL: \(arguments) accepted") }
             catch let error as WorkspaceError { try require(!error.message.hasPrefix("FAIL") && error.message.contains(expected), "Refuse \(arguments): \(error.message)") }
         }
+        let forged = BridgeRequest(id: UUID(), action: "terminal.read", command: [])
+        let forgedRequests: [(BridgeRequest, String)] = [
+            (with(forged) { $0.messages = -1 }, "--messages"),
+            (with(forged) { $0.lines = -5 }, "--lines"),
+            (with(forged) { $0.lines = Int.max }, "--lines"),
+            (with(forged) { $0.timeoutSeconds = -1e19 }, "--timeout"),
+            (with(forged) { $0.idleSeconds = 0 }, "--idle"),
+            (with(forged) { $0.keys = ["f13"] }, "Unknown key"),
+            (with(forged) { $0.keys = Array(repeating: "up", count: TerminalKey.maximumCount + 1) }, "Too many keys"),
+            (with(forged) { $0.waitsForExit = true; $0.idleSeconds = 3 }, "--idle"),
+            (with(forged) { $0.reply = true; $0.messages = 3 }, "only one"),
+        ]
+        for (request, expected) in forgedRequests {
+            do { try request.validate(); throw WorkspaceError(message: "FAIL: forged request \(expected) accepted") }
+            catch let error as WorkspaceError { try require(!error.message.hasPrefix("FAIL") && error.message.contains(expected), "Refuse forged \(expected): \(error.message)") }
+        }
+        try with(forged) { $0.lines = 10; $0.timeoutSeconds = 30; $0.keys = ["up"] }.validate()
+        try require(AgentCLI.withoutFinalLineBreak("hello\r\n") == "hello" && AgentCLI.withoutFinalLineBreak("hello\n") == "hello"
+                    && AgentCLI.withoutFinalLineBreak("a\n\n") == "a\n" && AgentCLI.withoutFinalLineBreak("hello") == "hello",
+                    "--stdin drops one final LF or CRLF")
         print("PASS terminal send, read, wait and close arguments")
         let mainID = UUID(), featureID = UUID()
         var locatedProject = Project(url: URL(fileURLWithPath: "/work/app"))
@@ -259,18 +316,22 @@ import Foundation
         try require(located.location(containing: "/work/application") == nil, "Sibling folders with a common prefix are not matched")
         let registry = root.appendingPathComponent("Instances")
         try FileManager.default.createDirectory(at: registry, withIntermediateDirectories: true)
-        let liveInstance = root.appendingPathComponent("live-instance"), deadInstance = root.appendingPathComponent("dead-instance")
-        try FileManager.default.createDirectory(at: liveInstance, withIntermediateDirectories: true)
-        try FileManager.default.createDirectory(at: deadInstance, withIntermediateDirectories: true)
         try require(AgentCLI.runningInstance(in: registry) == nil, "No registered instance means Heka is closed")
         try Data().write(to: registry.appendingPathComponent("1.sb-pending"))
         try require(AgentCLI.runningInstance(in: registry) == nil, "An atomic write in progress is not an instance")
         try require(FileManager.default.fileExists(atPath: registry.appendingPathComponent("1.sb-pending").path), "An atomic write in progress is left alone")
-        try deadInstance.path.write(to: registry.appendingPathComponent("999999"), atomically: true, encoding: .utf8)
+        let deadInstance = registry.appendingPathComponent("999999")
+        try FileManager.default.createDirectory(at: deadInstance.appendingPathComponent("bin"), withIntermediateDirectories: true)
+        try Data().write(to: registry.appendingPathComponent("999998"))
         try require(AgentCLI.runningInstance(in: registry) == nil, "A crashed instance is ignored")
-        try require(!FileManager.default.fileExists(atPath: registry.appendingPathComponent("999999").path), "A crashed instance is unregistered")
-        try liveInstance.path.write(to: registry.appendingPathComponent(String(ProcessInfo.processInfo.processIdentifier)), atomically: true, encoding: .utf8)
-        try require(AgentCLI.runningInstance(in: registry)?.path == liveInstance.path, "A running instance is found")
+        try require(!FileManager.default.fileExists(atPath: deadInstance.path), "A crashed instance's mailbox is removed")
+        try require(!FileManager.default.fileExists(atPath: registry.appendingPathComponent("999998").path), "A former registration of a crashed instance is removed")
+        let liveInstance = registry.appendingPathComponent(String(ProcessInfo.processInfo.processIdentifier))
+        try "/legacy".write(to: liveInstance, atomically: true, encoding: .utf8)
+        try require(AgentCLI.runningInstance(in: registry) == nil, "A running instance's former registration file is not a mailbox")
+        try FileManager.default.removeItem(at: liveInstance)
+        try FileManager.default.createDirectory(at: liveInstance, withIntermediateDirectories: true)
+        try require(AgentCLI.runningInstance(in: registry)?.standardizedFileURL.path == liveInstance.standardizedFileURL.path, "A running instance is found")
         print("PASS CLI context, argument boundaries, validation")
 
         let mailbox = root.appendingPathComponent("mailbox")
@@ -375,10 +436,29 @@ import Foundation
         let upstreamBranch = try await GitService.run(["rev-parse", "--abbrev-ref", "@{upstream}"], at: tracked.path)
         try require(upstreamBranch == "gh/team/shared/topic", "A remote branch shared by several remotes tracks the chosen remote")
         try await GitService.removeWorktree(project: gitProject, path: tracked.path)
+        let unrelated = try await GitService.createWorktree(project: gitProject, branch: "topic", root: root)
+        let unrelatedBranch = try await GitService.run(["branch", "--show-current"], at: unrelated.path)
+        try require(unrelatedBranch == "topic", "A new branch is created even when a remote branch ends with the same name")
+        try await GitService.removeWorktree(project: gitProject, path: unrelated.path)
+        _ = try await GitService.run(["branch", "-D", "topic"], at: repository.path)
         for remote in ["mirror", "gh/team"] {
             _ = try await GitService.run(["remote", "remove", remote], at: repository.path)
         }
         _ = try await GitService.run(["branch", "-D", "shared/topic"], at: repository.path)
+        var renamed = gitProject
+        renamed.name = "../Client / API"
+        let contained = try await GitService.createWorktree(project: renamed, branch: "contained", root: root)
+        try require(URL(fileURLWithPath: contained.path).lastPathComponent == "Client - API-contained"
+                        && URL(fileURLWithPath: contained.path).deletingLastPathComponent().resolvingSymlinksInPath() == root.resolvingSymlinksInPath(),
+                    "A project name with slashes or dots stays one folder inside the worktrees folder")
+        try fm.removeItem(atPath: contained.path)
+        let afterManualDeletion = try await GitService.existingWorktrees(project: gitProject)
+        try require(!afterManualDeletion.contains { $0.path == contained.path }, "A worktree whose folder was deleted by hand is not imported")
+        try await GitService.removeWorktree(project: gitProject, path: contained.path)
+        _ = try await GitService.run(["branch", "-D", "contained"], at: repository.path)
+        try require(GitService.worktreeEntries(in: "worktree /a\0branch refs/heads/x\0prunable gitdir file points to non-existent location\0\0worktree /b\0\0")
+                        == [GitWorktreeEntry(path: "/a", branch: "x", isPrunable: true), GitWorktreeEntry(path: "/b")],
+                    "Prunable worktrees are recognized")
         print("PASS Git worktree creation, discovery, isolation and failures")
 
         try require(GitRepository.containing(repository.path)?.branch.name == "main", "Read main branch")
@@ -814,6 +894,24 @@ import Foundation
         let upstreamLeft = try await GitService.run(["branch", "--list", "merge/upstream"], at: local.path)
         try require(upstreamLeft.isEmpty, "A branch merged into the remote main branch is deleted before the local main is updated")
 
+        let tracking = try await GitService.createWorktree(project: project, branch: "merge/tracked", root: root)
+        try await commit("Tracked by main", at: tracking.path)
+        try await GitService.removeWorktree(project: project, path: tracking.path)
+        _ = try await GitService.run(["branch", "--set-upstream-to=merge/tracked", "main"], at: local.path)
+        do {
+            try await deleteBranch("merge/tracked", .merged(confirmed: nil), project: project)
+            throw WorkspaceError(message: "FAIL: branch deleted because main tracks it")
+        } catch let error as UnmergedBranchError {
+            try require(error.hasMainBranch, "A local branch that main tracks is not a merge target")
+        }
+        _ = try await GitService.run(["branch", "--set-upstream-to=origin/main", "main"], at: local.path)
+        let trackedLeft = try await GitService.run(["branch", "--list", "merge/tracked"], at: local.path)
+        try require(!trackedLeft.isEmpty, "An unmerged branch that main tracks is kept")
+        try require(DefaultBranch.mergeTargets(in: "refs/heads/main\trefs/heads/dev\t[behind 2]\nrefs/heads/master\trefs/remotes/origin/master\t",
+                                               candidates: ["refs/heads/main", "refs/heads/master"])
+                        == ["refs/heads/main", "refs/heads/master", "refs/remotes/origin/master"],
+                    "Only remote upstreams of the main branch are merge targets")
+
         try await deleteBranch("merge/pushed", .force, project: project)
         let forcedLeft = try await GitService.run(["branch", "--list", "merge/pushed"], at: local.path)
         try require(forcedLeft.isEmpty, "Forcing deletes a pushed but unmerged branch")
@@ -835,6 +933,12 @@ import Foundation
         print("PASS merged means merged into the repository's main branch")
     }
 
+    private static func with(_ request: BridgeRequest, _ change: (inout BridgeRequest) -> Void) -> BridgeRequest {
+        var request = request
+        change(&request)
+        return request
+    }
+
     private static func deleteBranch(_ branch: String, _ removal: BranchRemoval, project: Project) async throws {
         let candidates = GitRepository.containing(project.path).flatMap { GitBranchProtection.mergeCandidates(of: $0, headFiles: GitBranchProtection.remoteHeadFiles(in: $0.commonDirectory, remoteNames: [])) } ?? []
         guard let deletion = try await GitService.deletion(of: branch, removal, mergeCandidates: candidates, at: project.path) else { return }
@@ -854,6 +958,16 @@ import Foundation
                     "Follow the Copilot journal next to the file the agent opened")
         try require(AgentProcess.agent(named: ["2.1.312", "claude", "--resume"]) == .claude && AgentProcess.agent(named: ["zsh", "-l"]) == nil,
                     "Recognise agents by process or argument name")
+        try require(AgentProcess.agent(processName: "2.1.312", arguments: ["claude", "--resume"]) == .claude
+                    && AgentProcess.agent(processName: "node", arguments: ["node", "/opt/homebrew/bin/codex"]) == .codex
+                    && AgentProcess.agent(processName: "Python", arguments: ["/usr/bin/python3", "/tools/claude"]) == .claude,
+                    "Recognise agents by process name, argv[0] or the script run by an interpreter")
+        try require(AgentProcess.agent(processName: "ssh", arguments: ["ssh", "codex"]) == nil
+                    && AgentProcess.agent(processName: "vim", arguments: ["vim", "claude"]) == nil
+                    && AgentProcess.agent(processName: "vim", arguments: ["vim", "/tmp/claude"]) == nil
+                    && AgentProcess.agent(processName: "node", arguments: ["node", "claude"]) == nil
+                    && AgentProcess.agent(processName: "zsh", arguments: ["/bin/zsh", "-l", "-i", "-c", "exec \"$@\"", "heka", "claude"]) == nil,
+                    "A program merely given an agent name as argument is not an agent")
 
         let start = Date()
         let exact = AgentProcess(agent: .claude, startedAt: start.addingTimeInterval(-600), directory: "/repo", sessionID: "old")
@@ -1021,33 +1135,42 @@ import Foundation
         try require(DropEdge.leading.axis == .horizontal && DropEdge.bottom.axis == .vertical
                     && DropEdge.leading.insertsBefore && DropEdge.top.insertsBefore && !DropEdge.trailing.insertsBefore,
                     "Drop edges carry their split axis and side")
-        try require(TerminalLayout.terminal(a).inserting(b, beside: a, edge: .leading) == .split(.horizontal, [.terminal(b), .terminal(a)])
-                    && TerminalLayout.terminal(a).inserting(b, beside: a, edge: .bottom) == .split(.vertical, [.terminal(a), .terminal(b)]),
+        try require(TerminalLayout.terminal(a).inserting(b, beside: a, edge: .leading) ≈ .split(.horizontal, [.terminal(b), .terminal(a)])
+                    && TerminalLayout.terminal(a).inserting(b, beside: a, edge: .bottom) ≈ .split(.vertical, [.terminal(a), .terminal(b)]),
                     "Insert before or after a single pane")
-        try require(pair.inserting(c, beside: a, edge: .trailing) == .split(.horizontal, [.terminal(a), .terminal(c), .terminal(b)])
-                    && pair.inserting(c, beside: b, edge: .leading) == .split(.horizontal, [.terminal(a), .terminal(c), .terminal(b)])
-                    && pair.inserting(c, beside: a, edge: .leading) == .split(.horizontal, [.terminal(c), .terminal(a), .terminal(b)]),
+        try require(pair.inserting(c, beside: a, edge: .trailing) ≈ .split(.horizontal, [.terminal(a), .terminal(c), .terminal(b)])
+                    && pair.inserting(c, beside: b, edge: .leading) ≈ .split(.horizontal, [.terminal(a), .terminal(c), .terminal(b)])
+                    && pair.inserting(c, beside: a, edge: .leading) ≈ .split(.horizontal, [.terminal(c), .terminal(a), .terminal(b)]),
                     "Insert along the same axis without nesting")
-        try require(pair.inserting(c, beside: b, edge: .top) == .split(.horizontal, [.terminal(a), .split(.vertical, [.terminal(c), .terminal(b)])]),
+        try require(pair.inserting(c, beside: b, edge: .top) ≈ .split(.horizontal, [.terminal(a), .split(.vertical, [.terminal(c), .terminal(b)])]),
                     "Insert across the axis nests a split around the target")
-        try require(pair.inserting(c, beside: d, edge: .top) == pair && pair.inserting(a, beside: b, edge: .top) == pair
-                    && pair.inserting(a, beside: a, edge: .top) == pair, "Insert ignores unknown targets, present terminals and itself")
-        try require(pair.moving(a, beside: a, edge: .trailing) == pair && TerminalLayout.terminal(a).moving(a, beside: a, edge: .top) == .terminal(a),
+        try require(pair.inserting(c, beside: d, edge: .top) ≈ pair && pair.inserting(a, beside: b, edge: .top) ≈ pair
+                    && pair.inserting(a, beside: a, edge: .top) ≈ pair, "Insert ignores unknown targets, present terminals and itself")
+        try require(pair.moving(a, beside: a, edge: .trailing) ≈ pair && TerminalLayout.terminal(a).moving(a, beside: a, edge: .top) ≈ .terminal(a),
                     "Dropping a pane on itself changes nothing")
-        try require(pair.moving(a, beside: b, edge: .trailing) == .split(.horizontal, [.terminal(b), .terminal(a)])
-                    && pair.moving(b, beside: a, edge: .trailing) == pair,
+        try require(pair.moving(a, beside: b, edge: .trailing) ≈ .split(.horizontal, [.terminal(b), .terminal(a)])
+                    && pair.moving(b, beside: a, edge: .trailing) ≈ pair,
                     "Move a pane within the same split")
-        try require(pair.moving(a, beside: b, edge: .bottom) == .split(.vertical, [.terminal(b), .terminal(a)]),
+        try require(pair.moving(a, beside: b, edge: .bottom) ≈ .split(.vertical, [.terminal(b), .terminal(a)]),
                     "Moving across the axis collapses the emptied split")
         let nested = TerminalLayout.split(.horizontal, [.terminal(a), .split(.vertical, [.terminal(b), .split(.horizontal, [.terminal(c), .terminal(d)])])])
-        try require(nested.removing(b) == .split(.horizontal, [.terminal(a), .terminal(c), .terminal(d)]),
+        try require(nested.removing(b) ≈ .split(.horizontal, [.terminal(a), .terminal(c), .terminal(d)]),
                     "Removing a pane flattens same-axis nesting")
-        try require(nested.moving(b, beside: a, edge: .leading) == .split(.horizontal, [.terminal(b), .terminal(a), .terminal(c), .terminal(d)]),
+        try require(nested.moving(b, beside: a, edge: .leading) ≈ .split(.horizontal, [.terminal(b), .terminal(a), .terminal(c), .terminal(d)]),
                     "Moving keeps the layout normalised")
-        try require(nested.moving(d, beside: b, edge: .bottom) == .split(.horizontal, [.terminal(a), .split(.vertical, [.terminal(b), .terminal(d), .terminal(c)])]),
+        try require(nested.moving(d, beside: b, edge: .bottom) ≈ .split(.horizontal, [.terminal(a), .split(.vertical, [.terminal(b), .terminal(d), .terminal(c)])]),
                     "Moving out of a nested split collapses it into its parent")
-        try require(pair.moving(c, beside: a, edge: .top) == .split(.horizontal, [.split(.vertical, [.terminal(c), .terminal(a)]), .terminal(b)]),
+        try require(pair.moving(c, beside: a, edge: .top) ≈ .split(.horizontal, [.split(.vertical, [.terminal(c), .terminal(a)]), .terminal(b)]),
                     "Moving a terminal from elsewhere inserts it")
+        let legacy = #"{"split":{"_0":"horizontal","_1":[{"terminal":{"_0":"\#(a.uuidString)"}},{"terminal":{"_0":"\#(b.uuidString)"}}]}}"#
+        let decoded = try JSONDecoder().decode(TerminalLayout.self, from: Data(legacy.utf8))
+        try require(decoded ≈ pair, "Layouts saved before split identifiers still load")
+        let reloaded = try JSONDecoder().decode(TerminalLayout.self, from: JSONEncoder().encode(decoded))
+        try require(reloaded == decoded, "A split keeps its identifier on disk")
+        let empty = try JSONDecoder().decode(TerminalLayout.self, from: Data(#"{"split":{"_0":"vertical","_1":[]}}"#.utf8))
+        try require(empty.terminalIDs.isEmpty && !empty.isSplit && empty.firstTerminalID == empty.id, "An empty split read from disk is harmless")
+        try require(pair.removing(a)?.id == b && TerminalLayout.split(.horizontal, [.terminal(a), .terminal(b), .terminal(c)], id: d).removing(a)?.id == d,
+                    "Closing the first pane keeps the identity of its split")
         print("PASS terminal layout drops")
     }
 

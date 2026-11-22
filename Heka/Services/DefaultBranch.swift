@@ -36,7 +36,7 @@ enum DefaultBranch {
             let fields = line.split(separator: "\t", omittingEmptySubsequences: false).map(String.init) + ["", ""]
             guard wanted.contains(fields[0]) else { continue }
             targets.append(fields[0])
-            if fields[1].hasPrefix("refs/"), fields[2] != "[gone]" { targets.append(fields[1]) }
+            if fields[1].hasPrefix("refs/remotes/"), fields[2] != "[gone]" { targets.append(fields[1]) }
         }
         return unique(targets)
     }

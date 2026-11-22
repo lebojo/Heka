@@ -1,4 +1,5 @@
 import Foundation
+import CryptoKit
 
 enum UsageService {
     private static let session = URLSession(configuration: {
@@ -48,7 +49,7 @@ enum UsageService {
     private static func claudeToken() async -> String? {
         let security = URL(fileURLWithPath: "/usr/bin/security")
         let home = FileManager.default.homeDirectoryForCurrentUser
-        if let data = try? await ReadCommand.run(security, ["find-generic-password", "-s", "Claude Code-credentials", "-w"],
+        if let data = try? await ReadCommand.run(security, ["find-generic-password", "-s", ClaudeCredentials.keychainService(), "-w"],
                                                  at: home.path, timeout: 10, limit: 65_536),
            let token = ClaudeCredentials.accessToken(in: data) {
             return token
@@ -73,6 +74,14 @@ struct UsageError: LocalizedError {
 }
 
 enum ClaudeCredentials {
+    static func keychainService(environment: [String: String] = ProcessInfo.processInfo.environment) -> String {
+        let service = "Claude Code-credentials"
+        let directory = environment["CLAUDE_SECURESTORAGE_CONFIG_DIR"] ?? environment["CLAUDE_CONFIG_DIR"] ?? ""
+        guard !directory.isEmpty else { return service }
+        let digest = SHA256.hash(data: Data(directory.precomposedStringWithCanonicalMapping.utf8))
+        return service + "-" + digest.prefix(4).map { String(format: "%02x", $0) }.joined()
+    }
+
     static func accessToken(in data: Data) -> String? {
         let text = String(decoding: data, as: UTF8.self).trimmingCharacters(in: .whitespacesAndNewlines)
         guard let file = try? JSONDecoder().decode(File.self, from: Data(text.utf8)),
