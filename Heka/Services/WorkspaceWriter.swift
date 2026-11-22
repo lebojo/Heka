@@ -1,6 +1,5 @@
 import Foundation
 
-/// Serial disk I/O off MainActor. A late older request cannot overwrite newer state.
 actor WorkspaceWriter {
     private let fileURL: URL
     private var writtenRevision: UInt64 = 0

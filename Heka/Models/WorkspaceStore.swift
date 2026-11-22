@@ -1,6 +1,12 @@
 import AppKit
 import Observation
 
+struct ForgottenWorktree: Sendable {
+    let worktree: Worktree
+    let index: Int
+    let selection: UUID?
+}
+
 @MainActor @Observable final class WorkspaceStore {
     private(set) var folders: [ProjectFolder] = []
     private(set) var projects: [Project] = [] {
@@ -45,6 +51,7 @@ import Observation
     private var terminalBlocksByWorktree: [UUID: [SidebarTerminalBlock]] = [:]
     @ObservationIgnored private var orphanScan: UInt64 = 0
     private(set) var isImporting = false
+    var canImport: Bool { !isReadOnly && !isImporting }
     var pendingImport: RepositoryImport?
     @ObservationIgnored private var queuedImports: [RepositoryImport] = []
     let sessions = TerminalSessions()
@@ -139,8 +146,12 @@ import Observation
         save()
     }
 
+    private func existingFolderID(_ id: UUID?) -> UUID? {
+        id.flatMap { id in folders.contains { $0.id == id } ? id : nil }
+    }
+
     @discardableResult func addFolder(_ name: String, parentID: UUID? = nil) -> UUID {
-        let parentID = parentID.flatMap { id in folders.contains { $0.id == id } ? id : nil }
+        let parentID = existingFolderID(parentID)
         let folder = ProjectFolder(name: name.trimmingCharacters(in: .whitespacesAndNewlines), parentID: parentID)
         folders.append(folder)
         if let parentID { revealFolder(parentID) }
@@ -188,6 +199,7 @@ import Observation
 
     @discardableResult func addProject(_ url: URL, folderID: UUID? = nil) throws -> Project {
         let canonical = URL(fileURLWithPath: WorkspacePath.canonical(url))
+        let folderID = existingFolderID(folderID)
         var directory: ObjCBool = false
         guard FileManager.default.fileExists(atPath: canonical.path, isDirectory: &directory), directory.boolValue else {
             throw WorkspaceError(message: String(localized: "This folder is no longer accessible: \(canonical.path)"))
@@ -280,7 +292,8 @@ import Observation
     }
 
     private func planImport(of url: URL, into folderID: UUID?) async throws -> RepositoryImport? {
-        guard !isReadOnly, !isImporting else { return nil }
+        guard !isReadOnly else { return nil }
+        guard !isImporting else { throw WorkspaceError(message: String(localized: "An import is already in progress.")) }
         isImporting = true
         defer { isImporting = false }
         let discovery = try await RepositoryDiscovery.scan(in: url)
@@ -355,7 +368,8 @@ import Observation
     }
 
     func moveProject(_ id: UUID, to folderID: UUID?) {
-        guard let index = projects.firstIndex(where: { $0.id == id }), projects[index].folderID != folderID else { return }
+        guard existingFolderID(folderID) == folderID,
+              let index = projects.firstIndex(where: { $0.id == id }), projects[index].folderID != folderID else { return }
         var project = projects[index]
         project.folderID = folderID
         projects = projects.removingAndAppending(at: index, project)
@@ -369,7 +383,8 @@ import Observation
         if let index = folders.firstIndex(where: { $0.id == id }) { folders[index].name = name }
         for p in projects.indices {
             if projects[p].id == id { projects[p].name = name }
-            if let g = projects[p].worktreeGroups.firstIndex(where: { $0.id == id }) { projects[p].worktreeGroups[g].name = name }
+            if let g = projects[p].worktreeGroups.firstIndex(where: { $0.id == id }),
+               !projects[p].hasWorktreeGroup(named: name, excluding: id) { projects[p].worktreeGroups[g].name = name }
             for w in projects[p].worktrees.indices {
                 for t in projects[p].worktrees[w].terminals.indices where projects[p].worktrees[w].terminals[t].id == id {
                     projects[p].worktrees[w].terminals[t].name = name
@@ -431,7 +446,11 @@ import Observation
         let parentID = removed.parentID.flatMap { parent in folders.contains { $0.id == parent } ? parent : nil }
         folders.removeAll { $0.id == id }
         for index in folders.indices where folders[index].parentID == id { folders[index].parentID = parentID }
-        for index in projects.indices where projects[index].folderID == id { projects[index].folderID = parentID }
+        projects = projects.map { project in
+            var project = project
+            if project.folderID == id { project.folderID = parentID }
+            return project
+        }
         collapsed.remove(id)
         save()
     }
@@ -581,11 +600,10 @@ import Observation
         let neighbour = worktree(containing: id)?.layout(containing: id)?.neighbour(of: id)
         sessions.close(id)
         collapsed.remove(id)
-        for p in projects.indices {
-            for w in projects[p].worktrees.indices {
-                projects[p].worktrees[w].terminals.removeAll { $0.id == id }
-                projects[p].worktrees[w].layouts = projects[p].worktrees[w].layouts
-                    .compactMap { $0.removing(id) }.filter(\.isSplit)
+        if let worktreeID = worktree(containing: id)?.id {
+            updateWorktree(worktreeID) { worktree in
+                worktree.terminals.removeAll { $0.id == id }
+                worktree.layouts = worktree.layouts.compactMap { $0.removing(id) }.filter(\.isSplit)
             }
         }
         if selection == id || selectedSubagent?.terminalID == id {
@@ -672,13 +690,14 @@ import Observation
         await beforeClosingTerminals()
         let started = worktree.terminals.filter { sessions.isRunning($0.id) }
         for terminal in started { sessions.close(terminal.id) }
+        let forgotten = forgetWorktree(worktreeID, of: projectID)
         do {
             try await GitService.removeWorktree(project: project, path: worktree.path)
         } catch {
+            if let forgotten { restoreWorktree(forgotten, of: projectID) }
             for context in started.compactMap({ context(for: $0.id) }) { sessions.start(context) }
             throw error
         }
-        forgetWorktree(worktreeID, of: projectID)
         if let keptBranch { return keptBranch }
         guard removal != .keep else { return .notRequested }
         guard let deletion else { return .untouched }
@@ -690,15 +709,25 @@ import Observation
         return try await GitService.deletion(of: name, removal, mergeCandidates: protection.mergeCandidates, at: path)
     }
 
-    private func forgetWorktree(_ worktreeID: UUID, of projectID: UUID) {
-        guard let index = projects.firstIndex(where: { $0.id == projectID }) else { return }
-        let remaining = projects[index].worktrees.first { $0.id == worktreeID }?.terminals ?? []
-        for terminal in remaining { sessions.close(terminal.id) }
-        projects[index].worktrees.removeAll { $0.id == worktreeID }
+    private func forgetWorktree(_ worktreeID: UUID, of projectID: UUID) -> ForgottenWorktree? {
+        guard let p = projects.firstIndex(where: { $0.id == projectID }),
+              let w = projects[p].worktrees.firstIndex(where: { $0.id == worktreeID }) else { return nil }
+        let forgotten = ForgottenWorktree(worktree: projects[p].worktrees[w], index: w, selection: selection)
+        for terminal in forgotten.worktree.terminals { sessions.close(terminal.id) }
+        projects[p].worktrees.remove(at: w)
         if selectedContext == nil {
-            selection = projects[index].worktrees.flatMap(\.terminals).first?.id
+            selection = projects[p].worktrees.flatMap(\.terminals).first?.id
             repairSelection()
         }
+        save()
+        return forgotten
+    }
+
+    private func restoreWorktree(_ forgotten: ForgottenWorktree, of projectID: UUID) {
+        guard let p = projects.firstIndex(where: { $0.id == projectID }),
+              !projects[p].worktrees.contains(where: { $0.id == forgotten.worktree.id }) else { return }
+        projects[p].worktrees.insert(forgotten.worktree, at: min(forgotten.index, projects[p].worktrees.count))
+        if context(for: forgotten.selection) != nil { selection = forgotten.selection }
         save()
     }
 
@@ -711,13 +740,15 @@ import Observation
         }
     }
 
-    @discardableResult func addWorktreeGroup(_ name: String, projectID: UUID, moving worktreeID: UUID? = nil) -> UUID? {
-        addWorktreeGroup(name, projectID: projectID, moving: worktreeID.map { [$0] } ?? [])
+    @discardableResult func addWorktreeGroup(_ name: String, projectID: UUID, moving worktreeID: UUID? = nil) throws -> UUID? {
+        try requireAvailableGroupName(name, in: projectID)
+        return addWorktreeGroup(name, projectID: projectID, moving: worktreeID.map { [$0] } ?? [])
     }
 
     @discardableResult func addWorktreeGroup(_ name: String, projectID: UUID, moving worktreeIDs: [UUID]) -> UUID? {
         let name = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !name.isEmpty, let index = projects.firstIndex(where: { $0.id == projectID }),
+              !projects[index].hasWorktreeGroup(named: name),
               worktreeIDs.allSatisfy({ id in projects[index].worktrees.contains { $0.id == id && !$0.isPrimary } }) else { return nil }
         let group = WorktreeGroup(name: name)
         projects[index].worktreeGroups.append(group)
@@ -725,6 +756,12 @@ import Observation
         collapsed.remove(group.id)
         save()
         return group.id
+    }
+
+    func requireAvailableGroupName(_ name: String, in projectID: UUID, renaming groupID: UUID? = nil) throws {
+        let name = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard projects.first(where: { $0.id == projectID })?.hasWorktreeGroup(named: name, excluding: groupID) == true else { return }
+        throw WorkspaceError(message: String(localized: "A group named “\(name)” already exists in this project."))
     }
 
     @discardableResult func moveWorktree(_ worktreeID: UUID, to groupID: UUID?) -> Bool {
@@ -839,14 +876,18 @@ import Observation
         catch { errorMessage = error.localizedDescription }
     }
 
+    static func ownRegistration(ofWorktreeAt path: String) -> URL? {
+        GitRepository.registeredWorktree(at: path, in: path)?.gitDirectory
+    }
+
     private func trashOrphanWorktree(at path: String) {
         guard let orphan = orphanWorktrees.first(where: { $0.path == path }) else { return }
-        let registration = WorktreeFolder.registration(of: URL(fileURLWithPath: orphan.path))
+        let registration = Self.ownRegistration(ofWorktreeAt: orphan.path)
         do {
             try FileManager.default.trashItem(at: URL(fileURLWithPath: orphan.path), resultingItemURL: nil)
             orphanScan += 1
             orphanWorktrees.removeAll { $0.path == orphan.path }
-            if let registration { try? FileManager.default.removeItem(at: registration) }
+            if let registration { try? FileManager.default.trashItem(at: registration, resultingItemURL: nil) }
         } catch { errorMessage = error.localizedDescription }
     }
 
@@ -900,7 +941,11 @@ import Observation
     private func restore(_ snapshot: Workspace) {
         restoring = true
         folders = snapshot.folders
-        projects = snapshot.projects
+        projects = snapshot.projects.map { project in
+            var project = project
+            project.folderID = existingFolderID(project.folderID)
+            return project
+        }
         collapsed = snapshot.collapsed
         selection = snapshot.selection
         restoring = false
@@ -914,6 +959,13 @@ import Observation
         pendingSave = Task { [weak self] in
             do { try await Task.sleep(for: .milliseconds(250)) } catch { return }
             try? await self?.persistSnapshot()
+        }
+    }
+
+    func waitForGitOperations(upTo limit: Duration) async {
+        let deadline = ContinuousClock.now + limit
+        while !busyProjects.isEmpty, ContinuousClock.now < deadline {
+            try? await Task.sleep(for: .milliseconds(100))
         }
     }
 

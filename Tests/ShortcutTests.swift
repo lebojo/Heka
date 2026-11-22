@@ -39,6 +39,11 @@ enum ShortcutTests {
 
         defaults.set(Data("{\"unknown\":\"x\",\"nextTab\":\"bad key\"}".utf8), forKey: ShortcutStore.storageKey)
         try CoreTests.require(!ShortcutStore(defaults: defaults).hasOverrides, "Unreadable stored shortcuts fall back to defaults")
+        let valid = String(decoding: try JSONEncoder().encode(custom), as: UTF8.self)
+        defaults.set(Data("{\"splitRight\":\(valid),\"nextTab\":\"bad key\",\"unknown\":\(valid)}".utf8), forKey: ShortcutStore.storageKey)
+        let tolerant = ShortcutStore(defaults: defaults)
+        try CoreTests.require(tolerant.combination(for: .splitRight) == custom && !tolerant.isCustomized(.nextTab),
+                              "One unreadable shortcut keeps the other custom shortcuts")
         print("PASS keyboard shortcuts")
     }
 }

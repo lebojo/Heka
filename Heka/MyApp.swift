@@ -11,7 +11,17 @@ import AppKit
         }
         WorkspaceDisk.isolateDebugState()
         AgentUIMigration.run()
+        raiseOpenFileLimit()
         HekaApplication.main()
+    }
+
+    private static func raiseOpenFileLimit() {
+        var limit = rlimit()
+        guard getrlimit(RLIMIT_NOFILE, &limit) == 0 else { return }
+        let target = min(limit.rlim_max, rlim_t(10_240))
+        guard limit.rlim_cur < target else { return }
+        limit.rlim_cur = target
+        setrlimit(RLIMIT_NOFILE, &limit)
     }
 }
 
@@ -29,17 +39,20 @@ import AppKit
         guard !finishingTermination else { return .terminateLater }
         guard let store else { return .terminateNow }
         let isRunningGitAction = gitActionQueues?.hasPendingAction == true
-        if store.sessions.runningCount > 0 || isRunningGitAction {
+        let isChangingWorktrees = !store.busyProjects.isEmpty
+        if store.sessions.runningCount > 0 || isRunningGitAction || isChangingWorktrees {
             let alert = NSAlert()
             alert.messageText = String(localized: "Quit Heka?")
-            alert.informativeText = quitWarnings(isRunningGitAction: isRunningGitAction, hasRunningTerminals: store.sessions.runningCount > 0)
+            alert.informativeText = quitWarnings(isRunningGitAction: isRunningGitAction, isChangingWorktrees: isChangingWorktrees,
+                                                 hasRunningTerminals: store.sessions.runningCount > 0)
             alert.addButton(withTitle: String(localized: "Quit"))
             alert.addButton(withTitle: String(localized: "Cancel"))
             guard alert.runModal() == .alertFirstButtonReturn else { return .terminateCancel }
         }
-        guard store.sessions.runningCount > 0 || store.hasUnsavedChanges else { return .terminateNow }
+        guard store.sessions.runningCount > 0 || store.hasUnsavedChanges || isChangingWorktrees else { return .terminateNow }
         finishingTermination = true
         Task { @MainActor in
+            await store.waitForGitOperations(upTo: .seconds(30))
             if store.sessions.runningCount > 0 {
                 await store.sessions.refreshAgents()
                 store.recordAgentSessions()
@@ -48,12 +61,27 @@ import AppKit
                 repeat { try await store.flushPersistence() } while store.hasUnsavedChanges
                 sender.reply(toApplicationShouldTerminate: true)
             } catch {
+                let quits = confirmsQuitWithoutSaving(error)
                 finishingTermination = false
-                store.errorMessage = String(localized: "Quitting was cancelled to keep unsaved changes. \(error.localizedDescription)")
-                sender.reply(toApplicationShouldTerminate: false)
+                if !quits { store.errorMessage = String(localized: "Quitting was cancelled to keep unsaved changes. \(error.localizedDescription)") }
+                sender.reply(toApplicationShouldTerminate: quits)
             }
         }
         return .terminateLater
+    }
+
+    private func confirmsQuitWithoutSaving(_ error: Error) -> Bool {
+        let alert = NSAlert()
+        alert.alertStyle = .warning
+        alert.messageText = String(localized: "Your changes couldn’t be saved.")
+        alert.informativeText = error.localizedDescription
+        alert.addButton(withTitle: String(localized: "Quit Anyway"))
+        alert.addButton(withTitle: String(localized: "Cancel"))
+        return alert.runModal() == .alertFirstButtonReturn
+    }
+
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        Task { await ComposerImageStore.pruneExpired() }
     }
 
     func applicationWillTerminate(_ notification: Notification) {
@@ -64,10 +92,11 @@ import AppKit
         host?.stop()
     }
 
-    private func quitWarnings(isRunningGitAction: Bool, hasRunningTerminals: Bool) -> String {
+    private func quitWarnings(isRunningGitAction: Bool, isChangingWorktrees: Bool, hasRunningTerminals: Bool) -> String {
         let gitAction = isRunningGitAction ? String(localized: "A Git action is still running and will be interrupted.") : nil
+        let worktrees = isChangingWorktrees ? String(localized: "A worktree is being created or deleted: Heka waits up to 30 seconds for it to finish.") : nil
         let terminals = hasRunningTerminals ? String(localized: "Terminals and their processes will be stopped. Your project organization will be kept and agent sessions will resume the next time you open Heka.") : nil
-        return [gitAction, terminals].compactMap { $0 }.joined(separator: " ")
+        return [gitAction, worktrees, terminals].compactMap { $0 }.joined(separator: " ")
     }
 }
 
@@ -81,6 +110,7 @@ struct HekaApplication: App {
     @State private var host = LocalHost()
     @State private var installedAgents = InstalledAgents()
     @State private var gitActionQueues = GitActionQueues()
+    @State private var chatDrafts = ChatDrafts()
 
     init() {
         let store = WorkspaceStore()
@@ -99,6 +129,7 @@ struct HekaApplication: App {
                 .environment(settings)
                 .environment(visibility)
                 .environment(installedAgents)
+                .environment(chatDrafts)
                 .task(id: visibility.isVisible) { if visibility.isVisible { await installedAgents.refresh() } }
                 .task(id: installedAgents.agents) { await usage.setInstalled(installedAgents.agents) }
                 .onAppear {
@@ -119,10 +150,10 @@ struct HekaApplication: App {
         .windowToolbarStyle(.unified)
         .commands {
             CommandGroup(replacing: .newItem) {
-                Button("Add Project…") { store.chooseProjects() }.keyboardShortcut(.addProject).disabled(store.isReadOnly || store.isImporting)
-                Button("Import Folder…") { store.chooseFolder() }.keyboardShortcut(.importFolder).disabled(store.isReadOnly || store.isImporting)
+                Button("Add Project…") { store.chooseProjects() }.keyboardShortcut(.addProject).disabled(!store.canImport)
+                Button("Import Folder…") { store.chooseFolder() }.keyboardShortcut(.importFolder).disabled(!store.canImport)
             }
-            NewVirtualFolderCommand(isDisabled: store.isReadOnly || store.isImporting)
+            NewVirtualFolderCommand(isDisabled: !store.canImport)
             FloatingTerminalCommands(floating: floating)
             CommandGroup(replacing: .help) {
                 OnboardingReplayButton()

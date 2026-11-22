@@ -1,6 +1,14 @@
 import Foundation
 import Observation
 
+struct StoredShortcut: Decodable {
+    let combination: KeyCombination?
+
+    init(from decoder: Decoder) throws {
+        combination = try? KeyCombination(from: decoder)
+    }
+}
+
 enum ShortcutChange: Equatable, Sendable {
     case saved
     case conflict(ShortcutAction)
@@ -62,7 +70,10 @@ final class ShortcutStore {
 
     private static func load(from defaults: UserDefaults) -> [ShortcutAction: KeyCombination] {
         guard let data = defaults.data(forKey: storageKey),
-              let stored = try? JSONDecoder().decode([String: KeyCombination].self, from: data) else { return [:] }
-        return Dictionary(uniqueKeysWithValues: stored.compactMap { key, value in ShortcutAction(rawValue: key).map { ($0, value) } })
+              let stored = try? JSONDecoder().decode([String: StoredShortcut].self, from: data) else { return [:] }
+        return Dictionary(uniqueKeysWithValues: stored.compactMap { key, value in
+            guard let action = ShortcutAction(rawValue: key), let combination = value.combination else { return nil }
+            return (action, combination)
+        })
     }
 }

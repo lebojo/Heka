@@ -11,6 +11,18 @@ struct ProjectFolder: Identifiable, Codable, Equatable, Sendable {
     var appearance: SidebarAppearance { SidebarAppearance(kind: .folder, symbol: symbol, tint: tint) }
 }
 
+extension ProjectFolder {
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        name = try container.decode(String.self, forKey: .name)
+        sourcePath = try container.decodeIfPresent(String.self, forKey: .sourcePath)
+        parentID = try container.decodeIfPresent(UUID.self, forKey: .parentID)
+        symbol = try? container.decodeIfPresent(SidebarSymbol.self, forKey: .symbol)
+        tint = try? container.decodeIfPresent(SidebarTint.self, forKey: .tint)
+    }
+}
+
 struct TerminalRecord: Identifiable, Codable, Equatable, Sendable {
     static let defaultName = "Terminal"
 
@@ -88,6 +100,10 @@ struct Project: Identifiable, Codable, Equatable, Sendable {
         worktrees.filter { !$0.isPrimary && $0.groupID == groupID }
     }
 
+    func hasWorktreeGroup(named name: String, excluding groupID: UUID? = nil) -> Bool {
+        worktreeGroups.contains { $0.id != groupID && $0.name.caseInsensitiveCompare(name) == .orderedSame }
+    }
+
     init(url: URL, folderID: UUID? = nil) {
         let path = WorkspacePath.canonical(url)
         self.name = url.lastPathComponent
@@ -104,8 +120,8 @@ struct Project: Identifiable, Codable, Equatable, Sendable {
         path = try container.decode(String.self, forKey: .path)
         folderID = try container.decodeIfPresent(UUID.self, forKey: .folderID)
         worktrees = try container.decode([Worktree].self, forKey: .worktrees)
-        symbol = try container.decodeIfPresent(SidebarSymbol.self, forKey: .symbol)
-        tint = try container.decodeIfPresent(SidebarTint.self, forKey: .tint)
+        symbol = try? container.decodeIfPresent(SidebarSymbol.self, forKey: .symbol)
+        tint = try? container.decodeIfPresent(SidebarTint.self, forKey: .tint)
         worktreeGroups = try container.decodeIfPresent([WorktreeGroup].self, forKey: .worktreeGroups) ?? []
     }
 }
@@ -116,6 +132,17 @@ struct Workspace: Codable, Equatable, Sendable {
     var projects: [Project] = []
     var selection: UUID?
     var collapsed: Set<UUID> = []
+}
+
+extension Workspace {
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        version = try container.decodeIfPresent(Int.self, forKey: .version) ?? 1
+        folders = try container.decodeIfPresent([ProjectFolder].self, forKey: .folders) ?? []
+        projects = try container.decodeIfPresent([Project].self, forKey: .projects) ?? []
+        selection = try? container.decodeIfPresent(UUID.self, forKey: .selection)
+        collapsed = (try? container.decodeIfPresent(Set<UUID>.self, forKey: .collapsed)) ?? []
+    }
 }
 
 extension Workspace {
@@ -249,6 +276,6 @@ extension Workspace {
         guard let project else {
             throw WorkspaceError(message: String(localized: "Project not found. Pass the group’s UUID, or run the command from a Heka terminal or from the folder of a project open in Heka."))
         }
-        return project.worktreeGroups.first { $0.name == name }.map { (project, $0) }
+        return project.worktreeGroups.first { $0.name.caseInsensitiveCompare(name) == .orderedSame }.map { (project, $0) }
     }
 }

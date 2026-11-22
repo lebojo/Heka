@@ -7,6 +7,9 @@ extension WorkspaceStore: WorkspaceEditing {
     }
 
     func rename(_ id: UUID, to name: String, appearance: SidebarAppearance?) async throws {
+        if let project = projects.first(where: { $0.worktreeGroups.contains { $0.id == id } }) {
+            try requireAvailableGroupName(name, in: project.id, renaming: id)
+        }
         rename(id, to: name)
         if let appearance { setAppearance(appearance, for: id) }
     }

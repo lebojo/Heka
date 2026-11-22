@@ -14,6 +14,9 @@ enum SettingsTests {
         try CoreTests.require(launch.command(on: .newTerminal) == ["codex", "--dangerously-bypass-approvals-and-sandbox"], "Codex permission bypass flag")
         let decodedLaunch = try JSONDecoder().decode(AgentLaunch.self, from: JSONEncoder().encode(launch))
         try CoreTests.require(decodedLaunch == launch, "Agent launch round-trips")
+        let partialLaunch = try JSONDecoder().decode(AgentLaunch.self, from: Data(#"{"agent":"unknown","onNewTerminal":true,"future":1}"#.utf8))
+        try CoreTests.require(partialLaunch.onNewTerminal && partialLaunch.agent == AgentLaunch().agent && !partialLaunch.onNewWorktree,
+                              "An unknown agent or a missing key keeps the other launch settings")
         let prompt = "--resume and commit"
         try CoreTests.require(ConversationAgent.claude.promptCommand(prompt, skippingPermissions: false) == ["claude", "--", prompt]
                                 && ConversationAgent.codex.promptCommand(prompt, skippingPermissions: true) == ["codex", "--dangerously-bypass-approvals-and-sandbox", "--", prompt],
@@ -68,6 +71,13 @@ enum SettingsTests {
         try CoreTests.require(TerminalTheme.allCases.compactMap(\.palette).allSatisfy { $0.ansi.count == 16 }, "Every preset defines 16 ANSI colors")
         let decodedAppearance = try JSONDecoder().decode(TerminalAppearance.self, from: JSONEncoder().encode(appearance))
         try CoreTests.require(decodedAppearance == appearance, "Terminal appearance round-trips")
+        let customized = appearance.customPalette
+        appearance.select(.nord)
+        appearance.select(.custom)
+        try CoreTests.require(appearance.palette == customized, "Choosing Custom after a preset keeps the saved custom palette")
+        let partialAppearance = try JSONDecoder().decode(TerminalAppearance.self, from: Data(#"{"theme":"unknown","fontSize":16,"customPalette":{"ansi":[]}}"#.utf8))
+        try CoreTests.require(partialAppearance.fontSize == 16 && partialAppearance.theme == .system && partialAppearance.customPalette == TerminalAppearance().customPalette,
+                              "An unknown theme, a broken palette or a missing key keeps the other appearance settings")
         print("PASS terminal appearance settings")
 
         func optionKey(_ key: NSEvent.SpecialKey?, _ modifiers: NSEvent.ModifierFlags, meta: Bool = false, kitty: Bool = false,
@@ -116,6 +126,8 @@ enum SettingsTests {
         try CoreTests.require(confirmations.requires(worktree), "Worktree deletion always asks for confirmation")
         let decodedConfirmations = try JSONDecoder().decode(RemovalConfirmations.self, from: JSONEncoder().encode(confirmations))
         try CoreTests.require(decodedConfirmations == confirmations, "Removal confirmations round-trip")
+        let partialConfirmations = try JSONDecoder().decode(RemovalConfirmations.self, from: Data(#"{"onTerminalClosing":false}"#.utf8))
+        try CoreTests.require(!partialConfirmations.onTerminalClosing && partialConfirmations.onProjectRemoval, "A missing confirmation key keeps the others")
         print("PASS removal confirmations")
 
         try CoreTests.require(HexColor(hex: "#FF8000")?.hex == "#FF8000FF", "A six-digit hex color is opaque")
