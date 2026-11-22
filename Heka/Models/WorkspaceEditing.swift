@@ -26,6 +26,10 @@ extension WorkspaceEditing {
         }
     }
 
+    func performMove(of projectID: UUID, to folderID: UUID?) {
+        perform { try await self.moveProject(projectID, to: folderID) }
+    }
+
     func deletableBranchBeforeDeadline(for removal: Removal) async -> String? {
         guard case .worktree = removal else { return nil }
         let (lookups, continuation) = AsyncStream.makeStream(of: String?.self)

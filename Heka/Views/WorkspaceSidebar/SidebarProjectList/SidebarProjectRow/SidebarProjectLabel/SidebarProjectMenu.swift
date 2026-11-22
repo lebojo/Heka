@@ -38,6 +38,6 @@ struct SidebarProjectMenu: View {
     }
 
     private func move(to folderID: UUID?) {
-        store.moveProject(project.id, to: folderID)
+        store.performMove(of: project.id, to: folderID)
     }
 }
