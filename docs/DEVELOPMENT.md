@@ -16,16 +16,17 @@ Xcode resolves the Swift Package Manager dependencies on first launch:
 
 | Dependency | Version |
 | --- | --- |
-| [SwiftTerm](https://github.com/migueldeicaza/SwiftTerm) | 1.20.0 (pinned) |
+| [SwiftTerm](https://github.com/migueldeicaza/SwiftTerm) | 1.99.3 (pinned) |
 | [Textual](https://github.com/gonzalezreal/textual) | 0.5.0 (pinned) |
 
-SwiftTerm stays on 1.20.0, the last 1.x release, until Heka migrates to its 2.0 API. A plain bump to 1.99.x breaks Heka in three ways:
+SwiftTerm is pinned to 1.99.3, a preview of its 2.0 API. Heka follows upstream's `MigratingFrom1To2` guide:
 
-- `TerminalView.getTerminal()` no longer exists, and Heka reads the emulator through it in 13 places.
-- `LocalProcessTerminalView` no longer calls `dataReceived(slice:)`, which Heka overrides to feed the phone mirror, `heka terminal wait --idle` and agent activity. With 1.99.0 and 1.99.1 these go silent without any build error; from 1.99.2 the override no longer compiles.
-- `processTerminated` now passes the exit code itself rather than the raw wait status, so `TerminalSessions` would decode it twice and read an exit code of 1 as signal 1.
+- `SharedProcessTerminalView` is a plain `TerminalView` that runs its own `LocalProcess` on the main queue. Its `LocalProcessDelegate` receives the output bytes, feeds the view and passes them on to the phone mirror, `heka terminal wait --idle` and agent activity. Terminal answers produced while that output is parsed (device attributes, cursor reports) go straight to the PTY, so they never count as typing on the Mac.
+- Heka never reaches the emulator: it reads copied values (`terminalDimensions`, `terminalInputStateSnapshot()`, `terminalContentSnapshot(region:)`, `visibleRowsText(_:)`). The phone mirror (`TerminalScreen`) is built from a content snapshot, and the modes a snapshot does not carry are tracked by `TerminalMirrorModes`.
+- `processTerminated` passes the exit code itself (nil after a signal), not a raw wait status.
+- On the phone, `MobileMirrorTerminalView` drops the answers its emulator produces while it replays the Mac's screen, because 2.0 delivers them after `feed` returns.
 
-The migration (upstream `MigratingFrom1To2`) runs Heka's own `LocalProcess` with a `LocalProcessDelegate` feeding a plain `TerminalView`, so the output bytes stay available. Bump the pin only together with that change.
+Kept workarounds: 1.99.3 still does not set close-on-exec on the PTY primary descriptor, so `TerminalSession` sets `FD_CLOEXEC` itself; `terminate()` only sends `SIGTERM`, so closing a terminal still sends `SIGHUP` to the shell and foreground process groups and `SIGKILL` after two seconds; bracketed paste and link opening keep Heka's own filters. Upstream now reaps the child after `terminate()`, resets one ANSI color for OSC 104 to the installed palette and refuses OSC 52 unless the host serves the clipboard, so Heka no longer reaps the shell or registers OSC handlers.
 
 Xcode may ask you to enable the `SwiftTermBuildInfoPlugin` plugin, which generates SwiftTerm's version information.
 
@@ -68,7 +69,7 @@ python3 Tests/integration.py
 # Companion integration (isolated Mac host, real TCP + PTY; needs Python 3.13+ for TLS-PSK)
 python3 Tests/remote-integration.py /tmp/heka-mobile-build/Build/Products/Debug/Heka.app/Contents/MacOS/Heka
 
-# Terminal checkpoints + UIKit regression app in a disposable simulator.
+# Terminal checkpoints, a real PTY session (output, host answers, exit codes) and a UIKit regression app in a disposable simulator.
 # First build macOS and iOS Simulator Debug into these derived-data directories.
 bash Tests/run-terminal-mirror.sh /tmp/heka-mobile-build /tmp/heka-ios-build
 ```

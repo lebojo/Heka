@@ -2,17 +2,11 @@ import AppKit
 import SwiftTerm
 
 extension TerminalView {
-    private var keyRouteScreen: TerminalKeyRoute.Screen {
-        let terminal = getTerminal()
-        return TerminalKeyRoute.Screen(usesKittyKeyboard: !terminal.keyboardEnhancementFlags.isEmpty,
-                                       showsAlternateBuffer: terminal.isCurrentBufferAlternate,
-                                       usesApplicationCursor: terminal.applicationCursor)
-    }
-
     func routeKey(_ event: NSEvent) -> NSEvent? {
-        guard !hasMarkedText(), let route = TerminalKeyRoute(key: event.specialKey, modifiers: event.modifierFlags,
+        guard !hasMarkedText(), let state = terminalInputStateSnapshot(),
+              let route = TerminalKeyRoute(key: event.specialKey, modifiers: event.modifierFlags,
                                            optionAsMeta: UserDefaults.standard.bool(forKey: TerminalKeyRoute.metaKeySetting),
-                                           screen: keyRouteScreen) else { return event }
+                                           screen: TerminalKeyRoute.Screen(state)) else { return event }
         switch route {
         case .composesCharacter:
             optionAsMetaKey = false
@@ -24,5 +18,13 @@ extension TerminalView {
             return nil
         }
         return event
+    }
+}
+
+private extension TerminalKeyRoute.Screen {
+    init(_ state: TerminalInputStateSnapshot) {
+        self.init(usesKittyKeyboard: !state.keyboardEnhancementFlags.isEmpty,
+                  showsAlternateBuffer: state.isAlternateBuffer,
+                  usesApplicationCursor: state.applicationCursor)
     }
 }

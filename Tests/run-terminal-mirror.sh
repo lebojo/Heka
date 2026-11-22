@@ -15,9 +15,15 @@ cleanup() {
 }
 trap cleanup EXIT
 xcrun swiftc -parse-as-library -I "$mac_build" \
-  Heka/Core/Session/TerminalMirrorModes.swift Heka/Core/Session/TerminalScreen.swift \
+  Heka/Core/Session/TerminalMirrorModes.swift Heka/Core/Session/TerminalScreen.swift Heka/Core/Session/TerminalContentSource.swift \
   Tests/TerminalMirrorTests.swift "$mac_build/SwiftTerm.o" -o "$fixture/mirror-tests"
 "$fixture/mirror-tests"
+xcrun swiftc -parse-as-library -swift-version 6 -I "$mac_build" \
+  Heka/Platforms/macOS/SharedProcessTerminalView.swift Heka/Platforms/macOS/ActivityTerminalView.swift Heka/Core/Session/TerminalContentSource.swift \
+  "Heka/Extensions/TerminalView+Appearance.swift" "Heka/Extensions/TerminalColor+Color.swift" "Heka/Extensions/String+BracketedPaste.swift" "Heka/Extensions/Collection+TerminalReport.swift" \
+  Heka/Models/TerminalAppearance.swift Heka/Models/TerminalTheme.swift Heka/Models/TerminalLink.swift Heka/Models/Data/TerminalGridSize.swift \
+  Tests/TerminalProcessTests.swift "$mac_build/SwiftTerm.o" -o "$fixture/process-tests"
+"$fixture/process-tests"
 app="$fixture/MobileTerminalTests.app"
 mkdir -p "$app"
 cat > "$app/Info.plist" <<'PLIST'
@@ -36,9 +42,8 @@ sdk="$(xcrun --sdk iphonesimulator --show-sdk-path)"
 SDKROOT="$sdk" xcrun swiftc -parse-as-library -target arm64-apple-ios18.0-simulator -sdk "$sdk" -I "$ios_build" \
   Heka/Models/Data/SessionMessage.swift Heka/Models/Data/AgentOptions.swift Heka/Models/Data/RemoteTerminalSnapshot.swift Heka/Models/Data/TerminalGridSize.swift \
   Heka/Models/TerminalAppearance.swift Heka/Models/TerminalTheme.swift \
-  Heka/Platforms/iOS/MobileTerminalView.swift Heka/Views/MobileWorkspaceView/MobileSessionDetail/MobileSessionContent/MobileTerminalViewport/MobileTerminalViewport.swift Heka/Views/MobileWorkspaceView/MobileSessionDetail/MobileSessionContent/MobileTerminalViewport/MobileTerminalCanvas.swift Heka/Platforms/iOS/MobileTerminalScrollView.swift Tests/MobileTerminalTests.swift \
+  Heka/Platforms/iOS/MobileTerminalView.swift Heka/Platforms/iOS/MobileMirrorTerminalView.swift Heka/Views/MobileWorkspaceView/MobileSessionDetail/MobileSessionContent/MobileTerminalViewport/MobileTerminalViewport.swift Heka/Views/MobileWorkspaceView/MobileSessionDetail/MobileSessionContent/MobileTerminalViewport/MobileTerminalCanvas.swift Heka/Platforms/iOS/MobileTerminalScrollView.swift Tests/MobileTerminalTests.swift \
   "$ios_build/SwiftTerm.o" -o "$app/MobileTerminalTests"
-cp -R "$ios_build/SwiftTerm_SwiftTerm.bundle" "$app/"
 codesign --force --sign - "$app" >/dev/null
 # A disposable simulator keeps this run isolated from the user's running devices.
 device=com.apple.CoreSimulator.SimDeviceType.iPhone-18-Pro

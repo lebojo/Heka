@@ -2,7 +2,7 @@ import SwiftUI
 import SwiftTerm
 import Observation
 
-@MainActor @Observable final class MobileTerminalSession: NSObject, @preconcurrency TerminalViewDelegate {
+@MainActor @Observable final class MobileTerminalSession: NSObject, TerminalViewDelegate {
     let identity: UUID
     let isChat: Bool
     private(set) var messages: [SessionMessage] = []
@@ -11,8 +11,7 @@ import Observation
     private(set) var hasExited = false
     private(set) var exitCode: Int32?
     private(set) var canvasSize = CGSize.zero
-    @ObservationIgnored let view: TerminalView?
-    @ObservationIgnored private var applyingOutput = false
+    @ObservationIgnored let view: MobileMirrorTerminalView?
     @ObservationIgnored private var viewport = CGSize.zero
     @ObservationIgnored private var requestedGrid: TerminalGridSize?
     @ObservationIgnored private var gridRequest: Task<Void, Never>?
@@ -24,7 +23,7 @@ import Observation
         self.isChat = isChat
         self.sendInput = sendInput
         self.requestGrid = requestGrid
-        view = isChat ? nil : TerminalView(frame: .zero)
+        view = isChat ? nil : MobileMirrorTerminalView(frame: .zero)
         super.init()
         view?.font = .monospacedSystemFont(ofSize: TerminalAppearance.defaultFontSize, weight: .regular)
         view?.terminalDelegate = self
@@ -32,11 +31,11 @@ import Observation
 
     private var fittingGrid: TerminalGridSize? {
         guard let view, viewport.width > 0, viewport.height > 0 else { return nil }
-        let terminal = view.getTerminal()
+        let grid = view.terminalDimensions
         let size = view.getOptimalFrameSize().size
         guard size.width > 0, size.height > 0 else { return nil }
-        return TerminalGridSize(columns: Int(viewport.width * CGFloat(terminal.cols) / size.width),
-                                rows: Int(viewport.height * CGFloat(terminal.rows) / size.height))
+        return TerminalGridSize(columns: Int(viewport.width * CGFloat(grid.cols) / size.width),
+                                rows: Int(viewport.height * CGFloat(grid.rows) / size.height))
     }
 
     @discardableResult func apply(_ snapshot: RemoteTerminalSnapshot) -> Bool {
@@ -60,11 +59,11 @@ import Observation
             messages = updated
         }
         guard let view else { return true }
-        applyingOutput = true
-        defer { applyingOutput = false }
-        let terminal = view.getTerminal()
-        if terminal.cols != snapshot.mirroredColumns || terminal.rows != snapshot.mirroredRows {
-            terminal.resize(cols: snapshot.mirroredColumns, rows: snapshot.mirroredRows)
+        view.appliesHostOutput = true
+        defer { view.appliesHostOutput = false }
+        let grid = view.terminalDimensions
+        if grid.cols != snapshot.mirroredColumns || grid.rows != snapshot.mirroredRows {
+            view.resize(cols: snapshot.mirroredColumns, rows: snapshot.mirroredRows)
         }
         updateCanvasSize()
         if !snapshot.output.isEmpty { view.feed(byteArray: Array(snapshot.output)[...]) }
@@ -114,15 +113,14 @@ import Observation
     }
 
     func send(source: TerminalView, data: ArraySlice<UInt8>) {
-        guard !applyingOutput else { return }
         sendInput(Data(data))
     }
     func sizeChanged(source: TerminalView, newCols: Int, newRows: Int) {}
     func setTerminalTitle(source: TerminalView, title: String) {}
     func hostCurrentDirectoryUpdate(source: TerminalView, directory: String?) {}
     func scrolled(source: TerminalView, position: Double) {}
-    func requestOpenLink(source: TerminalView, link: String, params: [String: String]) {
-        guard let url = URL(string: link), ["https", "http"].contains(url.scheme) else { return }
+    func requestOpenLink(source: TerminalView, request: TerminalLinkRequest) {
+        guard let url = URL(string: request.link), ["https", "http"].contains(url.scheme) else { return }
         UIApplication.shared.open(url)
     }
     func bell(source: TerminalView) {}

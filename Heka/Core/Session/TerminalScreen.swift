@@ -11,51 +11,60 @@ struct TerminalScreen {
     let history: [String]
     let lines: [String]
     let state: String
-    private let historyLines: [BufferLine?]
+    private let historyRows: [TerminalContentRowSnapshot]
 
-    init(terminal: Terminal, modes: TerminalMirrorModes, previous: TerminalScreen? = nil) {
-        let columns = terminal.cols
-        let rows = terminal.rows
+    static func region(columns: Int) -> TerminalContentRegion {
+        .history(maximumScrollbackRows: historyLimit(columns: columns))
+    }
+
+    private static func historyLimit(columns: Int) -> Int {
+        min(200, 16_384 / max(1, columns))
+    }
+
+    init(content: TerminalContentSnapshot, cursorStyle: CursorStyle, modes: TerminalMirrorModes, previous: TerminalScreen? = nil) {
+        let columns = content.dimensions.cols
+        let rows = content.dimensions.rows
         self.columns = columns
         self.rows = rows
-        alternate = terminal.isCurrentBufferAlternate
-        let first = terminal.buffer.totalLinesTrimmed
-        let top = max(first, terminal.liveLineEnd - rows)
-        func encodeLine(_ row: Int) -> String {
-            guard let line = terminal.getScrollInvariantLine(row: row) else { return "" }
+        alternate = content.bufferKind == .alt
+        let first = content.capturedRange.lowerBound
+        let top = content.liveTopRow
+        func row(_ number: Int) -> TerminalContentRowSnapshot? {
+            content.capturedRange.contains(number) ? content.rows[number - first] : nil
+        }
+        func encodeLine(_ number: Int) -> String {
+            guard let line = row(number) else { return "" }
             var result = ""
             var attribute: Attribute?
-            for column in 0..<columns {
-                let cell = line[column]
+            for cell in line.cells.prefix(columns) {
                 if cell.width == 0 { continue }
                 if attribute != cell.attribute {
                     attribute = cell.attribute
                     result += Self.sgr(cell.attribute)
                 }
-                let character = terminal.getCharacter(for: cell)
-                result += character.unicodeScalars.contains(where: { $0.value < 32 || (127...159).contains($0.value) }) ? " " : String(character)
+                result += cell.isBlank || cell.text.unicodeScalars.contains(where: { $0.value < 32 || (127...159).contains($0.value) }) ? " " : cell.text
             }
             return result
         }
-        historyStart = alternate ? top : max(first, top - min(200, 16_384 / max(1, columns)))
+        historyStart = alternate ? top : max(first, top - Self.historyLimit(columns: columns))
         let reusable = previous?.columns == columns && previous?.alternate == false && !alternate ? previous : nil
-        let historyLines = (historyStart..<top).map { terminal.getScrollInvariantLine(row: $0) }
+        let historyRows = (historyStart..<top).compactMap(row)
         var history: [String] = []
-        for (row, line) in zip(historyStart..<top, historyLines) {
-            history.append(reusable?.encodedHistory(row: row, line: line) ?? encodeLine(row))
+        for line in historyRows {
+            history.append(reusable?.encodedHistory(of: line) ?? encodeLine(line.absoluteRow))
         }
         self.history = history
-        self.historyLines = historyLines
+        self.historyRows = historyRows
         lines = (top..<(top + rows)).map(encodeLine)
         func mode(_ number: Int, _ enabled: Bool) -> String { "\u{1b}[?\(number)\(enabled ? "h" : "l")" }
+        let input = content.inputState
         var tail = ""
-        for number in [5, 25, 66, 1004] { tail += mode(number, modes.modes[number] ?? false) }
-        tail += mode(1, terminal.applicationCursor)
-        tail += mode(2004, terminal.bracketedPasteMode)
-        tail += mode(1007, terminal.alternateScrollMode)
+        for number in [5, 25, 66, 1004, 1007] { tail += mode(number, modes.modes[number] ?? false) }
+        tail += mode(1, input.applicationCursor)
+        tail += mode(2004, input.bracketedPasteMode)
         tail += "\u{1b}[?9;1000;1002;1003l\u{1b}[?1005;1006;1015;1016l"
         let mouse: Int?
-        switch terminal.mouseMode {
+        switch input.mouseMode {
         case .off: mouse = nil
         case .x10: mouse = 9
         case .vt200: mouse = 1000
@@ -64,29 +73,24 @@ struct TerminalScreen {
         }
         if let mouse { tail += mode(mouse, true) }
         if modes.mouseEncoding != 0 { tail += mode(modes.mouseEncoding, true) }
-        tail += "\u{1b}[=\(terminal.keyboardEnhancementFlags.rawValue)u"
+        tail += "\u{1b}[=\(input.keyboardEnhancementFlags.rawValue)u"
         tail += "\u{1b}[\(modes.newline ? "20h" : "20l")"
-        let style = (CursorStyle.allCases.firstIndex(of: terminal.options.cursorStyle) ?? 0) + 1
+        let style = (CursorStyle.allCases.firstIndex(of: cursorStyle) ?? 0) + 1
         tail += "\u{1b}[\(style) q"
-        tail += "\u{1b}[\(terminal.buffer.scrollTop + 1);\(terminal.buffer.scrollBottom + 1)r"
-        if modes.modes[69] == true {
-            tail += mode(69, true) + "\u{1b}[\(terminal.buffer.marginLeft + 1);\(terminal.buffer.marginRight + 1)s"
-        }
-        let origin = modes.modes[6] == true
-        tail += mode(6, origin)
-        let cursor = terminal.getCursorLocation()
-        let x = min(columns - 1, cursor.x) - (origin && modes.modes[69] == true ? terminal.buffer.marginLeft : 0)
-        let y = cursor.y - (origin ? terminal.buffer.scrollTop : 0)
+        if modes.modes[69] == true { tail += mode(69, true) }
+        tail += mode(6, modes.modes[6] == true)
+        let x = min(columns - 1, content.cursorColumn)
+        let y = content.cursorRow - top
         tail += "\u{1b}[\(max(0, y) + 1);\(max(0, x) + 1)H"
         tail += mode(7, modes.modes[7] ?? true)
         tail += "\u{1b}[\(modes.insert ? "4h" : "4l")"
-        tail += Self.sgr(terminal.currentAttribute)
+        tail += "\u{1b}[0m"
         state = tail
     }
 
-    private func encodedHistory(row: Int, line: BufferLine?) -> String? {
-        let index = row - historyStart
-        guard let line, historyLines.indices.contains(index), historyLines[index] === line else { return nil }
+    private func encodedHistory(of line: TerminalContentRowSnapshot) -> String? {
+        let index = line.absoluteRow - historyStart
+        guard historyRows.indices.contains(index), historyRows[index] == line else { return nil }
         return history[index]
     }
 
@@ -165,48 +169,5 @@ struct TerminalScreen {
         if let bg = color(attribute.bg, channel: 48) { codes.append(bg) }
         if let underline = attribute.underlineColor, let code = color(underline, channel: 58) { codes.append(code) }
         return "\u{1b}[" + codes.joined(separator: ";") + "m"
-    }
-}
-
-extension Terminal {
-    var liveLineEnd: Int {
-        var low = buffer.totalLinesTrimmed
-        var high = low + buffer.getCorrectBufferLength(rows)
-        while low < high {
-            let middle = low + (high - low) / 2
-            if getScrollInvariantLine(row: middle) == nil { high = middle }
-            else { low = middle + 1 }
-        }
-        return low
-    }
-
-    func recentText(limit: Int) -> String {
-        var lines: [String] = []
-        var size = 0
-        var row = liveLineEnd - 1
-        while row >= buffer.totalLinesTrimmed, size < limit, let line = getScrollInvariantLine(row: row) {
-            let text = line.translateToString(trimRight: true)
-            lines.append(text)
-            size += text.utf8.count + 1
-            row -= 1
-        }
-        return lines.reversed().joined(separator: "\n")
-    }
-    func recentLines(_ count: Int) -> String {
-        var lines: [String] = []
-        var continuation = ""
-        var row = liveLineEnd - 1
-        while row >= buffer.totalLinesTrimmed, lines.count < count, let line = getScrollInvariantLine(row: row) {
-            row -= 1
-            let segment = line.translateToString(trimRight: continuation.isEmpty) + continuation
-            if line.isWrapped {
-                continuation = segment
-                continue
-            }
-            continuation = ""
-            if !lines.isEmpty || !segment.isEmpty { lines.append(segment) }
-        }
-        if !continuation.isEmpty, lines.count < count { lines.append(continuation) }
-        return lines.reversed().joined(separator: "\n")
     }
 }

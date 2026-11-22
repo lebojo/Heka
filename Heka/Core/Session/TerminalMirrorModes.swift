@@ -6,11 +6,11 @@ struct TerminalMirrorModes {
     private var parameters: [UInt8] = []
     private var overflow = false
     private var utf8Remaining = 0
-    private(set) var modes: [Int: Bool] = [25: true, 7: true]
+    private(set) var modes: [Int: Bool] = [25: true, 7: true, 1007: true]
     private(set) var mouseEncoding = 0
     private(set) var insert = false
     private(set) var newline = false
-    private static let tracked: Set<Int> = [5, 6, 7, 25, 66, 69, 1004]
+    private static let tracked: Set<Int> = [5, 6, 7, 25, 66, 69, 1004, 1007]
 
     mutating func append(_ bytes: some Sequence<UInt8>) {
         for byte in bytes {
@@ -56,7 +56,7 @@ struct TerminalMirrorModes {
     private mutating func apply(final: UInt8) {
         let value = String(decoding: parameters, as: UTF8.self)
         if final == 0x70 && value == "!" {
-            modes[25] = true; modes[6] = false; modes[7] = true; modes[66] = false
+            modes[25] = true; modes[6] = false; modes[7] = true; modes[66] = false; modes[69] = false
             insert = false; newline = false
             return
         }

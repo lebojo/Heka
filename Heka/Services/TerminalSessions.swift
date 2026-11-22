@@ -2,7 +2,7 @@ import AppKit
 import SwiftTerm
 import Observation
 
-@MainActor @Observable final class TerminalSession: NSObject, LocalProcessTerminalViewDelegate, TerminalOutputReceiver {
+@MainActor @Observable final class TerminalSession: NSObject, TerminalProcessReceiver {
     enum InputOrigin: Sendable {
         case local
         case remote
@@ -53,8 +53,7 @@ import Observation
         runsShell = command.isEmpty || keepsShell
         view = ActivityTerminalView(frame: NSRect(x: 0, y: 0, width: 800, height: 500))
         super.init()
-        view.processDelegate = self
-        view.outputReceiver = self
+        view.receiver = self
         var isDirectory: ObjCBool = false
         guard FileManager.default.fileExists(atPath: path, isDirectory: &isDirectory), isDirectory.boolValue else {
             hasExited = true
@@ -72,7 +71,7 @@ import Observation
         env["HEKA_TERMINAL_ID"] = workspaceContext?.terminal.id.uuidString
         if env["LANG"] == nil { env["LANG"] = "en_US.UTF-8" }
         let shell = LoginShell.session(running: command, keepingShell: keepsShell, shell: LoginShell.path(environment: env))
-        view.startProcess(executable: shell.executable, args: shell.arguments, environment: env.map { "\($0.key)=\($0.value)" }, currentDirectory: path)
+        view.process.startProcess(executable: shell.executable, args: shell.arguments, environment: env.map { "\($0.key)=\($0.value)" }, currentDirectory: path)
         guard view.process.running else {
             hasExited = true
             view.feed(text: String(localized: "Couldn’t start the terminal.") + "\r\n")
@@ -137,7 +136,7 @@ import Observation
     private func updateTranscript() {
         guard transcript.source == .terminal, (transcriptRevision != outputRevision || transcript.messages.isEmpty) else { return }
         transcriptRevision = outputRevision
-        transcript.update(screen: view.getTerminal().recentText(limit: 65_536))
+        transcript.update(screen: view.recentText(limit: 65_536))
     }
 
     func send(_ data: Data, message: String? = nil, from origin: InputOrigin) async throws {
@@ -154,7 +153,7 @@ import Observation
     var lastOutput: Date { view.lastOutput }
 
     func recentLines(_ count: Int) -> String {
-        view.getTerminal().recentLines(count)
+        view.recentLines(count)
     }
 
     func type(_ text: String, submitting: Bool, from origin: InputOrigin) async throws {
@@ -169,7 +168,7 @@ import Observation
     func press(_ keys: [TerminalKey], from origin: InputOrigin) async throws {
         for (index, key) in keys.enumerated() {
             if index > 0 { try await Task.sleep(for: .milliseconds(50)) }
-            try await send(Data(key.bytes(applicationCursor: view.getTerminal().applicationCursor)), from: origin)
+            try await send(Data(key.bytes(applicationCursor: view.usesApplicationCursor)), from: origin)
         }
     }
 
@@ -181,7 +180,7 @@ import Observation
     }
 
     private func pasted(_ text: String) -> Data {
-        guard text.contains(where: \.isNewline), view.getTerminal().bracketedPasteMode else { return Data(text.utf8) }
+        guard text.contains(where: \.isNewline), view.usesBracketedPaste else { return Data(text.utf8) }
         return Data(("\u{1b}[200~" + text + "\u{1b}[201~").utf8)
     }
 
@@ -226,7 +225,7 @@ import Observation
         }
         updateTranscript()
         let sentID = transcript.sent(message)
-        guard data.last == 13, view.getTerminal().bracketedPasteMode else {
+        guard data.last == 13, view.usesBracketedPaste else {
             deliver(Array(data)[...], from: origin)
             return
         }
@@ -253,12 +252,14 @@ import Observation
         }
     }
 
-    func screen() -> TerminalScreen {
-        let terminal = view.getTerminal()
-        if let cachedScreen, screenRevision == outputRevision, cachedScreen.columns == terminal.cols, cachedScreen.rows == terminal.rows {
+    func screen() -> TerminalScreen? {
+        let size = view.terminalDimensions
+        if let cachedScreen, screenRevision == outputRevision, cachedScreen.columns == size.cols, cachedScreen.rows == size.rows {
             return cachedScreen
         }
-        let screen = TerminalScreen(terminal: terminal, modes: mirrorModes, previous: cachedScreen)
+        guard let content = view.terminalContentSnapshot(region: TerminalScreen.region(columns: size.cols)) else { return nil }
+        let screen = TerminalScreen(content: content, cursorStyle: view.terminalStateSnapshot().cursorStyle,
+                                    modes: mirrorModes, previous: cachedScreen)
         cachedScreen = screen
         screenRevision = outputRevision
         return screen
@@ -266,32 +267,31 @@ import Observation
 
     func snapshot(previousMessages: [SessionMessage], chat: Bool,
                   screen: TerminalScreen? = nil, previousScreen: TerminalScreen? = nil) -> RemoteTerminalSnapshot {
-        let output = chat ? Data() : (screen ?? self.screen()).output(after: previousScreen)
+        let output = chat ? Data() : (screen ?? self.screen())?.output(after: previousScreen) ?? Data()
         let messages = chat ? transcript.messages : []
         let delta = SessionTranscriptDelta(previous: previousMessages, current: messages)
-        let terminal = view.getTerminal()
+        let size = view.terminalDimensions
         return RemoteTerminalSnapshot(identity: identity, isChat: chat, output: output,
-                                      columns: terminal.cols, rows: terminal.rows,
+                                      columns: size.cols, rows: size.rows,
                                       transcript: delta.messages, transcriptDropped: delta.dropped, transcriptStart: delta.start,
                                       transcriptAppend: delta.append,
                                       hasExited: hasExited, exitCode: exitCode, chatSource: transcript.source,
                                       agentOptions: transcript.options)
     }
 
-    func sizeChanged(source: LocalProcessTerminalView, newCols: Int, newRows: Int) {
+    func terminalResized() {
         outputRevision += 1
         scheduleTranscriptRefresh()
     }
-    func setTerminalTitle(source: LocalProcessTerminalView, title: String) { self.title = title }
-    func hostCurrentDirectoryUpdate(source: TerminalView, directory: String?) {}
-    func processTerminated(source: TerminalView, exitCode: Int32?) {
+    func terminalTitleChanged(_ title: String) { self.title = title }
+    func terminalProcessEnded(exitCode: Int32?) {
         hasExited = true
         agent = nil
         agentKind = nil
         agentStatus = nil
         subagents = []
         journalMonitor.attach(nil)
-        self.exitCode = exitCode.flatMap { CommandRunner.ExitStatus(waitStatus: $0).exitCode }
+        self.exitCode = exitCode
         owner?.agentStopped(in: terminalID)
     }
     func updateRepository(directory: String, branch: GitBranch?, divergentBranch: GitBranch?) {
@@ -320,12 +320,16 @@ import Observation
 
     func stop() {
         journalMonitor.attach(nil)
-        guard view.process.running else { return }
-        let pid = view.process.shellPid
-        let groups = Set([pid, tcgetpgrp(view.process.childfd)]).filter { $0 > 0 }
+        let process = view.process
+        guard process.running else { return }
+        let groups = Set([process.shellPid, tcgetpgrp(process.childfd)]).filter { $0 > 0 }
         groups.forEach { kill(-$0, SIGHUP) }
-        view.terminate()
-        ProcessReaper.reap(pid, killing: Array(groups))
+        process.terminate()
+        Task {
+            try? await Task.sleep(for: .seconds(2))
+            guard process.running else { return }
+            groups.forEach { kill(-$0, SIGKILL) }
+        }
     }
 }
 
