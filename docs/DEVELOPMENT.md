@@ -18,7 +18,14 @@ Xcode resolves the Swift Package Manager dependencies on first launch:
 | --- | --- |
 | [SwiftTerm](https://github.com/migueldeicaza/SwiftTerm) | 1.20.0 (pinned) |
 | [Textual](https://github.com/gonzalezreal/textual) | 0.5.0 (pinned) |
-| [swift-argument-parser](https://github.com/apple/swift-argument-parser) | 1.8.2 |
+
+SwiftTerm stays on 1.20.0, the last 1.x release, until Heka migrates to its 2.0 API. A plain bump to 1.99.x breaks Heka in three ways:
+
+- `TerminalView.getTerminal()` no longer exists, and Heka reads the emulator through it in 13 places.
+- `LocalProcessTerminalView` no longer calls `dataReceived(slice:)`, which Heka overrides to feed the phone mirror, `heka terminal wait --idle` and agent activity. With 1.99.0 and 1.99.1 these go silent without any build error; from 1.99.2 the override no longer compiles.
+- `processTerminated` now passes the exit code itself rather than the raw wait status, so `TerminalSessions` would decode it twice and read an exit code of 1 as signal 1.
+
+The migration (upstream `MigratingFrom1To2`) runs Heka's own `LocalProcess` with a `LocalProcessDelegate` feeding a plain `TerminalView`, so the output bytes stay available. Bump the pin only together with that change.
 
 Xcode may ask you to enable the `SwiftTermBuildInfoPlugin` plugin, which generates SwiftTerm's version information.
 
@@ -58,7 +65,7 @@ Heka/
 # Integration tests against a Debug app built in /tmp/heka-build
 python3 Tests/integration.py
 
-# Companion integration (isolated Mac host, real TCP + PTY)
+# Companion integration (isolated Mac host, real TCP + PTY; needs Python 3.13+ for TLS-PSK)
 python3 Tests/remote-integration.py /tmp/heka-mobile-build/Build/Products/Debug/Heka.app/Contents/MacOS/Heka
 
 # Terminal checkpoints + UIKit regression app in a disposable simulator.
@@ -72,7 +79,7 @@ If the macOS session cannot focus the test window, `HEKA_SKIP_WINDOW_TESTS=1 pyt
 
 ## Continuous integration
 
-Every pull request and every push to `main` triggers the [CI](../.github/workflows/ci.yml) workflow on a GitHub `xcode-27` runner: a Debug build of the app, then the unit tests. The `main` branch is protected: changes go through a pull request whose **Build** check must pass.
+Every pull request and every push to `main` triggers the [CI](../.github/workflows/ci.yml) workflow on GitHub `xcode-27` runners. The **Build** job lints the views, runs the unit tests, builds the macOS and iOS Simulator Debug apps and runs the terminal mirror tests; the **Release build** job compiles the universal (arm64 and x86_64) macOS Release configuration in parallel. The `main` branch is protected: changes go through a pull request whose **Build** check must pass.
 
 ## Contributing
 

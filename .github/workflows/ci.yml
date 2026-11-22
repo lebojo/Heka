@@ -10,14 +10,17 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  DEVELOPER_DIR: /Applications/Xcode_27.1.app/Contents/Developer
+
 jobs:
   build:
     name: Build
     runs-on: xcode-27
-    timeout-minutes: 30
+    timeout-minutes: 45
     env:
-      DEVELOPER_DIR: /Applications/Xcode_27.1.app/Contents/Developer
-      DERIVED_DATA: ${{ github.workspace }}/DerivedData
+      MAC_DERIVED_DATA: ${{ github.workspace }}/DerivedData
+      IOS_DERIVED_DATA: ${{ github.workspace }}/DerivedData-iOS
     steps:
       - uses: actions/checkout@v5
 
@@ -32,11 +35,16 @@ jobs:
       - name: Cache Swift packages
         uses: actions/cache@v5
         with:
-          path: DerivedData/SourcePackages
+          path: |
+            DerivedData/SourcePackages
+            DerivedData-iOS/SourcePackages
           key: spm-${{ runner.os }}-${{ hashFiles('Heka.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
           restore-keys: spm-${{ runner.os }}-
 
-      - name: Build
+      - name: Unit tests
+        run: ./Tests/run.sh
+
+      - name: Build macOS
         run: |
           set -o pipefail
           xcodebuild \
@@ -44,11 +52,57 @@ jobs:
             -scheme Heka \
             -configuration Debug \
             -destination 'platform=macOS' \
-            -derivedDataPath "$DERIVED_DATA" \
+            -derivedDataPath "$MAC_DERIVED_DATA" \
             -skipPackagePluginValidation \
             -skipMacroValidation \
             build \
             CODE_SIGNING_ALLOWED=NO
 
-      - name: Unit tests
-        run: ./Tests/run.sh
+      - name: Build iOS Simulator
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project Heka.xcodeproj \
+            -scheme Heka-iOS \
+            -configuration Debug \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath "$IOS_DERIVED_DATA" \
+            -skipPackagePluginValidation \
+            -skipMacroValidation \
+            build \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Terminal mirror tests
+        run: bash Tests/run-terminal-mirror.sh "$MAC_DERIVED_DATA" "$IOS_DERIVED_DATA"
+
+  release-build:
+    name: Release build
+    runs-on: xcode-27
+    timeout-minutes: 45
+    env:
+      DERIVED_DATA: ${{ github.workspace }}/DerivedData
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Cache Swift packages
+        uses: actions/cache@v5
+        with:
+          path: DerivedData/SourcePackages
+          key: spm-release-${{ runner.os }}-${{ hashFiles('Heka.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
+          restore-keys: spm-release-${{ runner.os }}-
+
+      - name: Build universal Release
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project Heka.xcodeproj \
+            -scheme Heka \
+            -configuration Release \
+            -destination 'generic/platform=macOS' \
+            -derivedDataPath "$DERIVED_DATA" \
+            -skipPackagePluginValidation \
+            -skipMacroValidation \
+            ARCHS="arm64 x86_64" \
+            ONLY_ACTIVE_ARCH=NO \
+            build \
+            CODE_SIGNING_ALLOWED=NO

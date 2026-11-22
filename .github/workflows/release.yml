@@ -2,7 +2,7 @@ name: Release
 
 on:
   push:
-    tags: ['*']
+    tags: ['[0-9]*', 'v[0-9]*']
 
 permissions:
   contents: write
@@ -22,6 +22,8 @@ jobs:
       TAG: ${{ github.ref_name }}
     steps:
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
 
       - name: Show toolchain
         run: |
@@ -30,10 +32,32 @@ jobs:
 
       - name: Resolve version
         run: |
-          VERSION="${TAG#v}"
-          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
-          echo "BUILD_NUMBER=$GITHUB_RUN_ATTEMPT" >> "$GITHUB_ENV"
-          echo "Tag $TAG, version $VERSION, build $GITHUB_RUN_ATTEMPT"
+          set -euo pipefail
+          if [[ ! "$TAG" =~ ^v?(([0-9]+\.[0-9]+(\.[0-9]+)?)(-[0-9A-Za-z.]+)?)$ ]]; then
+            echo "::error::Tag $TAG is not a version such as 1.2.0 or 1.2.0-beta.1"
+            exit 1
+          fi
+          VERSION="${BASH_REMATCH[1]}"
+          BASE_VERSION="${BASH_REMATCH[2]}"
+          PRERELEASE="$([ -n "${BASH_REMATCH[4]}" ] && echo true || echo false)"
+          PROJECT_VERSION="$(sed -nE 's/.*MARKETING_VERSION = ([^;]+);/\1/p' Heka.xcodeproj/project.pbxproj | sort -u)"
+          if [ "$PROJECT_VERSION" != "$BASE_VERSION" ]; then
+            echo "::error::Tag $TAG needs MARKETING_VERSION = $BASE_VERSION in the project, found: $PROJECT_VERSION. Bump it in a commit on main before tagging."
+            exit 1
+          fi
+          if ! git merge-base --is-ancestor "$(git rev-parse "$TAG^{commit}")" origin/main; then
+            echo "::error::Tag $TAG points to a commit that is not on main"
+            exit 1
+          fi
+          HIGHEST="$(git tag --list | grep -E '^v?[0-9]+\.[0-9]+(\.[0-9]+)?$' | sed 's/^v//' | sort -V | tail -n 1)"
+          LATEST="$([ "$PRERELEASE" = false ] && [ "$VERSION" = "$HIGHEST" ] && echo true || echo false)"
+          {
+            echo "VERSION=$VERSION"
+            echo "PRERELEASE=$PRERELEASE"
+            echo "LATEST=$LATEST"
+            echo "BUILD_NUMBER=$GITHUB_RUN_ATTEMPT"
+          } >> "$GITHUB_ENV"
+          echo "Tag $TAG, version $VERSION, build $GITHUB_RUN_ATTEMPT, pre-release $PRERELEASE, latest $LATEST"
 
       - name: Cache Swift packages
         uses: actions/cache@v5
@@ -85,7 +109,6 @@ jobs:
             -skipMacroValidation \
             ARCHS="arm64 x86_64" \
             ONLY_ACTIVE_ARCH=NO \
-            MARKETING_VERSION="$VERSION" \
             CURRENT_PROJECT_VERSION="$BUILD_NUMBER" \
             CODE_SIGN_STYLE=Manual \
             CODE_SIGN_IDENTITY="$SIGNING_IDENTITY" \
@@ -142,6 +165,7 @@ jobs:
           set -euo pipefail
           cd dist
           ditto -c -k --sequesterRsrc --keepParent Heka.app Heka.zip
+          ditto -c -k --keepParent "$DERIVED_DATA/Build/Products/Release/Heka.app.dSYM" Heka.app.dSYM.zip
           shasum -a 256 Heka.zip > Heka.zip.sha256
           cat Heka.zip.sha256
 
@@ -161,7 +185,7 @@ jobs:
 
           The app is signed with a Developer ID and notarized by Apple, so it opens like any other Mac app.
 
-          `Heka.zip.sha256` contains the SHA-256 checksum of the archive (`shasum -a 256 -c Heka.zip.sha256`).
+          `Heka.zip.sha256` contains the SHA-256 checksum of the archive (`shasum -a 256 -c Heka.zip.sha256`). `Heka.app.dSYM.zip` holds the debug symbols used to symbolicate crash reports.
           EOF
 
       - name: Publish release
@@ -171,13 +195,14 @@ jobs:
           set -euo pipefail
           cd dist
           if gh release view "$TAG" >/dev/null 2>&1; then
-            gh release upload "$TAG" Heka.zip Heka.zip.sha256 --clobber
+            gh release upload "$TAG" Heka.zip Heka.zip.sha256 Heka.app.dSYM.zip --clobber
           else
-            gh release create "$TAG" Heka.zip Heka.zip.sha256 \
+            gh release create "$TAG" Heka.zip Heka.zip.sha256 Heka.app.dSYM.zip \
               --title "Heka $VERSION" \
               --notes-file notes.md \
               --generate-notes \
-              --latest
+              --prerelease="$PRERELEASE" \
+              --latest="$LATEST"
           fi
 
       - name: Remove signing keychain

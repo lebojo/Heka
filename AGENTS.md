@@ -15,6 +15,8 @@ git tag -a <version> -m "Heka <version>"
 git push origin <version>
 ```
 
+The tag must match `MARKETING_VERSION` in `Heka.xcodeproj/project.pbxproj` and point to a commit on `main`: bump `MARKETING_VERSION` first, in a commit the user has approved, then tag that commit. A suffix such as `-beta.1` publishes a pre-release for the same `MARKETING_VERSION`. The release workflow and Xcode Cloud refuse a tag that does not match.
+
 ## Agent skill
 
 `skills/heka/SKILL.md` documents the `heka` CLI for agents and is bundled in the app. Update it with any change to the CLI (`Heka/Services/AgentCLI.swift`, `Heka/Services/AgentBridge.swift`), and increase `metadata.version` with every change to the file: the app relies on it to offer the new version in Settings (`npx skills update` detects changes on its own).
@@ -29,7 +31,7 @@ The app was renamed from AgentUI to Heka in November 2026. The migration code on
 - the paragraph about AgentUI in the “Data and lifetime” section of `docs/GUIDE.md`;
 - then this section.
 
-Also remind the user that they can delete by hand, once Heka holds everything: AgentUI.app, `~/Library/Application Support/AgentUI` (only instance registrations or items listed by the migration message are left there), the `ch.jordanchap.agentui` defaults (`defaults delete ch.jordanchap.agentui`), the `ch.jordanchap.agentui.pairing` keychain item, and the `~/agentui` and `~/.agentui` folders once their worktrees are no longer needed.
+Also remind the user that they can delete by hand, once Heka holds everything: AgentUI.app, `~/Library/Application Support/AgentUI` (only instance registrations or items listed by the migration message are left there), the `ch.jordanchap.agentui` defaults (`defaults delete ch.jordanchap.agentui`), the `ch.jordanchap.agentui.pairing` keychain item, the former `agentui` skill (`~/.agents/skills/agentui` and `~/.claude/skills/agentui`), the `~/.local/bin/agentui` link, and the `~/agentui` and `~/.agentui` folders once their worktrees are no longer needed.
 
 ## Lint
 

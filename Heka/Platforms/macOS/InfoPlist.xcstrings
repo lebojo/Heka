@@ -1,0 +1,24 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "NSLocalNetworkUsageDescription" : {
+      "comment" : "Privacy - Local Network Usage Description",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Programs you run in Heka’s terminals, such as ssh or git, may connect to devices on your local network. Heka also serves the iPhone and iPad companion app."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les programmes lancés dans les terminaux de Heka, comme ssh ou git, peuvent se connecter aux appareils de votre réseau local. Heka sert aussi l’app compagnon pour iPhone et iPad."
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

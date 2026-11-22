@@ -1,6 +1,6 @@
 # iOS beta builds with Xcode Cloud
 
-The **iOS Beta** workflow is enabled in Xcode Cloud and connected to `lebojo/Heka`. It builds and archives iOS when a release tag is pushed, matching the GitHub Release workflow. Its external TestFlight post-action uses the **Github link** group and the **Archive - iOS** artifact. The shared schemes and scripts in this branch must be merged into `main` before the first Cloud run can use them; no Cloud run has been validated yet.
+The **iOS Beta** workflow is enabled in Xcode Cloud and connected to `lebojo/Heka`. It builds and archives iOS when a release tag is pushed, matching the GitHub Release workflow. Its external TestFlight post-action uses the **Github link** group and the **Archive - iOS** artifact.
 
 App: `6831797156`; Cloud product: `c42d365c-baba-41bf-871c-b61818834f71`; workflow: `63057B02-D13C-48E0-B3FD-1DB220349956`. `ios-beta-workflow.json` records the API update used for the build actions and start condition. The null `branchStartCondition` explicitly removes the previous branch trigger. TestFlight post-actions are configured separately in Xcode, because the public API does not expose them.
 
@@ -23,7 +23,7 @@ Use these settings, matching StreamClipper's build/archive workflow:
 | Archive action | **iOS**, Release, required to pass, **TestFlight and App Store** distribution |
 | Post-action | TestFlight External Testing → **Github link** |
 
-The release script `../update.sh <version>` pushes `main` and its version tag atomically. Only the tag triggers Xcode Cloud; ordinary pushes and merges to `main` do not. All tags are included, matching `.github/workflows/release.yml`. The build starts when the tag is pushed, independently of GitHub release publication. Do not add macOS actions. The host machine runs macOS, but both build actions target iOS. The shared target still supports normal local Mac builds.
+The release script `../update.sh <version>` pushes `main` and its version tag atomically. Only the tag triggers Xcode Cloud; ordinary pushes and merges to `main` do not. All tags are included; `.github/workflows/release.yml` only publishes version tags. The build starts when the tag is pushed, independently of GitHub release publication. Do not add macOS actions. The host machine runs macOS, but both build actions target iOS. The shared target still supports normal local Mac builds.
 
 The **Github link** group owns [the public TestFlight invitation](https://testflight.apple.com/join/DsVPEUqk). External distribution needs a clean build and an archive eligible for App Store distribution; do not select **TestFlight Internal Only**. Apple's beta review and any required TestFlight information still apply. The post-actions must be selected in Xcode or App Store Connect, even when a workflow is otherwise managed through the API.
 
@@ -31,7 +31,7 @@ The **Github link** group owns [the public TestFlight invitation](https://testfl
 
 `ci_post_clone.sh` runs only inside Xcode Cloud and refuses non-iOS actions. Xcode Cloud sets the build number itself from its own counter (`CI_BUILD_NUMBER`) when it archives, so the number keeps increasing across versions and any `CURRENT_PROJECT_VERSION` change in the checkout is ignored: run 1 uploaded build 1 of 0.6.0, run 6 build 6 of 0.8.0. App Store Connect only requires the number to be unique within a version. Never reset the Cloud counter. The macOS GitHub release uses its own number, which starts at 1 for each tag.
 
-The script also enables SwiftTerm's pinned build-info package plugin on the disposable Cloud machine. It does not change `MARKETING_VERSION`, create tags, or publish a GitHub release. The existing macOS release workflow remains separate.
+The script also enables SwiftTerm's pinned build-info package plugin on the disposable Cloud machine, and stops the build when the tag (without a leading `v` or a pre-release suffix such as `-beta.1`) differs from the project's `MARKETING_VERSION`. It does not change `MARKETING_VERSION`, create tags, or publish a GitHub release. The existing macOS release workflow remains separate.
 
 The iOS Info.plist explicitly carries `ITSAppUsesNonExemptEncryption = NO`, matching the existing TestFlight build's declaration, so subsequent uploads retain that export-compliance answer. Reassess it if the app's use of encryption changes.
 

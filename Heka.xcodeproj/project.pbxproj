@@ -373,7 +373,6 @@
 					UsageBar.swift,
 					UsageGauge.swift,
 					UsageModels.swift,
-					UsageProviderLogo.swift,
 					UsageService.swift,
 					UsageSheet.swift,
 					UsageSignInButton.swift,
@@ -415,15 +414,20 @@
 					SubagentDetail.swift,
 					SubagentHeader.swift,
 					SubagentTranscript.swift,
+					"*/Platforms/macOS/InfoPlist.xcstrings",
 				);
-				"EXCLUDED_SOURCE_FILE_NAMES[sdk=macosx*]" = "Mobile*.swift";
+				"EXCLUDED_SOURCE_FILE_NAMES[sdk=macosx*]" = (
+					"Mobile*.swift",
+					"*/Platforms/iOS/InfoPlist.xcstrings",
+				);
 				GENERATE_INFOPLIST_FILE = YES;
 				"INFOPLIST_KEY_ITSAppUsesNonExemptEncryption[sdk=iphoneos*]" = NO;
 				"INFOPLIST_FILE[sdk=macosx*]" = "Configuration/Info-macOS.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = Heka;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
-				INFOPLIST_KEY_NSCameraUsageDescription = "Heka utilise l’appareil photo pour scanner le QR code affiché sur votre Mac.";
-				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Heka se connecte à votre Mac sur le réseau local pour reprendre vos sessions.";
+				"INFOPLIST_KEY_NSCameraUsageDescription[sdk=iphone*]" = "Heka uses the camera to scan the QR code shown on your Mac.";
+				"INFOPLIST_KEY_NSLocalNetworkUsageDescription[sdk=iphone*]" = "Heka connects to your Mac on the local network to resume your sessions.";
+				"INFOPLIST_KEY_NSLocalNetworkUsageDescription[sdk=macosx*]" = "Programs you run in Heka’s terminals, such as ssh or git, may connect to devices on your local network. Heka also serves the iPhone and iPad companion app.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -552,7 +556,6 @@
 					UsageBar.swift,
 					UsageGauge.swift,
 					UsageModels.swift,
-					UsageProviderLogo.swift,
 					UsageService.swift,
 					UsageSheet.swift,
 					UsageSignInButton.swift,
@@ -594,15 +597,20 @@
 					SubagentDetail.swift,
 					SubagentHeader.swift,
 					SubagentTranscript.swift,
+					"*/Platforms/macOS/InfoPlist.xcstrings",
 				);
-				"EXCLUDED_SOURCE_FILE_NAMES[sdk=macosx*]" = "Mobile*.swift";
+				"EXCLUDED_SOURCE_FILE_NAMES[sdk=macosx*]" = (
+					"Mobile*.swift",
+					"*/Platforms/iOS/InfoPlist.xcstrings",
+				);
 				GENERATE_INFOPLIST_FILE = YES;
 				"INFOPLIST_KEY_ITSAppUsesNonExemptEncryption[sdk=iphoneos*]" = NO;
 				"INFOPLIST_FILE[sdk=macosx*]" = "Configuration/Info-macOS.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = Heka;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
-				INFOPLIST_KEY_NSCameraUsageDescription = "Heka utilise l’appareil photo pour scanner le QR code affiché sur votre Mac.";
-				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Heka se connecte à votre Mac sur le réseau local pour reprendre vos sessions.";
+				"INFOPLIST_KEY_NSCameraUsageDescription[sdk=iphone*]" = "Heka uses the camera to scan the QR code shown on your Mac.";
+				"INFOPLIST_KEY_NSLocalNetworkUsageDescription[sdk=iphone*]" = "Heka connects to your Mac on the local network to resume your sessions.";
+				"INFOPLIST_KEY_NSLocalNetworkUsageDescription[sdk=macosx*]" = "Programs you run in Heka’s terminals, such as ssh or git, may connect to devices on your local network. Heka also serves the iPhone and iPad companion app.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;

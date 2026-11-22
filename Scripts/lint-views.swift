@@ -69,6 +69,7 @@ struct Member {
     let firstLine: Int
     let lastLine: Int
     let blankBefore: Bool
+    let extraBlankLines: Bool
     let section: Section
     let missingPrivate: Bool
     let isDirective: Bool
@@ -77,6 +78,7 @@ struct Member {
 
 struct ViewDeclaration {
     let name: String
+    let kind: String
     let headerLine: Int
     let closingLine: Int
     let members: [Member]
@@ -88,23 +90,24 @@ struct Violation {
     let message: String
 }
 
+struct SourceScan {
+    let depths: [Int]
+    let commentLines: [Int]
+}
+
 struct SourceScanner {
     let lines: [String]
 
-    func depthsAtLineStart() -> [Int] {
+    func scan() -> SourceScan {
         var depths: [Int] = []
+        var commentLines: [Int] = []
         var depth = 0
         var inBlockComment = 0
         var stringDelimiter: String?
         var interpolationStack: [(delimiter: String, parentheses: Int)] = []
-        for line in lines {
+        for (lineIndex, line) in lines.enumerated() {
             let isInsideLiteral = stringDelimiter != nil || inBlockComment > 0 || !interpolationStack.isEmpty
             depths.append(depth + (isInsideLiteral ? 1 : 0))
-            if !isInsideLiteral {
-                let trimmed = line.trimmingCharacters(in: .whitespaces)
-                if trimmed.hasPrefix("#if") { depth += 1 }
-                if trimmed.hasPrefix("#endif") { depth -= 1 }
-            }
             let chars = Array(line)
             var index = 0
             while index < chars.count {
@@ -132,7 +135,7 @@ struct SourceScanner {
                     index += 1
                     continue
                 }
-                if char == "/" && next == "/" { break }
+                if char == "/" && next == "/" { commentLines.append(lineIndex); break }
                 if char == "/" && next == "*" { inBlockComment += 1; index += 2; continue }
                 if char == "\"" {
                     let isMultiline = index + 2 < chars.count && chars[index + 1] == "\"" && chars[index + 2] == "\""
@@ -159,7 +162,7 @@ struct SourceScanner {
             if stringDelimiter == "\"" { stringDelimiter = nil }
         }
         depths.append(depth)
-        return depths
+        return SourceScan(depths: depths, commentLines: commentLines)
     }
 }
 
@@ -167,20 +170,21 @@ struct ViewParser {
     let lines: [String]
 
     private static let viewHeader = try! NSRegularExpression(
-        pattern: #"^\s*(?:(?:private|fileprivate|internal|public)\s+)?struct\s+(\w+)(?:<[^>]*>)?\s*:[^{]*\bView\b[^{]*\{"#
+        pattern: #"^\s*(?:(?:private|fileprivate|internal|public)\s+)?struct\s+(\w+)(?:<[^>]*>)?\s*:[^{]*\b(View|ViewModifier|(?:NS|UI)View(?:Controller)?Representable)\b[^{]*\{"#
     )
 
     func views() -> [ViewDeclaration] {
-        let depths = SourceScanner(lines: lines).depthsAtLineStart()
+        let depths = SourceScanner(lines: lines).scan().depths
         var result: [ViewDeclaration] = []
         for (index, line) in lines.enumerated() {
             let range = NSRange(line.startIndex..., in: line)
             guard let match = Self.viewHeader.firstMatch(in: line, range: range),
-                  let nameRange = Range(match.range(at: 1), in: line) else { continue }
+                  let nameRange = Range(match.range(at: 1), in: line),
+                  let kindRange = Range(match.range(at: 2), in: line) else { continue }
             let bodyDepth = depths[index] + 1
             guard let closing = (index + 1..<lines.count).first(where: { depths[$0 + 1] < bodyDepth }) else { continue }
             let members = parseMembers(from: index + 1, to: closing, depth: bodyDepth, depths: depths)
-            result.append(ViewDeclaration(name: String(line[nameRange]), headerLine: index, closingLine: closing, members: members))
+            result.append(ViewDeclaration(name: String(line[nameRange]), kind: String(line[kindRange]), headerLine: index, closingLine: closing, members: members))
         }
         return result
     }
@@ -189,13 +193,18 @@ struct ViewParser {
         var members: [Member] = []
         var pending: [String] = []
         var pendingStart: Int?
-        var blankBefore = false
+        var blankLines = 0
         var index = start
         while index < end {
             let line = lines[index]
             let trimmed = line.trimmingCharacters(in: .whitespaces)
             if trimmed.isEmpty {
-                if pending.isEmpty { blankBefore = true } else { pending.append(line) }
+                if pending.isEmpty { blankLines += 1 } else { pending.append(line) }
+                index += 1
+                continue
+            }
+            if pending.isEmpty && isDirective(trimmed) {
+                members.append(makeMember(lines: [line], firstLine: index, lastLine: index, blankLines: 0))
                 index += 1
                 continue
             }
@@ -211,17 +220,21 @@ struct ViewParser {
                 last += 1
                 pending.append(lines[last])
             }
-            members.append(makeMember(lines: pending, firstLine: pendingStart ?? index, lastLine: last, blankBefore: blankBefore))
+            members.append(makeMember(lines: pending, firstLine: pendingStart ?? index, lastLine: last, blankLines: blankLines))
             pending = []
             pendingStart = nil
-            blankBefore = false
+            blankLines = 0
             index = last + 1
         }
         while pending.last?.trimmingCharacters(in: .whitespaces).isEmpty == true { pending.removeLast() }
         if !pending.isEmpty, let pendingStart {
-            members.append(makeMember(lines: pending, firstLine: pendingStart, lastLine: pendingStart + pending.count - 1, blankBefore: blankBefore))
+            members.append(makeMember(lines: pending, firstLine: pendingStart, lastLine: pendingStart + pending.count - 1, blankLines: blankLines))
         }
         return members
+    }
+
+    private func isDirective(_ trimmed: String) -> Bool {
+        ["#if", "#elseif", "#else", "#endif"].contains { trimmed == $0 || trimmed.hasPrefix($0 + " ") }
     }
 
     private func isAttributeOnly(_ trimmed: String) -> Bool {
@@ -235,7 +248,7 @@ struct ViewParser {
         return trimmed.hasPrefix("}") || trimmed.hasPrefix(".") || trimmed.hasPrefix(")") || trimmed.hasPrefix("]")
     }
 
-    private func makeMember(lines: [String], firstLine: Int, lastLine: Int, blankBefore: Bool) -> Member {
+    private func makeMember(lines: [String], firstLine: Int, lastLine: Int, blankLines: Int) -> Member {
         let code = lines
             .map { $0.trimmingCharacters(in: .whitespaces) }
             .filter { !$0.isEmpty && !$0.hasPrefix("//") }
@@ -248,6 +261,7 @@ struct ViewParser {
             .map(String.init)
         let isPrivate = tokens.contains("private") || tokens.contains("fileprivate")
         let isStatic = tokens.contains("static") || tokens.contains("class")
+        let isOverride = tokens.contains("override")
         let keyword = tokens.first { ["let", "var", "func", "init", "struct", "enum", "class", "actor", "typealias", "protocol", "extension"].contains($0) }
         let name = keyword.flatMap { keyword in tokens.firstIndex(of: keyword).flatMap { tokens.indices.contains($0 + 1) ? tokens[$0 + 1] : nil } }?
             .components(separatedBy: CharacterSet(charactersIn: ":=({<")).first ?? ""
@@ -263,6 +277,9 @@ struct ViewParser {
         } else if keyword == "var" && !isStatic {
             section = .stored
             missingPrivate = isComputed(declaration) && !isPrivate
+        } else if keyword == "func" {
+            section = .trailing
+            missingPrivate = !isPrivate && !isOverride && !Self.protocolRequirements.contains(name)
         } else {
             section = .trailing
         }
@@ -270,13 +287,21 @@ struct ViewParser {
             lines: lines,
             firstLine: firstLine,
             lastLine: lastLine,
-            blankBefore: blankBefore,
+            blankBefore: blankLines > 0,
+            extraBlankLines: blankLines > 1,
             section: section,
             missingPrivate: missingPrivate,
             isDirective: code.first?.hasPrefix("#") == true,
             name: name
         )
     }
+
+    private static let protocolRequirements: Set<String> = [
+        "body", "sizeThatFits", "makeCoordinator",
+        "makeNSView", "updateNSView", "dismantleNSView", "makeUIView", "updateUIView", "dismantleUIView",
+        "makeNSViewController", "updateNSViewController", "dismantleNSViewController",
+        "makeUIViewController", "updateUIViewController", "dismantleUIViewController",
+    ]
 
     private func isComputed(_ declaration: String) -> Bool {
         guard let brace = declaration.firstIndex(of: "{"), !declaration[..<brace].contains("=") else { return false }
@@ -290,7 +315,22 @@ struct Linter {
     let lines: [String]
 
     func violations() -> [Violation] {
-        ViewParser(lines: lines).views().flatMap(violations(in:))
+        let views = ViewParser(lines: lines).views()
+        return views.flatMap(violations(in:)) + fileViolations(views: views)
+    }
+
+    private func fileViolations(views: [ViewDeclaration]) -> [Violation] {
+        var result: [Violation] = []
+        for view in views.dropFirst() {
+            result.append(Violation(file: path, line: view.headerLine + 1, message: "\(view.name) (\(view.kind)) doit être dans son propre fichier : une vue par fichier"))
+        }
+        for (index, line) in lines.enumerated() where line.contains("@ViewBuilder") {
+            result.append(Violation(file: path, line: index + 1, message: "@ViewBuilder est interdit : extraire une vue dans son propre fichier"))
+        }
+        for index in SourceScanner(lines: lines).scan().commentLines {
+            result.append(Violation(file: path, line: index + 1, message: "commentaire // interdit"))
+        }
+        return result
     }
 
     private func violations(in view: ViewDeclaration) -> [Violation] {
@@ -311,6 +351,9 @@ struct Linter {
             let previous = members[index - 1]
             if previous.section != member.section && previous.section < member.section && !member.blankBefore {
                 result.append(Violation(file: path, line: line, message: "\(view.name).\(member.name) doit être séparé de la section précédente par une ligne vide"))
+            }
+            if member.extraBlankLines {
+                result.append(Violation(file: path, line: line, message: "\(view.name).\(member.name) doit être précédé d’une seule ligne vide"))
             }
         }
         return result
@@ -351,9 +394,10 @@ struct Linter {
     }
 
     private func addingPrivate(to lines: [String]) -> [String] {
-        guard let index = lines.firstIndex(where: { $0.range(of: #"\b(var|let)\b"#, options: .regularExpression) != nil }) else { return lines }
+        let keyword = #"\b((?:static\s+)?(?:var|let|func))\b"#
+        guard let index = lines.firstIndex(where: { $0.range(of: keyword, options: .regularExpression) != nil }) else { return lines }
         var copy = lines
-        copy[index] = copy[index].replacingOccurrences(of: #"\b(var|let)\b"#, with: "private $1", options: .regularExpression, range: copy[index].range(of: #"\b(var|let)\b"#, options: .regularExpression))
+        copy[index] = copy[index].replacingOccurrences(of: keyword, with: "private $1", options: .regularExpression, range: copy[index].range(of: keyword, options: .regularExpression))
         return copy
     }
 }

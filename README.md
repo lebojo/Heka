@@ -111,7 +111,7 @@ To build from source, see [DEVELOPMENT.md](docs/DEVELOPMENT.md).
 | ⌘D / ⇧⌘D | Split right / below |
 | ⌘W | Close the selected terminal |
 
-**On iPhone and iPad**: enable **Settings → Accès local** on the Mac, then scan the QR code from the [Heka Mobile beta](https://testflight.apple.com/join/DsVPEUqk) to follow your sessions as a terminal or a chat. Traffic stays on your local network, encrypted.
+**On iPhone and iPad**: turn on **Settings → Mobile Control → Allow Access from the Local Network** on the Mac, then scan the QR code from the [Heka Mobile beta](https://testflight.apple.com/join/DsVPEUqk) to follow your sessions as a terminal or a chat. Traffic stays on your local network, encrypted.
 
 Everything else (organization, inspector, agent usage, `heka` commands, companion, data and lifetime) is in the **[guide](docs/GUIDE.md)**. Building, tests and contributing are in **[DEVELOPMENT.md](docs/DEVELOPMENT.md)**.
 
