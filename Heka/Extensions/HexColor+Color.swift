@@ -10,8 +10,15 @@ extension HexColor {
 }
 
 extension BorderBeamAppearance {
-    func beamColor(for agent: ConversationAgent?) -> Color {
+    private func beamColor(for agent: ConversationAgent?) -> Color {
         agent.map { color(for: $0).color } ?? Color.accentColor
+    }
+
+    func beamColors(for agent: ConversationAgent?) -> [Color] {
+        switch colorMode {
+        case .perAgent: BorderBeamPalette.single(beamColor(for: agent))
+        case .multicolor: multicolorPalette.map(\.color)
+        }
     }
 
     subscript(colorOf agent: ConversationAgent) -> Color {

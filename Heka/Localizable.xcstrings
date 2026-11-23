@@ -9051,6 +9051,26 @@
         }
       }
     },
+    "Multicolor" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Multicolore"
+          }
+        }
+      }
+    },
+    "Per Agent" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Par agent"
+          }
+        }
+      }
+    },
     "Reset Colors" : {
       "localizations" : {
         "fr" : {
