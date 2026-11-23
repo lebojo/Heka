@@ -24,7 +24,7 @@ xcrun swiftc "${swift_flags[@]}" \
 "$test_binary"
 
 xcrun swiftc "${swift_flags[@]}" \
-  Heka/Models/Workspace.swift Heka/Services/WorkspaceDisk.swift Heka/Models/TerminalLayout.swift Heka/Models/SidebarAppearance.swift Heka/Models/WorkspaceStore.swift Heka/Extensions/Array+Moving.swift Heka/Models/SidebarFilter.swift Heka/Models/UI/SidebarProjectContent.swift Heka/Models/Removal.swift Heka/Models/SidebarTerminalBlock.swift Heka/Models/TerminalDragItem.swift Heka/Models/WorkInProgress.swift Heka/Models/AgentStatus.swift \
+  Heka/Models/Workspace.swift Heka/Services/WorkspaceDisk.swift Heka/Models/TerminalLayout.swift Heka/Models/SidebarAppearance.swift Heka/Models/WorkspaceStore.swift Heka/Extensions/Array+Moving.swift Heka/Models/SidebarFilter.swift Heka/Models/UI/SidebarProjectContent.swift Heka/Models/Removal.swift Heka/Models/SidebarTerminalBlock.swift Heka/Models/TerminalDragItem.swift Heka/Models/SidebarDropItem.swift Heka/Models/WorkInProgress.swift Heka/Models/AgentStatus.swift \
   Heka/Models/AgentConversation.swift Heka/Models/Subagent.swift \
   Heka/Services/GitService.swift Heka/Services/GitRepository.swift Heka/Models/DiscoveredWorktree.swift Heka/Models/RepositoryImport.swift Heka/Models/GitBranch.swift Heka/Models/WorktreeBranch.swift Heka/Services/DefaultBranch.swift Heka/Services/GitBranchProtection.swift Heka/Services/TerminalSessionsDelegate.swift Heka/Services/WorkspaceWriter.swift \
   Heka/Services/ReadCommand.swift Heka/Services/CommandRunner.swift Heka/Services/GitConfiguration.swift Heka/Services/GitFilterGuard.swift \
