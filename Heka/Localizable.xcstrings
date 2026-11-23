@@ -1147,6 +1147,16 @@
         }
       }
     },
+    "Add an optional comment…" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajouter un commentaire facultatif…"
+          }
+        }
+      }
+    },
     "Add Folder…" : {
       "localizations" : {
         "fr" : {
@@ -1193,6 +1203,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ajouter des projets…"
+          }
+        }
+      }
+    },
+    "Add Quote" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajouter la citation"
           }
         }
       }
@@ -2169,6 +2189,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Conversation Copilot"
+          }
+        }
+      }
+    },
+    "Copy" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copier"
           }
         }
       }
@@ -5158,6 +5188,36 @@
         }
       }
     },
+    "Quotation" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Citation"
+          }
+        }
+      }
+    },
+    "Quote" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Citer"
+          }
+        }
+      }
+    },
+    "Quoted Text" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Texte cité"
+          }
+        }
+      }
+    },
     "Reading repository…" : {
       "localizations" : {
         "fr" : {
@@ -5326,6 +5386,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Retirer le projet"
+          }
+        }
+      }
+    },
+    "Remove Quote" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retirer la citation"
           }
         }
       }

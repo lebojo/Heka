@@ -13,6 +13,7 @@ import Observation
         var draft = self[terminal: terminal]
         if draft.text == sent.text { draft.text = "" }
         if draft.images == sent.images { draft.images = [] }
+        draft.quotes.removeAll(where: sent.quotes.contains)
         self[terminal: terminal] = draft
     }
 
