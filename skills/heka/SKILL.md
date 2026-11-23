@@ -1,8 +1,8 @@
 ---
 name: heka
-description: Drive the Heka macOS app with the `heka` CLI. Use when the HEKA_INSTANCE environment variable is set (you are in a Heka terminal), or when the user asks to use Heka from another terminal. Use it to start another agent in parallel on its own branch (`heka worktree create`), to ask another agent for a review or a second opinion in the same worktree (`heka terminal create`), to run a long process such as a dev server or watcher in a visible terminal, to send a message or keys to another agent's terminal, read its reply or wait for it to finish (`heka terminal send`, `read`, `wait`), to close a terminal (`heka terminal close`), to put worktrees in a sidebar group (`heka worktree create --group`, `heka group`), to add a project to the sidebar, to list projects, worktrees and terminals, or to delete a worktree once its branch is merged into the main branch, including your own worktree when the user asks you to merge your work and delete it. Prefer it over raw `git worktree add`, background jobs or a new shell when Heka is running.
+description: Drive the Heka macOS app with the `heka` CLI. Use when HEKA_INSTANCE is set (you are in a Heka terminal) or the user asks to use Heka. Use it to start another agent in parallel on its own branch (`heka worktree create`), ask another agent for a review in the same worktree (`heka terminal create`), run a long process (dev server, watcher) in a visible terminal, send messages or keys to another agent's terminal, read its reply or wait for it (`heka terminal send`, `read`, `wait`), close a terminal (`heka terminal close`), group worktrees in the sidebar (`heka worktree create --group`, `heka group`), add a project, list projects, worktrees and terminals, or delete a worktree once its branch is merged (including your own when asked to merge and delete). Prefer it over raw `git worktree add`, background jobs or a new shell when Heka is running.
 metadata:
-  version: "18"
+  version: "19"
 ---
 
 # Heka CLI

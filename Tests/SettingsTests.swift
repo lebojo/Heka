@@ -160,6 +160,8 @@ enum SettingsTests {
         let read = { (directory: URL) in try? String(contentsOf: directory.appending(path: "SKILL.md"), encoding: .utf8) }
         let repository = try String(contentsOf: URL(fileURLWithPath: "skills/heka/SKILL.md"), encoding: .utf8)
         try CoreTests.require(AgentSkillInstaller.version(of: repository) > 0, "The repository skill declares a readable version")
+        let description = repository.split(separator: "\n").first { $0.hasPrefix("description: ") }?.dropFirst("description: ".count) ?? ""
+        try CoreTests.require(!description.isEmpty && description.count <= 1024, "The repository skill description fits the 1024-character limit of agent skills")
         try CoreTests.require(AgentSkillInstaller.version(of: "---\r\nmetadata:\r\n  version: 4 # bump\r\n---\r\n") == 4, "Versions tolerate CRLF and comments")
         try CoreTests.require(AgentSkillInstaller.version(of: "no frontmatter") == 0, "A file without frontmatter has no version")
 
