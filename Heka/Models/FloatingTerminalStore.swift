@@ -64,6 +64,10 @@ import Observation
         state.select(tab)
     }
 
+    func selectTab(at index: Int) {
+        state.selectTab(at: index)
+    }
+
     func selectTab(offset: Int) {
         state.selectTab(offset: offset)
     }

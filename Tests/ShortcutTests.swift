@@ -10,6 +10,10 @@ enum ShortcutTests {
                                 && KeyCombination("k", modifiers: [.command, .control, .option]).symbols == "⌃⌥⌘K",
                               "Shortcut symbols follow the macOS modifier order")
 
+        try CoreTests.require(ShortcutAction.tabSelections.map(\.defaultCombination) == (1...9).map { KeyCombination(Character(String($0))) }
+                                && ShortcutAction.tabSelections.allSatisfy { $0.area == .terminal },
+                              "Tab selection shortcuts default to ⌘1…⌘9 in the Terminal area")
+
         let suite = "Heka.ShortcutTests.\(UUID().uuidString)"
         let defaults = UserDefaults(suiteName: suite)!
         defer { defaults.removePersistentDomain(forName: suite) }

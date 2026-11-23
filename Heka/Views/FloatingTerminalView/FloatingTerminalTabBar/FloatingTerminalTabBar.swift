@@ -42,6 +42,11 @@ struct FloatingTerminalTabBar: View {
                     .keyboardShortcut(.previousTab)
                 Button("Next Tab") { floating.selectTab(offset: 1) }
                     .keyboardShortcut(.nextTab)
+                ForEach(ShortcutAction.tabSelections.indices, id: \.self) { index in
+                    let action = ShortcutAction.tabSelections[index]
+                    Button { floating.selectTab(at: index) } label: { Text(action.title) }
+                        .keyboardShortcut(action)
+                }
             }
             .opacity(0)
             .accessibilityHidden(true)
