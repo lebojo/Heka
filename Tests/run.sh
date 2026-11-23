@@ -19,7 +19,7 @@ xcrun swiftc "${swift_flags[@]}" \
   Heka/Models/InstallationStatus.swift Heka/Models/TerminalLink.swift "Heka/Extensions/String+BracketedPaste.swift" Heka/Platforms/macOS/TerminalKeyRoute.swift Heka/Services/AgentSkillInstaller.swift Heka/Services/CommandLineInstaller.swift Heka/Services/AgentUIMigration.swift Heka/Services/LoginShell.swift \
   Heka/Services/AgentProcess.swift Heka/Services/AgentSessionLocator.swift Heka/Services/SessionDatabase.swift Heka/Services/ConversationTranscripts.swift Heka/Models/AgentStatus.swift \
   Heka/Services/ClaudeSubagents.swift Heka/Models/Subagent.swift "Heka/Extensions/String+HomeAbbreviation.swift" \
-  Heka/Models/KeyCombination.swift Heka/Models/ShortcutAction.swift Heka/Models/ShortcutStore.swift Heka/Models/HexColor.swift Heka/Models/BorderBeamAppearance.swift "Heka/Extensions/Optional+Selection.swift" Heka/Models/OnboardingStep.swift Heka/Models/OnboardingLaunch.swift \
+  Heka/Models/KeyCombination.swift Heka/Models/ShortcutAction.swift Heka/Models/ShortcutStore.swift Heka/Models/HexColor.swift Heka/Models/BorderBeamAppearance.swift Heka/Models/ChatTheme.swift "Heka/Extensions/Optional+Selection.swift" Heka/Models/OnboardingStep.swift Heka/Models/OnboardingLaunch.swift \
   Tests/TerminalLayoutShape.swift Tests/ShortcutTests.swift Tests/RegressionTests.swift Tests/RefreshTests.swift Tests/InspectorTests.swift Tests/UsageTests.swift Tests/SettingsTests.swift Tests/CoreTests.swift -o "$test_binary"
 "$test_binary"
 

@@ -99,7 +99,7 @@ struct SessionComposer: View {
         .frame(maxWidth: Dimension.Chat.readableWidth)
         .padding(Spacing.xl)
         .frame(maxWidth: .infinity)
-        .background(Color.surface)
+        .background(.background)
         .disabled(!isEnabled)
     }
 
