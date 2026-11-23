@@ -55,12 +55,332 @@
         }
       }
     },
+    "Allow all permissions" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tout autoriser"
+          }
+        }
+      }
+    },
+    "Analyze your sessions" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Analyser vos sessions"
+          }
+        }
+      }
+    },
+    "Ask a side question" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Poser une question en aparté"
+          }
+        }
+      }
+    },
     "Attached Image" : {
       "localizations" : {
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Image jointe"
+          }
+        }
+      }
+    },
+    "Branch the conversation from here" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Créer une branche de la conversation à partir d’ici"
+          }
+        }
+      }
+    },
+    "Change the model variant" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Changer la variante du modèle"
+          }
+        }
+      }
+    },
+    "Change the output style" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Changer le style de réponse"
+          }
+        }
+      }
+    },
+    "Choose what the agent can do" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choisir ce que l’agent peut faire"
+          }
+        }
+      }
+    },
+    "condition" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "condition"
+          }
+        }
+      }
+    },
+    "Configure the memories" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Configurer les souvenirs"
+          }
+        }
+      }
+    },
+    "Connect a provider" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connecter un fournisseur"
+          }
+        }
+      }
+    },
+    "Consult a stronger model at key moments" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Consulter un modèle plus puissant aux moments clés"
+          }
+        }
+      }
+    },
+    "Copy the conversation" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copier la conversation"
+          }
+        }
+      }
+    },
+    "Copy the last response" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copier la dernière réponse"
+          }
+        }
+      }
+    },
+    "Create a CLAUDE.md file" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Créer un fichier CLAUDE.md"
+          }
+        }
+      }
+    },
+    "Create an instructions file" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Créer un fichier d’instructions"
+          }
+        }
+      }
+    },
+    "Edit the message in an editor" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modifier le message dans un éditeur"
+          }
+        }
+      }
+    },
+    "Fork the conversation" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dupliquer la conversation"
+          }
+        }
+      }
+    },
+    "Hand the session to GitHub to open a pull request" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Confier la session à GitHub pour ouvrir une pull request"
+          }
+        }
+      }
+    },
+    "Import the Claude Code setup" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Importer la configuration de Claude Code"
+          }
+        }
+      }
+    },
+    "interval" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "intervalle"
+          }
+        }
+      }
+    },
+    "Jump to a message" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aller à un message"
+          }
+        }
+      }
+    },
+    "List the allowed directories" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lister les dossiers autorisés"
+          }
+        }
+      }
+    },
+    "List the background terminals" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lister les terminaux en arrière-plan"
+          }
+        }
+      }
+    },
+    "List the skills" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lister les skills"
+          }
+        }
+      }
+    },
+    "Manage IDE integrations" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gérer les intégrations aux IDE"
+          }
+        }
+      }
+    },
+    "Manage plugins" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gérer les plugins"
+          }
+        }
+      }
+    },
+    "Manage skills" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gérer les skills"
+          }
+        }
+      }
+    },
+    "Manage the agents" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gérer les agents"
+          }
+        }
+      }
+    },
+    "Manage the instruction files" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gérer les fichiers d’instructions"
+          }
+        }
+      }
+    },
+    "Manage the memory" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gérer la mémoire"
+          }
+        }
+      }
+    },
+    "Manage the pull request" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gérer la pull request"
+          }
+        }
+      }
+    },
+    "name" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "nom"
           }
         }
       }
@@ -101,6 +421,216 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ouvre le choix du modèle de l’agent"
+          }
+        }
+      }
+    },
+    "Plan before coding" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Planifier avant de coder"
+          }
+        }
+      }
+    },
+    "question" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "question"
+          }
+        }
+      }
+    },
+    "Recap the conversation" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Récapituler la conversation"
+          }
+        }
+      }
+    },
+    "Reload the plugins" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recharger les plugins"
+          }
+        }
+      }
+    },
+    "Reload the skills" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recharger les skills"
+          }
+        }
+      }
+    },
+    "Rename the conversation" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Renommer la conversation"
+          }
+        }
+      }
+    },
+    "Research a topic in depth" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Étudier un sujet en profondeur"
+          }
+        }
+      }
+    },
+    "Review the changes for bugs" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relire les modifications pour trouver des bugs"
+          }
+        }
+      }
+    },
+    "Run a prompt on an interval" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lancer un prompt à intervalle régulier"
+          }
+        }
+      }
+    },
+    "Run or save a reusable prompt" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lancer ou enregistrer un prompt réutilisable"
+          }
+        }
+      }
+    },
+    "Run subagents in parallel" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lancer des sous-agents en parallèle"
+          }
+        }
+      }
+    },
+    "Schedule remote agents" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Planifier des agents distants"
+          }
+        }
+      }
+    },
+    "Send a subagent with the full context" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Envoyer un sous-agent avec tout le contexte"
+          }
+        }
+      }
+    },
+    "Send feedback" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Envoyer un commentaire"
+          }
+        }
+      }
+    },
+    "Send the session to the background" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Passer la session en arrière-plan"
+          }
+        }
+      }
+    },
+    "Set a goal to reach before stopping" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fixer un objectif à atteindre avant de s’arrêter"
+          }
+        }
+      }
+    },
+    "Set the effort level" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Régler le niveau d’effort"
+          }
+        }
+      }
+    },
+    "Show the background tasks" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afficher les tâches en arrière-plan"
+          }
+        }
+      }
+    },
+    "Show the cost and plan usage" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afficher le coût et l’utilisation du forfait"
+          }
+        }
+      }
+    },
+    "Show the release notes" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afficher les notes de version"
+          }
+        }
+      }
+    },
+    "Show the uncommitted changes" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afficher les modifications non commitées"
           }
         }
       }
@@ -1820,16 +2350,6 @@
         }
       }
     },
-    "Choose what runs without approval" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Choisir ce qui s’exécute sans validation"
-          }
-        }
-      }
-    },
     "Choose…" : {
       "localizations" : {
         "fr" : {
@@ -2482,16 +3002,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Créer un fichier AGENTS.md"
-          }
-        }
-      }
-    },
-    "Create an AGENTS.md or CLAUDE.md file" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Créer un fichier AGENTS.md ou CLAUDE.md"
           }
         }
       }
@@ -3949,16 +4459,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Gérer les autorisations"
-          }
-        }
-      }
-    },
-    "Manage subagents" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Gérer les sous-agents"
           }
         }
       }
@@ -6004,42 +6504,12 @@
         }
       }
     },
-    "Show the plan usage" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Afficher l’utilisation du forfait"
-          }
-        }
-      }
-    },
-    "Show the pull request comments" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Afficher les commentaires de la pull request"
-          }
-        }
-      }
-    },
     "Show the session" : {
       "localizations" : {
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Afficher la session"
-          }
-        }
-      }
-    },
-    "Show the session cost" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Afficher le coût de la session"
           }
         }
       }
@@ -6100,6 +6570,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Se connecter…"
+          }
+        }
+      }
+    },
+    "Simplify the changed code" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Simplifier le code modifié"
           }
         }
       }
@@ -6326,6 +6806,16 @@
         }
       }
     },
+    "Start a background agent with the conversation" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lancer un agent en arrière-plan avec la conversation"
+          }
+        }
+      }
+    },
     "Start a new conversation" : {
       "localizations" : {
         "fr" : {
@@ -6372,6 +6862,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ne plus lire ce dossier"
+          }
+        }
+      }
+    },
+    "Stop the background terminals" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arrêter les terminaux en arrière-plan"
           }
         }
       }
@@ -6426,6 +6926,16 @@
         }
       }
     },
+    "Switch between subagents" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Passer d’un sous-agent à l’autre"
+          }
+        }
+      }
+    },
     "Switch session" : {
       "localizations" : {
         "fr" : {
@@ -6442,6 +6952,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Système"
+          }
+        }
+      }
+    },
+    "task" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "tâche"
           }
         }
       }
@@ -7391,12 +7911,52 @@
         }
       }
     },
-    "Toggle tool details" : {
+    "Toggle autopilot mode" : {
       "localizations" : {
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Afficher ou masquer le détail des outils"
+            "value" : "Activer ou désactiver le mode pilote automatique"
+          }
+        }
+      }
+    },
+    "Toggle experimental features" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activer ou désactiver les fonctions expérimentales"
+          }
+        }
+      }
+    },
+    "Toggle fast mode" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activer ou désactiver le mode rapide"
+          }
+        }
+      }
+    },
+    "Toggle MCP servers" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activer ou désactiver les serveurs MCP"
+          }
+        }
+      }
+    },
+    "Toggle the reasoning" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afficher ou masquer le raisonnement"
           }
         }
       }
@@ -7471,6 +8031,16 @@
         }
       }
     },
+    "Turn on plan mode" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activer le mode plan"
+          }
+        }
+      }
+    },
     "Underline" : {
       "localizations" : {
         "fr" : {
@@ -7487,16 +8057,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Annuler le dernier message"
-          }
-        }
-      }
-    },
-    "Undo the last turn" : {
-      "localizations" : {
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Annuler le dernier tour"
           }
         }
       }
@@ -7678,6 +8238,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "usage indisponible"
+          }
+        }
+      }
+    },
+    "Use a skill" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Utiliser un skill"
           }
         }
       }

@@ -15,12 +15,12 @@ extension ChatJournalTests {
         try require(SlashCommandMatcher.query(in: "/rv") == "rv" && SlashCommandMatcher.query(in: "/model x") == nil
                     && SlashCommandMatcher.query(in: "hi /x") == nil, "Completion only runs on a leading /word")
         try require(SessionChatSource.terminal.slashCommands.isEmpty, "Terminal sessions have no slash commands")
-        let fuzzy = SlashCommandMatcher.matches(for: "rv", in: commands, recent: [])
+        let fuzzy = SlashCommandMatcher.matches(for: "rv", in: SessionChatSource.codex.slashCommands, recent: [])
         try require(fuzzy.first?.command.name == "review" && fuzzy.first?.matchedOffsets == [0, 2], "/rv matches /review first")
         let prefix = SlashCommandMatcher.matches(for: "co", in: commands, recent: [])
         try require(prefix.prefix(4).allSatisfy { $0.command.name.hasPrefix("co") }, "Prefix matches rank first")
-        let recent = SlashCommandMatcher.matches(for: "co", in: commands, recent: ["cost"])
-        try require(recent.first?.command.name == "cost", "Recently used commands rank higher among equal matches")
+        let recent = SlashCommandMatcher.matches(for: "co", in: commands, recent: ["copy"])
+        try require(recent.first?.command.name == "copy", "Recently used commands rank higher among equal matches")
         try require(SlashCommandMatcher.matches(for: "zzz", in: commands, recent: []).isEmpty, "Non-matching queries list nothing")
         guard let model = commands.first(where: { $0.name == "model" }) else { throw NSError(domain: "Claude has /model", code: 1) }
         try require(SlashCommandMatcher.insertion(for: model) == "/model " && model.argument == "model", "Accepting inserts the command and its argument hint")
@@ -33,11 +33,11 @@ extension ChatJournalTests {
         let single = SlashCommandMatcher.matches(for: "secur", in: commands, recent: [])
         try require(SlashCommandMatcher.commandToAcceptOnReturn(draft: "/secur", matches: single, selection: 0, isNavigated: false)?.name == "security-review",
                     "Return accepts an unambiguous match")
-        let exact = SlashCommandMatcher.matches(for: "review", in: commands, recent: [])
-        try require(SlashCommandMatcher.commandToAcceptOnReturn(draft: "/review", matches: exact, selection: 0, isNavigated: true) == nil,
+        let exact = SlashCommandMatcher.matches(for: "compact", in: commands, recent: [])
+        try require(SlashCommandMatcher.commandToAcceptOnReturn(draft: "/compact", matches: exact, selection: 0, isNavigated: true) == nil,
                     "Return sends a draft that already is the selected command")
-        let recentLonger = SlashCommandMatcher.matches(for: "review", in: commands, recent: ["security-review"])
-        try require(recentLonger.first?.command.name == "review", "An exact match ranks first")
+        let recentLonger = SlashCommandMatcher.matches(for: "skills", in: commands, recent: ["reload-skills"])
+        try require(recentLonger.first?.command.name == "skills", "An exact match ranks first")
         let recentPrefix = SlashCommandMatcher.matches(for: "model", in: SessionChatSource.openCode.slashCommands + [SlashCommand("model", "Change the model")], recent: ["models"])
         try require(recentPrefix.first?.command.name == "model", "An exact match beats a recent longer prefix")
         let custom = SlashCommandDiscovery.command(name: "deploy", markdown: "---\ndescription: \"Ship it\"\nargument-hint: [env]\n---\nBody")
@@ -75,8 +75,15 @@ extension ChatJournalTests {
         let literal = SlashCommandDiscovery.command(name: "x", markdown: "---\r\ndescription: |\r\n  one\r\n  two\r\n---\r\n")
         try require(literal?.summary == "one\ntwo", "CRLF block scalars keep their lines")
         try require(tasks == "- ☑ Done\n- ☐ Todo\n```\n- [ ] code\n```", "Task list items get checkboxes outside code blocks")
-        try require(SlashCommandDiscovery.merged(commands, [SlashCommand("review", "Other"), SlashCommand("deploy", "Ship")]).filter { $0.name == "review" }.count == 1,
-                    "Custom commands never duplicate built-in ones")
+        let mergedCommands = SlashCommandDiscovery.merged(commands, [SlashCommand("compact", "Other"), SlashCommand("deploy", "Ship"), SlashCommand("deploy", "Again")])
+        try require(mergedCommands.filter { $0.name == "compact" }.count == 1 && mergedCommands.filter { $0.name == "deploy" }.count == 1,
+                    "Custom commands never duplicate built-in ones or each other")
+        let sources: [SessionChatSource] = [.claude, .codex, .copilot, .openCode]
+        try require(sources.allSatisfy { Set($0.slashCommands.map(\.name)).count == $0.slashCommands.count && !$0.slashCommands.isEmpty },
+                    "Built-in command lists have unique names")
+        try require(["code-review", "simplify", "effort", "goal", "btw"].allSatisfy { name in commands.contains { $0.name == name } }
+                    && !commands.contains { ["cost", "review", "pr-comments", "agents"].contains($0.name) },
+                    "Claude lists its current built-ins and drops the removed ones")
         print("PASS Slash command fuzzy completion, Return handling and custom commands")
     }
 
@@ -109,9 +116,42 @@ extension ChatJournalTests {
         print("PASS transcript tool grouping, identifiers and group state")
     }
 
+    static func customCommandDiscovery() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("heka-slash-\(UUID())")
+        defer { try? FileManager.default.removeItem(at: root) }
+        let home = root.appendingPathComponent("home")
+        let project = root.appendingPathComponent("project")
+        func write(_ text: String, _ path: String, in base: URL) throws {
+            let file = base.appendingPathComponent(path)
+            try FileManager.default.createDirectory(at: file.deletingLastPathComponent(), withIntermediateDirectories: true)
+            try text.write(to: file, atomically: true, encoding: .utf8)
+        }
+        try write("---\nname: ship\ndescription: Ship it\n---\n", ".github/skills/ship/SKILL.md", in: project)
+        try write("---\nname: ship\ndescription: Again\n---\n", ".agents/skills/ship/SKILL.md", in: home)
+        try write("---\nname: tidy\ndescription: Tidy up\n---\n", ".copilot/skills/tidy/SKILL.md", in: home)
+        try write("---\nname: hidden\nuser-invocable: false\n---\n", ".copilot/skills/hidden/SKILL.md", in: home)
+        let copilot = await SlashCommandDiscovery.customCommands(for: .copilot, directory: project.path, home: home)
+        let copilotMerged = SlashCommandDiscovery.merged(SessionChatSource.copilot.slashCommands, copilot)
+        try require(copilotMerged.filter { $0.name == "ship" }.map(\.summary) == ["Ship it"] && copilotMerged.contains { $0.name == "tidy" }
+                    && !copilotMerged.contains { $0.name == "hidden" }, "Copilot lists project and personal skills once")
+        try write("---\ndescription: Deploy\nname: ignored\n---\nBody", ".opencode/commands/team/deploy.md", in: project)
+        try write("Run the checks", ".config/opencode/command/check.md", in: home)
+        try write("---\nname: lint\ndescription: Lint\n---\n", ".opencode/skills/lint/SKILL.md", in: project)
+        try write("---\nname: polish\ndescription: Polish\n---\n", ".claude/skills/polish/SKILL.md", in: home)
+        try write("---\ndescription: Mine\n---\n", ".opencode/commands/review.md", in: project)
+        let openCode = await SlashCommandDiscovery.customCommands(for: .openCode, directory: project.path, home: home)
+        let openCodeMerged = SlashCommandDiscovery.merged(SessionChatSource.openCode.slashCommands, openCode)
+        try require(openCodeMerged.first { $0.name == "team/deploy" }?.summary == "Deploy" && openCodeMerged.first { $0.name == "check" }?.summary == "Run the checks",
+                    "OpenCode commands are named after their path in the commands folder")
+        try require(["lint", "polish"].allSatisfy { name in openCodeMerged.contains { $0.name == name } }, "OpenCode lists its own and shared skills")
+        try require(openCodeMerged.filter { $0.name == "review" }.count == 1, "OpenCode custom commands never duplicate built-in ones")
+        print("PASS Copilot and OpenCode custom slash commands")
+    }
+
     @MainActor static func agentChatSupport() async throws {
         try slashCommandCompletion()
         try transcriptToolGrouping()
+        try await customCommandDiscovery()
         let root = FileManager.default.temporaryDirectory.appendingPathComponent("heka-chat-support-\(UUID())")
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: root) }
