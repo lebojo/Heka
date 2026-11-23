@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct MobileSessionContent: View {
+    @State private var isLaunching = false
+
     let mode: SessionDisplayMode
     let context: TerminalContext
     let session: MobileTerminalSession
@@ -20,8 +22,13 @@ struct MobileSessionContent: View {
                 .disabled(!store.isConnected || session.hasExited)
             if mode == .chat, store.isConnected, !session.hasExited, !store.installedAgents.isEmpty {
                 AgentShortcutBar(agents: store.installedAgents) { agent in
-                    Task { await store.launch(agent, in: context) }
+                    isLaunching = true
+                    Task {
+                        await store.launch(agent, in: context)
+                        isLaunching = false
+                    }
                 }
+                .disabled(isLaunching)
             }
         }
         if session.hasExited {
