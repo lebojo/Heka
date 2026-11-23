@@ -57,9 +57,8 @@ struct SidebarFolderRow: View {
             .help(folder.name)
             #if os(macOS)
             .draggable(folder.id.uuidString)
-            .dropDestination(for: String.self) { values, _ in
-                guard let value = values.first, let id = UUID(uuidString: value) else { return false }
-                return store.drop(id, into: folder.id)
+            .dropDestination(for: SidebarDropItem.self) { items, _ in
+                store.drop(items, into: folder.id)
             } isTargeted: { isDropTargeted = $0 }
             #endif
             .contextMenu {

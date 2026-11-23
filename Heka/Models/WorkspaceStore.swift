@@ -172,6 +172,13 @@ struct ForgottenWorktree: Sendable {
         save()
     }
 
+    func drop(_ items: [SidebarDropItem], into folderID: UUID) -> Bool {
+        let folderURLs = items.compactMap(\.folderURL)
+        if !folderURLs.isEmpty { return acceptDroppedFolders(folderURLs, into: folderID) }
+        guard let id = items.first?.sidebarItemID else { return false }
+        return drop(id, into: folderID)
+    }
+
     func drop(_ id: UUID, into folderID: UUID) -> Bool {
         if projects.contains(where: { $0.id == id }) {
             moveProject(id, to: folderID)
@@ -257,11 +264,30 @@ struct ForgottenWorktree: Sendable {
     func importFolder(_ url: URL, into folderID: UUID? = nil, review: Bool = true) async {
         do {
             guard let plan = try await planImport(of: url, into: folderID) else { return }
-            guard !plan.repositoryPaths.isEmpty else {
-                throw WorkspaceError(message: plan.warning ?? String(localized: "No Git repository found in this folder. Choose the folder that contains your repositories, or use Add Project for a folder without Git."))
-            }
-            await submit(plan, review: review)
+            try await submitFolder(plan, review: review)
         } catch { errorMessage = error.localizedDescription }
+    }
+
+    func acceptDroppedFolders(_ urls: [URL], into folderID: UUID? = nil) -> Bool {
+        let folders = urls.filter(WorkspacePath.isFolder)
+        guard canImport, !folders.isEmpty else { return false }
+        Task { await importDroppedFolders(folders, into: folderID) }
+        return true
+    }
+
+    func importDroppedFolders(_ urls: [URL], into folderID: UUID? = nil, review: Bool = true) async {
+        var failures: [String] = []
+        for url in urls.filter(WorkspacePath.isFolder) {
+            do {
+                guard let plan = try await planImport(of: url, into: folderID) else { continue }
+                if plan.repositoryPaths == [WorkspacePath.canonical(url)] {
+                    try addProject(url, folderID: folderID)
+                } else {
+                    try await submitFolder(plan, review: review)
+                }
+            } catch { failures.append(error.localizedDescription) }
+        }
+        if !failures.isEmpty { errorMessage = failures.joined(separator: "\n") }
     }
 
     func showNextImport() {
@@ -301,6 +327,13 @@ struct ForgottenWorktree: Sendable {
             throw WorkspaceError(message: warning)
         }
         return RepositoryImport(source: url, discovery: discovery, target: folders.first { $0.id == folderID })
+    }
+
+    private func submitFolder(_ plan: RepositoryImport, review: Bool) async throws {
+        guard !plan.repositoryPaths.isEmpty else {
+            throw WorkspaceError(message: plan.warning ?? String(localized: "No Git repository found in this folder. Choose the folder that contains your repositories, or use Add Project for a folder without Git."))
+        }
+        await submit(plan, review: review)
     }
 
     private func submit(_ plan: RepositoryImport, review: Bool) async {

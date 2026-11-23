@@ -257,6 +257,11 @@ enum WorkspacePath {
         defer { free(resolved) }
         return String(cString: resolved)
     }
+
+    static func isFolder(_ url: URL) -> Bool {
+        guard url.isFileURL, let values = try? url.resourceValues(forKeys: [.isDirectoryKey, .isPackageKey]) else { return false }
+        return values.isDirectory == true && values.isPackage != true
+    }
 }
 
 extension Workspace {

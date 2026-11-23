@@ -5,13 +5,8 @@ struct TerminalDropHighlight: View {
     let size: CGSize
 
     var body: some View {
-        RoundedRectangle(cornerRadius: Radius.m)
-            .fill(Color.dropTargetFill)
-            .strokeBorder(Color.accentColor, lineWidth: Stroke.regular)
-            .padding(Spacing.xs)
+        DropTargetHighlight()
             .frame(width: edge.axis == .horizontal ? size.width / 2 : size.width,
                    height: edge.axis == .vertical ? size.height / 2 : size.height)
-            .allowsHitTesting(false)
-            .accessibilityHidden(true)
     }
 }
