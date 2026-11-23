@@ -55,6 +55,10 @@ Usage comes from the agents' own sign-in, like Orca: Claude reads the `Claude Co
 | ⌘D | Split the selected terminal to the right |
 | ⇧⌘D | Split the selected terminal below |
 | ⌘W | Close the selected terminal and stop its process; with no terminal selected, close the window |
+| ⌘1…⌘9 | In the floating terminal, select the first to ninth tab (nothing happens beyond the last tab) |
+| ⇧⌘[ / ⇧⌘] | In the floating terminal, select the previous or next tab |
+
+Shortcuts listed in Settings → Shortcuts, including ⌘1…⌘9 and the tab navigation, can be changed there.
 
 Split panes are regular terminals of the same worktree: they also appear in the sidebar, and selecting any of them shows the whole split. Dragging a terminal row or a pane title onto a pane highlights the half where it will land (left, right, top or bottom) and moves it there, out of any other split. Clicking a pane focuses it; its × button (or ⌘W) closes it, and the last remaining pane takes the whole space again. The layout is restored on relaunch.
 

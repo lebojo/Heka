@@ -78,6 +78,11 @@ struct FloatingTerminal: Codable, Equatable, Sendable {
         focus(focusedID(in: tab))
     }
 
+    mutating func selectTab(at index: Int) {
+        guard tabs.indices.contains(index) else { return }
+        select(tabs[index])
+    }
+
     mutating func selectTab(offset: Int) {
         guard let selectedTab, let index = tabs.firstIndex(of: selectedTab) else { return }
         let count = tabs.count

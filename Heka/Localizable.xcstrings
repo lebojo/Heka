@@ -5694,6 +5694,16 @@
         }
       }
     },
+    "Select Tab %lld" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sélectionner l’onglet %lld"
+          }
+        }
+      }
+    },
     "Selected" : {
       "localizations" : {
         "fr" : {
