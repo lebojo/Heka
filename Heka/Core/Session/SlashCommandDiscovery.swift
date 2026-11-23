@@ -22,7 +22,21 @@ enum SlashCommandDiscovery {
         case .codex:
             let codex = configDirectory ?? home.appendingPathComponent(".codex")
             return commandFiles(in: codex.appendingPathComponent("prompts"), prefix: "prompts:")
-        case .terminal, .copilot, .openCode:
+        case .copilot:
+            let projectRoots = [".github", ".claude", ".agents"].compactMap { project?.appendingPathComponent($0) }
+            let personalRoots = [configDirectory ?? home.appendingPathComponent(".copilot"), home.appendingPathComponent(".agents")]
+            return (projectRoots + personalRoots).flatMap { skills(in: $0.appendingPathComponent("skills")) }
+        case .openCode:
+            let config = configDirectory ?? home.appendingPathComponent(".config/opencode")
+            let openCodeRoots = [project?.appendingPathComponent(".opencode"), config].compactMap(\.self)
+            let sharedRoots = [project?.appendingPathComponent(".claude"), project?.appendingPathComponent(".agents"),
+                               home.appendingPathComponent(".claude"), home.appendingPathComponent(".agents")].compactMap(\.self)
+            let commands = openCodeRoots.flatMap { root in
+                ["command", "commands"].flatMap { openCodeCommandFiles(in: root.appendingPathComponent($0)) }
+            }
+            let openCodeSkills = openCodeRoots.flatMap { root in ["skill", "skills"].flatMap { skills(in: root.appendingPathComponent($0)) } }
+            return commands + openCodeSkills + sharedRoots.flatMap { skills(in: $0.appendingPathComponent("skills")) }
+        case .terminal:
             return []
         }
     }
@@ -30,19 +44,37 @@ enum SlashCommandDiscovery {
     static func command(name: String, markdown: String) -> SlashCommand? {
         let metadata = frontMatter(of: markdown)
         guard metadata["user-invocable"] != "false" else { return nil }
-        let summary = metadata["description"] ?? firstBodyLine(of: markdown) ?? String(localized: "Custom command")
-        return SlashCommand(name: metadata["name"] ?? name, summary: summary, argument: metadata["argument-hint"])
+        return SlashCommand(name: metadata["name"] ?? name, summary: summary(of: markdown, metadata: metadata), argument: metadata["argument-hint"])
+    }
+
+    static func openCodeCommand(path: [String], markdown: String) -> SlashCommand {
+        SlashCommand(name: path.joined(separator: "/"), summary: summary(of: markdown, metadata: frontMatter(of: markdown)), argument: nil)
+    }
+
+    private static func summary(of markdown: String, metadata: [String: String]) -> String {
+        metadata["description"] ?? firstBodyLine(of: markdown) ?? String(localized: "Custom command")
     }
 
     private static func commandFiles(in folder: URL, prefix: String = "") -> [SlashCommand] {
+        markdownFiles(in: folder).compactMap { file in
+            guard let markdown = try? String(contentsOf: file, encoding: .utf8) else { return nil }
+            return command(name: prefix + file.deletingPathExtension().lastPathComponent, markdown: markdown)
+        }
+    }
+
+    private static func openCodeCommandFiles(in folder: URL) -> [SlashCommand] {
+        let paths = (try? FileManager.default.subpathsOfDirectory(atPath: folder.path)) ?? []
+        return paths.filter { $0.hasSuffix(".md") }.sorted().compactMap { path in
+            guard let markdown = try? String(contentsOf: folder.appendingPathComponent(path), encoding: .utf8) else { return nil }
+            return openCodeCommand(path: (String(path.dropLast(3)) as NSString).pathComponents, markdown: markdown)
+        }
+    }
+
+    private static func markdownFiles(in folder: URL) -> [URL] {
         guard let files = FileManager.default.enumerator(at: folder, includingPropertiesForKeys: nil) else { return [] }
         return files.compactMap { $0 as? URL }
             .filter { $0.pathExtension == "md" }
             .sorted { $0.path < $1.path }
-            .compactMap { file in
-                guard let markdown = try? String(contentsOf: file, encoding: .utf8) else { return nil }
-                return command(name: prefix + file.deletingPathExtension().lastPathComponent, markdown: markdown)
-            }
     }
 
     private static func skills(in folder: URL) -> [SlashCommand] {
