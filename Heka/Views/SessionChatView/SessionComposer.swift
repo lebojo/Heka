@@ -19,6 +19,7 @@ struct SessionComposer: View {
     let isEnabled: Bool
     let isBusy: Bool
     let isWorking: Bool
+    let isInterruptible: Bool
 
     private var draft: ChatDraft { drafts[terminal: chat.terminal] }
 
@@ -64,7 +65,7 @@ struct SessionComposer: View {
                 if source.supportsAgentOptions {
                     SessionAgentOptions(source: source, reported: options, isBusy: isBusy)
                 }
-                SessionComposerControls(source: source, isBusy: isBusy)
+                SessionComposerControls(source: source, isBusy: isBusy, isInterruptible: isInterruptible)
                 Spacer(minLength: Spacing.s)
                 if let pendingArgument {
                     Text("Add \(pendingArgument)")

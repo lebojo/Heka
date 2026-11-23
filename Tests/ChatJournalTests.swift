@@ -88,6 +88,20 @@ import Foundation
         try require(!ChatActivity(subagent: .done).showsIndicator, "a finished subagent hides the indicator")
         try require(!ChatActivity(subagent: .stopped).showsIndicator, "a stopped subagent hides the indicator")
         print("PASS chat activity indicator visibility")
+        try chatInterrupt()
+    }
+
+    static func chatInterrupt() throws {
+        let idle = ChatActivity(status: .ready, isSending: false, isEnabled: true)
+        let working = ChatActivity(status: .working, isSending: false, isEnabled: true)
+        let sending = ChatActivity(status: .ready, isSending: true, isEnabled: true)
+        try require(!idle.allowsInterrupt(from: .claude, status: .ready), "an idle agent hides Interrupt")
+        try require(ChatActivity(status: nil, isSending: false, isEnabled: true).allowsInterrupt(from: .codex, status: nil), "an unknown status keeps Interrupt available")
+        try require(working.allowsInterrupt(from: .claude, status: .working), "a working agent shows Interrupt")
+        try require(sending.allowsInterrupt(from: .copilot, status: .ready), "a message being sent shows Interrupt")
+        try require(idle.allowsInterrupt(from: .claude, status: .waitingForInput), "an approval prompt shows Interrupt")
+        try require(idle.allowsInterrupt(from: .terminal, status: .ready), "a plain terminal always offers Escape")
+        print("PASS chat interrupt visibility")
     }
 
     @MainActor static func main() async throws {

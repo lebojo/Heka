@@ -15,4 +15,8 @@ enum ChatActivity: Equatable, Sendable {
     }
 
     var showsIndicator: Bool { self == .working }
+
+    func allowsInterrupt(from source: SessionChatSource, status: AgentStatus?) -> Bool {
+        source == .terminal || status == nil || self == .working || status == .waitingForInput
+    }
 }

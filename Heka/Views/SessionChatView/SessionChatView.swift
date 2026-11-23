@@ -10,8 +10,12 @@ struct SessionChatView: View {
     let isEnabled: Bool
     let status: AgentStatus?
 
+    private var activity: ChatActivity {
+        ChatActivity(status: status, isSending: chat.isSending || chat.awaitsAgent, isEnabled: isEnabled)
+    }
+
     private var isAgentWorking: Bool {
-        source.agent != nil && ChatActivity(status: status, isSending: chat.isSending || chat.awaitsAgent, isEnabled: isEnabled).showsIndicator
+        source.agent != nil && activity.showsIndicator
     }
 
     var body: some View {
@@ -19,7 +23,8 @@ struct SessionChatView: View {
         .background(Color.surface)
         .safeAreaInset(edge: .bottom, spacing: 0) {
             SessionComposer(source: source, options: options, commands: commands, isEnabled: isEnabled,
-                            isBusy: !(status?.acceptsCommands ?? true), isWorking: isAgentWorking)
+                            isBusy: !(status?.acceptsCommands ?? true), isWorking: isAgentWorking,
+                            isInterruptible: activity.allowsInterrupt(from: source, status: status))
         }
         .environment(chat)
         .onChange(of: status) { chat.awaitsAgent = false }
