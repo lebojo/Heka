@@ -108,8 +108,9 @@ struct SessionComposer: View {
         guard isEnabled, !chat.isSending, !sent.isBlank else { return }
         let message = source.agent?.prompt(sent.text, attaching: sent.images) ?? sent.text
         let terminal = chat.terminal
+        let pending = PendingChatMessage(text: sent.text, prompt: message, agent: source.agent)
         Task {
-            if await chat.send(message) { drafts.clear(sent, of: terminal) }
+            if await chat.send(message, showing: pending) { drafts.clear(sent, of: terminal) }
         }
     }
 

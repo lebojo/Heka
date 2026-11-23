@@ -6,14 +6,20 @@ import Observation
     var awaitsAgent = false
     var error: String?
     private(set) var requestedOptions: AgentOptions?
+    private(set) var pendingMessages: [PendingChatMessage] = []
 
     @ObservationIgnored private let channel: any SessionChannel
+    @ObservationIgnored private var pending = PendingChatMessages()
 
     init(channel: any SessionChannel) {
         self.channel = channel
     }
 
     var terminal: UUID { channel.terminalID }
+
+    var sendingPendingIDs: [UUID] {
+        pendingMessages.filter { $0.state == .sending }.map(\.id)
+    }
 
     subscript(model reported: AgentOptions) -> AgentModel {
         get { shownOptions(reported).model }
@@ -37,18 +43,28 @@ import Observation
         requestedOptions = nil
     }
 
-    func send(_ message: String) async -> Bool {
+    func send(_ message: String, showing pendingMessage: PendingChatMessage? = nil) async -> Bool {
         guard !isSending else { return false }
         isSending = true
         defer { isSending = false }
+        if let pendingMessage { updatePending { $0.add(pendingMessage) } }
         do {
             try await channel.sendMessage(message)
             awaitsAgent = true
             return true
         } catch {
+            if let pendingMessage { updatePending { $0.remove(pendingMessage.id) } }
             self.error = error.localizedDescription
             return false
         }
+    }
+
+    func reconcilePending(with messages: [SessionMessage]) {
+        updatePending { $0.reconcile(with: messages) }
+    }
+
+    func markPendingUnconfirmed(_ ids: [UUID]) {
+        updatePending { $0.markUnconfirmed(ids) }
     }
 
     func control(_ data: Data) {
@@ -66,6 +82,11 @@ import Observation
             self.error = error.localizedDescription
             return false
         }
+    }
+
+    private func updatePending(_ change: (inout PendingChatMessages) -> Void) {
+        change(&pending)
+        if pendingMessages != pending.items { pendingMessages = pending.items }
     }
 
     private func request(_ options: AgentOptions, with command: AgentCommand) {

@@ -14,8 +14,12 @@ struct SessionChatView: View {
         source.agent != nil && ChatActivity(status: status, isSending: chat.isSending || chat.awaitsAgent, isEnabled: isEnabled).showsIndicator
     }
 
+    private var unconfirmedCandidates: [UUID] {
+        isAgentWorking ? [] : chat.sendingPendingIDs
+    }
+
     var body: some View {
-        SessionTranscriptList(messages: messages, source: source, showsTypingIndicator: isAgentWorking)
+        SessionTranscriptList(messages: messages, pending: chat.pendingMessages, source: source, showsTypingIndicator: isAgentWorking)
         .background(Color.surface)
         .safeAreaInset(edge: .bottom, spacing: 0) {
             SessionComposer(source: source, options: options, commands: commands, isEnabled: isEnabled,
@@ -23,6 +27,14 @@ struct SessionChatView: View {
         }
         .environment(chat)
         .onChange(of: status) { chat.awaitsAgent = false }
+        .onChange(of: messages, initial: true) { chat.reconcilePending(with: messages) }
+        .task(id: unconfirmedCandidates) {
+            let candidates = unconfirmedCandidates
+            guard !candidates.isEmpty else { return }
+            try? await Task.sleep(for: PendingChatMessages.confirmationGrace)
+            guard !Task.isCancelled else { return }
+            chat.markPendingUnconfirmed(candidates)
+        }
         .task(id: chat.awaitsAgent) {
             guard chat.awaitsAgent else { return }
             try? await Task.sleep(for: ChatActivity.agentStartGrace)

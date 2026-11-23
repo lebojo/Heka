@@ -4557,6 +4557,16 @@
         }
       }
     },
+    "Not in the conversation yet" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pas encore dans la conversation"
+          }
+        }
+      }
+    },
     "Not Installed" : {
       "localizations" : {
         "fr" : {
@@ -5730,6 +5740,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Envoi non confirmé. Vérifie la session avant de renvoyer."
+          }
+        }
+      }
+    },
+    "Sending…" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Envoi…"
           }
         }
       }

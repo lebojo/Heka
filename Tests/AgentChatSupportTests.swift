@@ -258,7 +258,82 @@ extension ChatJournalTests {
         try codeBlocksReachHekaHighlighter()
         try composerDrafts()
         try await sessionChatActions()
+        try pendingMessagesReconcile()
+        try await pendingMessagesFollowSends()
         try composerImageCleanup()
+    }
+
+    static func pendingMessagesReconcile() throws {
+        let history = [SessionMessage(id: "old", kind: .input, text: "Bonjour"), SessionMessage(id: "reply", kind: .assistant, text: "Salut")]
+        var pending = PendingChatMessages()
+        pending.reconcile(with: history)
+        let first = PendingChatMessage(text: "Corrige  le test", prompt: "/tmp/a.png Corrige  le test")
+        let second = PendingChatMessage(text: "Puis la doc", prompt: "Puis la doc")
+        pending.add(first)
+        pending.add(second)
+        pending.reconcile(with: history + [SessionMessage(id: "reply-2", kind: .assistant, text: "Je regarde")])
+        try require(pending.items.map(\.id) == [first.id, second.id], "Pending messages stay until an input reaches the transcript")
+        let echoed = history + [SessionMessage(id: "first", kind: .input, text: "[Image #1] Corrige le test\n")]
+        pending.reconcile(with: echoed)
+        try require(pending.items.map(\.id) == [second.id], "The matching input replaces its pending bubble, whitespace and attachments aside")
+        pending.reconcile(with: echoed)
+        try require(pending.items.map(\.id) == [second.id], "A known input never consumes another pending message")
+        pending.markUnconfirmed([second.id])
+        try require(pending.items.first?.state == .unconfirmed, "A message missing from the transcript becomes unconfirmed")
+        pending.reconcile(with: echoed + [SessionMessage(id: "second", kind: .input, text: "Puis la doc")])
+        try require(pending.items.isEmpty, "An unconfirmed message is still replaced once it appears")
+
+        let third = PendingChatMessage(text: "Troisième", prompt: "Troisième")
+        let fourth = PendingChatMessage(text: "Quatrième", prompt: "Quatrième")
+        pending.add(third)
+        pending.add(fourth)
+        pending.reconcile(with: echoed + [SessionMessage(id: "fourth", kind: .input, text: "Quatrième")])
+        try require(pending.items.isEmpty, "A later message reaching the transcript clears the earlier ones")
+
+        let rewritten = PendingChatMessage(text: "Explique", prompt: "Explique")
+        pending.add(rewritten)
+        pending.reconcile(with: echoed + [SessionMessage(id: "rewritten", kind: .input, text: "Explain")])
+        try require(pending.items.map(\.id) == [rewritten.id], "An unmatched input never drops a bubble during its grace period")
+        pending.reconcile(with: echoed + [SessionMessage(id: "rewritten", kind: .input, text: "Explain"), SessionMessage(id: "late", kind: .input, text: "Explique")])
+        try require(pending.items.isEmpty, "Input typed in the terminal right after a send keeps the bubble until its message arrives")
+        let rewrittenAgain = PendingChatMessage(text: "Résume", prompt: "Résume")
+        pending.add(rewrittenAgain)
+        pending.reconcile(with: echoed + [SessionMessage(id: "rewritten", kind: .input, text: "Explain"), SessionMessage(id: "late", kind: .input, text: "Explique"),
+                                          SessionMessage(id: "summary", kind: .input, text: "Summarize")])
+        pending.markUnconfirmed([rewrittenAgain.id])
+        try require(pending.items.isEmpty, "A bubble followed only by an unmatched input is taken as rewritten once its grace period ends")
+
+        let echo = PendingChatMessage(text: "Refactor", prompt: "Refactor")
+        let waiting = PendingChatMessage(text: "Then test", prompt: "Then test")
+        pending.add(echo)
+        pending.add(waiting)
+        let batch = echoed + [SessionMessage(id: "rewritten", kind: .input, text: "Explain"), SessionMessage(id: "echo", kind: .input, text: "Refactor"),
+                              SessionMessage(id: "typed", kind: .input, text: "y")]
+        pending.reconcile(with: batch)
+        try require(pending.items.map(\.id) == [waiting.id], "An unmatched input never drops a second bubble once another input matched")
+        pending.markUnconfirmed([waiting.id])
+        pending.reconcile(with: batch + [SessionMessage(id: "typed-2", kind: .input, text: "n")])
+        try require(pending.items.map(\.id) == [waiting.id], "An unrelated input never drops a bubble that is past its grace period")
+        pending.remove(waiting.id)
+
+        try require(PendingChatMessage(text: "/model", prompt: "/model", agent: .claude) == nil, "Slash commands never show a pending bubble")
+        try require(PendingChatMessage(text: "/model", prompt: "/model", agent: nil) != nil, "Shell input starting with a slash is shown")
+        try require(PendingChatMessage(text: " ", prompt: "/tmp/a.png", agent: .codex)?.text == "/tmp/a.png", "An image-only message shows its prompt")
+        print("PASS pending chat messages reconcile with the transcript")
+    }
+
+    @MainActor static func pendingMessagesFollowSends() async throws {
+        let channel = RecordingChannel()
+        let chat = SessionChat(channel: channel)
+        chat.reconcilePending(with: [])
+        let sent = await chat.send("hello", showing: PendingChatMessage(text: "hello", prompt: "hello"))
+        try require(sent && chat.pendingMessages.map(\.text) == ["hello"] && chat.sendingPendingIDs.count == 1, "A delivered message shows a pending bubble")
+        chat.reconcilePending(with: [SessionMessage(id: "hello", kind: .input, text: "hello")])
+        try require(chat.pendingMessages.isEmpty, "The real message replaces the pending bubble without a duplicate")
+        channel.fails = true
+        let failed = await chat.send("lost", showing: PendingChatMessage(text: "lost", prompt: "lost"))
+        try require(!failed && chat.pendingMessages.isEmpty && chat.error != nil, "A failed send drops its pending bubble and reports the error")
+        print("PASS session chat pending bubbles follow sends")
     }
 
     @MainActor static func composerDrafts() throws {
