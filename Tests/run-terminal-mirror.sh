@@ -40,7 +40,7 @@ cat > "$app/Info.plist" <<'PLIST'
 PLIST
 sdk="$(xcrun --sdk iphonesimulator --show-sdk-path)"
 SDKROOT="$sdk" xcrun swiftc -parse-as-library -target arm64-apple-ios18.0-simulator -sdk "$sdk" -I "$ios_build" \
-  Heka/Models/Data/SessionMessage.swift Heka/Models/Data/AgentOptions.swift Heka/Models/Data/RemoteTerminalSnapshot.swift Heka/Models/Data/TerminalGridSize.swift \
+  Heka/Models/Data/SessionMessage.swift Heka/Models/Data/AgentOptions.swift Heka/Models/Data/CopilotModel.swift Heka/Models/Data/RemoteTerminalSnapshot.swift Heka/Models/Data/TerminalGridSize.swift \
   Heka/Models/TerminalAppearance.swift Heka/Models/TerminalTheme.swift \
   Heka/Platforms/iOS/MobileTerminalView.swift Heka/Platforms/iOS/MobileMirrorTerminalView.swift Heka/Views/MobileWorkspaceView/MobileSessionDetail/MobileSessionContent/MobileTerminalViewport/MobileTerminalViewport.swift Heka/Views/MobileWorkspaceView/MobileSessionDetail/MobileSessionContent/MobileTerminalViewport/MobileTerminalCanvas.swift Heka/Platforms/iOS/MobileTerminalScrollView.swift Tests/MobileTerminalTests.swift \
   "$ios_build/SwiftTerm.o" -o "$app/MobileTerminalTests"

@@ -2049,6 +2049,28 @@
         }
       }
     },
+    "Auto" : {
+      "comment" : "Copilot model menu option that lets Copilot pick the model",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auto"
+          }
+        }
+      }
+    },
+    "Auto (%@)" : {
+      "comment" : "Copilot model menu label when Copilot picks the model; the argument is the model it picked",
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auto (%@)"
+          }
+        }
+      }
+    },
     "Automatic" : {
       "localizations" : {
         "fr" : {

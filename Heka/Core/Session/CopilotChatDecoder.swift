@@ -2,11 +2,16 @@ import Foundation
 
 struct CopilotChatDecoder: ChatJournalDecoder {
     private var log = ChatMessageLog()
+    private var model = CopilotModelState()
     private var taskCompleteCalls: Set<String> = []
     private var turnReplies: [String: String] = [:]
     private var turnSummaries: [String: String] = [:]
 
     var messages: [SessionMessage] { log.messages }
+
+    var options: AgentOptionsReport {
+        model == CopilotModelState() ? AgentOptionsReport() : AgentOptionsReport(copilot: model)
+    }
 
     mutating func trim() { log.trim() }
 
@@ -15,10 +20,25 @@ struct CopilotChatDecoder: ChatJournalDecoder {
               let data = record["data"] as? [String: Any] else { return }
         let id = record["id"] as? String ?? "line:\(offset)"
         switch record["type"] as? String {
+        case "session.start", "session.resume":
+            if let reported = CopilotModel(reported: data["selectedModel"] as? String) { select(reported) }
+        case "session.model_change":
+            guard let reported = CopilotModel(reported: data["newModel"] as? String) else { return }
+            let isAutomatic = data["source"] as? String == "automatic"
+            if isAutomatic, model.selected?.isAutomatic == true {
+                model.running = reported
+            } else if isAutomatic, model.selected == nil, data["cause"] as? String != "initial_resolution" {
+                model.running = reported
+            } else {
+                select(reported)
+            }
+        case "session.auto_mode_resolved":
+            model.running = CopilotModel(reported: data["chosenModel"] as? String) ?? model.running
         case "user.message":
             startTurn()
             log.addText(ChatMessageLog.text(data["content"]), id: id, kind: .input)
         case "assistant.message":
+            if model.running == nil { model.running = CopilotModel(reported: data["model"] as? String) }
             addReply(ChatMessageLog.text(data["content"]), id: data["messageId"] as? String ?? id)
             for request in data["toolRequests"] as? [[String: Any]] ?? [] {
                 guard let call = request["toolCallId"] as? String else { continue }
@@ -47,6 +67,10 @@ struct CopilotChatDecoder: ChatJournalDecoder {
     mutating func consumeOversized(_ head: Data) {
         guard String(decoding: head, as: UTF8.self).contains("\"tool.execution_complete\"") else { return }
         log.finishOversizedTools(in: head, key: "toolCallId", excluding: taskCompleteCalls)
+    }
+
+    private mutating func select(_ reported: CopilotModel) {
+        model = CopilotModelState(choosing: reported)
     }
 
     private mutating func startTool(_ call: String, name: String?, arguments: [String: Any]) {
