@@ -47,7 +47,10 @@ struct SessionComposer: View {
             if !draft.images.isEmpty {
                 SessionComposerImages(images: draft.images)
             }
-            TextField(prompt, text: Bindable(drafts)[terminal: chat.terminal].text, axis: .vertical)
+            if !draft.visiblePastes.isEmpty {
+                SessionComposerPastes(pastes: draft.visiblePastes)
+            }
+            TextField(prompt, text: Bindable(drafts)[terminal: chat.terminal].editedText, axis: .vertical)
                 .font(Font.chatInput)
                 .autocorrectionDisabled()
                 .commandInputTraits()
@@ -106,7 +109,7 @@ struct SessionComposer: View {
     private func submit() {
         let sent = draft
         guard isEnabled, !chat.isSending, !sent.isBlank else { return }
-        let message = source.agent?.prompt(sent.text, attaching: sent.images) ?? sent.text
+        let message = source.agent?.prompt(sent.message, attaching: sent.images) ?? sent.message
         let terminal = chat.terminal
         Task {
             if await chat.send(message) { drafts.clear(sent, of: terminal) }
