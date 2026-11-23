@@ -150,6 +150,21 @@ enum SettingsTests {
         try CoreTests.require(BorderBeamAppearance(rawValue: "garbage") == nil, "Invalid stored settings fall back to the defaults")
         print("PASS border beam settings")
 
+        try CoreTests.require(OnboardingLaunch.release(of: "0.9.2") == "0.9" && OnboardingLaunch.release(of: "1") == "1.0"
+                                && OnboardingLaunch.release(of: "1.2-beta.1") == "1.2" && OnboardingLaunch.release(of: "") == "",
+                              "The onboarding release keeps the major and minor version")
+        try CoreTests.require(OnboardingLaunch(isCompleted: false, completedRelease: "", currentRelease: "0.9", isWorkspaceEmpty: true) == .present(.welcome),
+                              "A first launch with an empty workspace shows the welcome tour")
+        try CoreTests.require(OnboardingLaunch(isCompleted: false, completedRelease: "", currentRelease: "0.9", isWorkspaceEmpty: false) == .complete,
+                              "A first launch with projects completes the onboarding silently")
+        try CoreTests.require(OnboardingLaunch(isCompleted: true, completedRelease: "0.9", currentRelease: "0.10", isWorkspaceEmpty: false) == .present(.setup)
+                                && OnboardingLaunch(isCompleted: true, completedRelease: "", currentRelease: "0.10", isWorkspaceEmpty: true) == .present(.setup),
+                              "An update lands on the Setup Check")
+        try CoreTests.require(OnboardingLaunch(isCompleted: true, completedRelease: "0.10", currentRelease: "0.10", isWorkspaceEmpty: false) == .none
+                                && OnboardingLaunch(isCompleted: true, completedRelease: "0.9", currentRelease: "", isWorkspaceEmpty: false) == .none,
+                              "The onboarding stays dismissed for the same release")
+        print("PASS onboarding replay after updates")
+
         try runAgentSkill()
     }
 
