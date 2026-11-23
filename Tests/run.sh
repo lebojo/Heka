@@ -12,7 +12,7 @@ trap 'rm -f "$test_binary" "$store_binary" "$conversation_binary" "$remote_binar
 xcrun swiftc "${swift_flags[@]}" \
   Heka/Models/Workspace.swift Heka/Services/WorkspaceDisk.swift Heka/Models/TerminalLayout.swift Heka/Models/SidebarAppearance.swift Heka/Models/BridgeProtocol.swift Heka/Models/TerminalKey.swift Heka/Models/Data/SessionMessage.swift Heka/Models/Data/AgentOptions.swift Heka/Models/FloatingTerminal.swift \
   Heka/Services/GitService.swift Heka/Services/GitRepository.swift Heka/Models/DiscoveredWorktree.swift Heka/Models/RepositoryImport.swift Heka/Models/GitBranch.swift Heka/Models/WorktreeBranch.swift Heka/Models/BranchMergeState.swift Heka/Services/DefaultBranch.swift Heka/Services/AgentCLI.swift Heka/Services/BridgeMailbox.swift Heka/Services/FileSystemWatcher.swift \
-  Heka/Models/InspectorModels.swift Heka/Models/PreviewSheetKind.swift Heka/Design/Dimension.swift Heka/Models/AgentPrompts.swift Heka/Models/AgentRequest.swift Heka/Models/GitAction.swift Heka/Models/GitChangeFolder.swift Heka/Models/RemoteWebAddress.swift "Heka/Extensions/String+QueryValue.swift" Heka/Models/GitDiff.swift Heka/Services/ReadCommand.swift Heka/Services/CommandRunner.swift Heka/Services/GitConfiguration.swift Heka/Services/GitFilterGuard.swift Heka/Services/GitStatus.swift Heka/Services/GitRootCache.swift Heka/Services/GitBranchProtection.swift Heka/Services/BranchMergeCache.swift Heka/Services/FileEvents.swift Heka/Services/InspectorService.swift \
+  Heka/Models/InspectorModels.swift Heka/Models/PreviewSheetKind.swift Heka/Design/Dimension.swift Heka/Models/AgentPrompts.swift Heka/Models/AgentRequest.swift Heka/Models/GitAction.swift Heka/Models/GitChangeFolder.swift Heka/Models/RemoteWebAddress.swift "Heka/Extensions/String+QueryValue.swift" Heka/Models/GitDiff.swift Heka/Models/IntraLineDiff.swift Heka/Services/ReadCommand.swift Heka/Services/CommandRunner.swift Heka/Services/GitConfiguration.swift Heka/Services/GitFilterGuard.swift Heka/Services/GitStatus.swift Heka/Services/GitRootCache.swift Heka/Services/GitBranchProtection.swift Heka/Services/BranchMergeCache.swift Heka/Services/FileEvents.swift Heka/Services/InspectorService.swift \
   Heka/Models/InspectorStore.swift Heka/Models/GitActionQueue.swift Heka/Models/GitActionQueues.swift Heka/Models/InspectorPreviews.swift Heka/Services/WorkspaceWriter.swift \
   Heka/Models/UsageModels.swift Heka/Models/UsageStore.swift Heka/Services/UsageService.swift \
   Heka/Models/AgentConversation.swift Heka/Models/AgentLaunch.swift Heka/Models/TerminalTheme.swift Heka/Models/Removal.swift Heka/Models/RemovalConfirmations.swift Heka/Models/TerminalAppearance.swift \
@@ -28,7 +28,7 @@ xcrun swiftc "${swift_flags[@]}" \
   Heka/Models/AgentConversation.swift Heka/Models/Subagent.swift \
   Heka/Services/GitService.swift Heka/Services/GitRepository.swift Heka/Models/DiscoveredWorktree.swift Heka/Models/RepositoryImport.swift Heka/Models/GitBranch.swift Heka/Models/WorktreeBranch.swift Heka/Services/DefaultBranch.swift Heka/Services/GitBranchProtection.swift Heka/Services/TerminalSessionsDelegate.swift Heka/Services/WorkspaceWriter.swift \
   Heka/Services/ReadCommand.swift Heka/Services/CommandRunner.swift Heka/Services/GitConfiguration.swift Heka/Services/GitFilterGuard.swift \
-  Heka/Models/InspectorModels.swift Heka/Models/GitAction.swift Heka/Models/RemoteWebAddress.swift "Heka/Extensions/String+QueryValue.swift" Heka/Models/BranchMergeState.swift Heka/Models/GitDiff.swift \
+  Heka/Models/InspectorModels.swift Heka/Models/GitAction.swift Heka/Models/RemoteWebAddress.swift "Heka/Extensions/String+QueryValue.swift" Heka/Models/BranchMergeState.swift Heka/Models/GitDiff.swift Heka/Models/IntraLineDiff.swift \
   Tests/TerminalLayoutShape.swift Tests/StoreTests.swift -o "$store_binary"
 "$store_binary"
 
@@ -41,7 +41,7 @@ xcrun swiftc "${swift_flags[@]}" \
 
 xcrun swiftc "${swift_flags[@]}" \
   Heka/Models/Workspace.swift Heka/Services/WorkspaceDisk.swift Heka/Models/TerminalLayout.swift Heka/Models/SidebarAppearance.swift Heka/Models/GitBranch.swift \
-  Heka/Models/InspectorModels.swift Heka/Models/GitAction.swift Heka/Models/RemoteWebAddress.swift "Heka/Extensions/String+QueryValue.swift" Heka/Models/BranchMergeState.swift Heka/Models/GitDiff.swift Heka/Models/AgentConversation.swift \
+  Heka/Models/InspectorModels.swift Heka/Models/GitAction.swift Heka/Models/RemoteWebAddress.swift "Heka/Extensions/String+QueryValue.swift" Heka/Models/BranchMergeState.swift Heka/Models/GitDiff.swift Heka/Models/IntraLineDiff.swift Heka/Models/AgentConversation.swift \
   Heka/Models/Data/RemoteProtocol.swift Heka/Models/Data/RemoteTerminalSnapshot.swift Heka/Models/Data/TerminalGridSize.swift Heka/Models/Data/SessionMessage.swift Heka/Models/Data/AgentOptions.swift \
   Heka/Models/Data/RemoteGridRequests.swift "Heka/Extensions/Collection+TerminalReport.swift" Heka/Models/Removal.swift Heka/Models/WorktreeBranch.swift Heka/Models/AgentLaunch.swift Heka/Models/Data/SidebarActivity.swift Heka/Models/AgentStatus.swift Heka/Models/Subagent.swift \
   Heka/Models/Data/PairingInvitation.swift Heka/Models/Data/SavedHost.swift Heka/Models/Data/LocalAddress.swift Heka/Core/Remote/QRCode.swift \

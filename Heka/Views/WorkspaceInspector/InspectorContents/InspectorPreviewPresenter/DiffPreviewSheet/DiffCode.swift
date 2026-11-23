@@ -2,13 +2,26 @@ import SwiftUI
 
 struct DiffCode: View {
     let line: GitDiffLine
+    let changedRanges: [Range<Int>]
+
+    private var code: AttributedString {
+        var code = AttributedString(line.text)
+        for range in changedRanges {
+            let lower = code.characters.index(code.startIndex, offsetBy: range.lowerBound)
+            let upper = code.characters.index(lower, offsetBy: range.count)
+            code[lower..<upper].backgroundColor = line.kind.emphasis
+        }
+        var endingSymbols = AttributedString(line.endingSymbols)
+        endingSymbols.foregroundColor = Color.textTertiary
+        return code + endingSymbols
+    }
 
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: 0) {
             Text(line.kind.marker).foregroundStyle(line.kind.markerColor)
                 .frame(width: Dimension.DiffSheet.markerWidth)
                 .textSelection(.disabled)
-            Text("\(line.text)\(Text(line.endingSymbols).foregroundStyle(Color.textTertiary))")
+            Text(code)
                 .fixedSize(horizontal: false, vertical: true)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }

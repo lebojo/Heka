@@ -2,6 +2,7 @@ import SwiftUI
 
 struct DiffPreviewSheet: View {
     @AppStorage("diffLayout") private var layout: DiffLayout = .unified
+    @AppStorage("diffIntraLineHighlight") private var highlightsChanges = true
 
     @Environment(\.dismiss) private var dismiss
 
@@ -17,6 +18,11 @@ struct DiffPreviewSheet: View {
                     }
                 }
                 Spacer()
+                Toggle(isOn: $highlightsChanges) {
+                    Label("Highlight Changes", systemImage: "highlighter")
+                }
+                .toggleStyle(.button).labelStyle(.iconOnly)
+                .help("Highlight the changed parts of each line")
                 Picker("Diff Layout", selection: $layout) {
                     ForEach(DiffLayout.allCases) { item in
                         Label(item.title, systemImage: item.symbol).tag(item)
@@ -34,7 +40,8 @@ struct DiffPreviewSheet: View {
                     LazyVStack(alignment: .leading, spacing: 0, pinnedViews: .sectionHeaders) {
                         ForEach(diff.sections) { section in
                             Section {
-                                DiffSectionRows(section: section, layout: layout, digits: diff.lineNumberDigits)
+                                DiffSectionRows(section: section, layout: layout, digits: diff.lineNumberDigits,
+                                                highlightsChanges: highlightsChanges)
                             } header: {
                                 DiffSectionHeader(section: section)
                             }

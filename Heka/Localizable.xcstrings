@@ -95,6 +95,26 @@
         }
       }
     },
+    "Highlight Changes" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Surligner les modifications"
+          }
+        }
+      }
+    },
+    "Highlight the changed parts of each line" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Surligner les parties modifiées de chaque ligne"
+          }
+        }
+      }
+    },
     "Branch the conversation from here" : {
       "localizations" : {
         "fr" : {
