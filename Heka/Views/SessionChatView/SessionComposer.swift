@@ -87,7 +87,7 @@ struct SessionComposer: View {
         .background(Color.control, in: RoundedRectangle(cornerRadius: Radius.l))
         .overlay {
             RoundedRectangle(cornerRadius: Radius.l)
-                .strokeBorder(isFocused ? Color.accentColor : Color.textTertiary.opacity(0.4), lineWidth: Stroke.hairline)
+                .strokeBorder(isFocused ? beam.beamColor(for: source.agent) : Color.textTertiary.opacity(0.4), lineWidth: Stroke.hairline)
         }
         .borderBeam(isActive: isWorking && beam.isEnabled, cornerRadius: Radius.l, color: beam.beamColor(for: source.agent))
         .overlay(alignment: .top) {
