@@ -19,7 +19,8 @@ import Observation
         let typed = self[terminal: terminal].renumberingPastes(after: unsent)
         self[terminal: terminal] = ChatDraft(text: [unsent.text, typed.text].filter { !$0.isEmpty }.joined(separator: "\n"),
                                              images: unsent.images + typed.images,
-                                             pastes: unsent.pastes + typed.pastes)
+                                             pastes: unsent.pastes + typed.pastes,
+                                             quotes: unsent.quotes + typed.quotes)
     }
 
     func remove(_ image: URL, from terminal: UUID) {

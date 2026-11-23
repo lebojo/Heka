@@ -45,6 +45,9 @@ struct SessionComposer: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.m) {
+            if !draft.quotes.isEmpty {
+                SessionComposerQuotes(quotes: draft.quotes)
+            }
             if !draft.images.isEmpty {
                 SessionComposerImages(images: draft.images)
             }
@@ -111,7 +114,7 @@ struct SessionComposer: View {
         guard isEnabled, !chat.isSending, !draft.isBlank else { return }
         let terminal = chat.terminal
         let sent = drafts.take(from: terminal)
-        let message = source.agent?.prompt(sent.message, attaching: sent.images) ?? sent.message
+        let message = sent.prompt(for: source.agent)
         let pending = PendingChatMessage(text: sent.message, prompt: message, agent: source.agent)
         Task {
             if await !chat.send(message, showing: pending) { drafts.restore(sent, to: terminal) }

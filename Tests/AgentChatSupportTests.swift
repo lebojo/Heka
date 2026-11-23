@@ -297,6 +297,7 @@ extension ChatJournalTests {
         print("PASS syntax highlighting tokens and Unicode ranges")
         try codeBlocksReachHekaHighlighter()
         try composerDrafts()
+        try composerQuotes()
         try await sessionChatActions()
         try pendingMessagesReconcile()
         try await pendingMessagesFollowSends()
