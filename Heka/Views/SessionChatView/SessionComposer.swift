@@ -89,7 +89,7 @@ struct SessionComposer: View {
             RoundedRectangle(cornerRadius: Radius.l)
                 .strokeBorder(isFocused ? Color.accentColor : Color.textTertiary.opacity(0.4), lineWidth: Stroke.hairline)
         }
-        .borderBeam(isActive: isWorking && beam.isEnabled, cornerRadius: Radius.l, color: beam.beamColor(for: source.agent))
+        .borderBeam(shape: .rounded(Radius.l), isActive: isWorking && beam.isEnabled, colors: beam.beamColors(for: source.agent))
         .overlay(alignment: .top) {
             if !commandMatches.isEmpty {
                 SessionCommandPopup(matches: commandMatches, selection: commandSelection, accept: accept)

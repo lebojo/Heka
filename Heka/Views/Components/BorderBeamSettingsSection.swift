@@ -9,6 +9,12 @@ struct BorderBeamSettingsSection: View {
                 Text("Border beam")
                 Text("A light travels around the message field while the agent works.")
             }
+            Picker("Colors", selection: $beam.colorMode) {
+                ForEach(BorderBeamColorMode.allCases) { mode in
+                    Text(mode.title).tag(mode)
+                }
+            }
+            .disabled(!beam.isEnabled)
             ForEach(ConversationAgent.allCases) { agent in
                 ColorPicker(agent.title, selection: $beam[colorOf: agent])
                     .disabled(!beam.isEnabled)

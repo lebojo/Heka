@@ -147,6 +147,14 @@ enum SettingsTests {
         beam.setColor(custom, for: .codex)
         beam.resetColors()
         try CoreTests.require(beam.color(for: .codex) == BorderBeamAppearance.defaultColor(for: .codex), "Reset restores the default colors")
+        try CoreTests.require(beam.colorMode == .perAgent, "The border beam uses one color per agent by default")
+        beam.colorMode = .multicolor
+        try CoreTests.require(BorderBeamAppearance(rawValue: beam.rawValue)?.colorMode == .multicolor, "The multicolor mode round-trips")
+        try CoreTests.require(Set(beam.multicolorPalette).count == ConversationAgent.allCases.count, "The multicolor palette holds a distinct color per agent")
+        beam.setColor(custom, for: .copilot)
+        try CoreTests.require(beam.multicolorPalette.contains(custom), "Custom agent colors feed the multicolor palette")
+        let legacyBeam = BorderBeamAppearance(rawValue: #"{"colors":{},"isEnabled":true}"#)
+        try CoreTests.require(legacyBeam?.colorMode == .perAgent && legacyBeam?.isEnabled == true, "Settings saved before the color mode keep one color per agent")
         try CoreTests.require(BorderBeamAppearance(rawValue: "garbage") == nil, "Invalid stored settings fall back to the defaults")
         print("PASS border beam settings")
 
