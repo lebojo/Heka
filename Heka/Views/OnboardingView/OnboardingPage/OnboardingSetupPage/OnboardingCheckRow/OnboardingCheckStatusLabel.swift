@@ -8,6 +8,12 @@ struct OnboardingCheckStatusLabel: View {
         case .checking:
             ProgressView().controlSize(.small)
                 .accessibilityLabel("Checking")
+        case .working(let text):
+            HStack(spacing: Spacing.s) {
+                ProgressView().controlSize(.small)
+                Text(text)
+            }
+            .foregroundStyle(Color.textSecondary)
         case .ready(let text):
             Label(text, systemImage: "checkmark.circle.fill")
                 .foregroundStyle(Color.success)

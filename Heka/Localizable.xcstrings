@@ -65,12 +65,52 @@
         }
       }
     },
+    "Install with Homebrew" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installer avec Homebrew"
+          }
+        }
+      }
+    },
+    "Installation failed" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Échec de l’installation"
+          }
+        }
+      }
+    },
+    "Installing…" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installation…"
+          }
+        }
+      }
+    },
     "Open the agent's model picker" : {
       "localizations" : {
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ouvre le choix du modèle de l’agent"
+          }
+        }
+      }
+    },
+    "Runs brew install gh" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exécute brew install gh"
           }
         }
       }

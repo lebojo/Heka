@@ -11,5 +11,6 @@ enum OnboardingStep: Int, CaseIterable, Identifiable, Sendable {
 
 enum OnboardingKey {
     static let completed = "onboardingCompleted"
+    static let completedRelease = "onboardingCompletedRelease"
     static let replayRequested = "onboardingReplayRequested"
 }
