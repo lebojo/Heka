@@ -9,11 +9,16 @@ import Observation
         set { drafts[terminal] = newValue == ChatDraft() ? nil : newValue }
     }
 
-    func clear(_ sent: ChatDraft, of terminal: UUID) {
-        var draft = self[terminal: terminal]
-        if draft.text == sent.text { draft.text = "" }
-        if draft.images == sent.images { draft.images = [] }
-        self[terminal: terminal] = draft
+    func take(from terminal: UUID) -> ChatDraft {
+        let draft = self[terminal: terminal]
+        self[terminal: terminal] = ChatDraft()
+        return draft
+    }
+
+    func restore(_ unsent: ChatDraft, to terminal: UUID) {
+        let typed = self[terminal: terminal]
+        self[terminal: terminal] = ChatDraft(text: [unsent.text, typed.text].filter { !$0.isEmpty }.joined(separator: "\n"),
+                                             images: unsent.images + typed.images)
     }
 
     func remove(_ image: URL, from terminal: UUID) {
