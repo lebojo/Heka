@@ -1,7 +1,6 @@
 import SwiftUI
 
 struct FloatingTerminalPane: View {
-    @Environment(SettingsStore.self) private var settings
     @Environment(FloatingTerminalStore.self) private var floating
 
     let id: UUID
@@ -18,9 +17,7 @@ struct FloatingTerminalPane: View {
                 Divider()
             }
             if let session {
-                NativeTerminalView(session: session, appearance: settings.terminal, isFocused: isFocused) { floating.focus(id) }
-                    .id(ObjectIdentifier(session))
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                LocalSessionContent(session: session, isFocused: isFocused) { floating.focus(id) }
                 SessionEndedBar(session: session, accessory: Button("Close") { floating.close(id) }) { floating.reopen(id) }
             } else {
                 ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
