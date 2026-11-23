@@ -29,6 +29,11 @@ import Observation
         }
     }
 
+    subscript(copilotModel reported: AgentOptions) -> CopilotModel {
+        get { shownOptions(reported).copilot?.shown ?? .automatic }
+        set { request(shownOptions(reported).switching(toCopilot: newValue), with: newValue.command) }
+    }
+
     func shownOptions(_ reported: AgentOptions) -> AgentOptions {
         requestedOptions ?? reported
     }

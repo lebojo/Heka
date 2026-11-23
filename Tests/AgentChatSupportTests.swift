@@ -310,6 +310,13 @@ extension ChatJournalTests {
         channel.fails = true
         chat[effort: reported] = .high
         try await eventually("failed request is forgotten") { chat.requestedOptions == nil && chat.error != nil }
+        channel.fails = false
+        let copilot = AgentOptions(copilot: CopilotModelState(selected: .automatic, running: CopilotModel(id: "gpt-6-luna")))
+        chat[copilotModel: copilot] = CopilotModel(id: "grok-4.7")
+        try require(chat.shownOptions(copilot).copilot == CopilotModelState(choosing: CopilotModel(id: "grok-4.7")), "A requested Copilot model shows before Copilot reports it")
+        try await eventually("Copilot model command runs") { channel.commands.last == AgentCommand(text: "/model grok-4.7") }
+        chat.forgetRequestedOptions()
+        channel.fails = true
         let failed = await chat.send("again")
         try require(!failed && channel.sent == ["hello"], "A failed send reports its error and keeps the draft")
         print("PASS session chat actions through an environment model")
