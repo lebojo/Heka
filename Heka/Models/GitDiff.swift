@@ -50,6 +50,8 @@ struct GitDiffSection: Identifiable, Sendable {
     let isComplete: Bool
     let lines: [GitDiffLine]
     let rows: [GitDiffRow]
+    private let pairedRows: [Int: Int]
+    private let intraLineChanges: [Int: IntraLineDiff]
     let additions: Int
     let deletions: Int
     var id: Kind { kind }
@@ -64,8 +66,23 @@ struct GitDiffSection: Identifiable, Sendable {
         self.isComplete = isComplete
         self.lines = lines
         rows = GitDiffRow.pair(lines)
+        pairedRows = GitDiffRow.pairedRows(rows)
+        intraLineChanges = GitDiffRow.intraLineChanges(rows)
         additions = lines.count(where: { $0.kind == .addition })
         deletions = lines.count(where: { $0.kind == .deletion })
+    }
+
+    func changes(in row: GitDiffRow) -> IntraLineDiff? {
+        intraLineChanges[row.id]
+    }
+
+    func changedRanges(of line: GitDiffLine) -> [Range<Int>] {
+        guard let row = pairedRows[line.id], let changes = intraLineChanges[row] else { return [] }
+        switch line.kind {
+        case .deletion: return changes.old
+        case .addition: return changes.new
+        case .context, .hunk, .meta: return []
+        }
     }
 
     static func untracked(path: String, content: TextContent, isExecutable: Bool) -> GitDiffSection {
@@ -202,6 +219,30 @@ struct GitDiffRow: Identifiable, Sendable {
 
     let id: Int
     let content: Content
+
+    private var changedPair: (old: GitDiffLine, new: GitDiffLine)? {
+        guard case .pair(let old?, let new?) = content, old.kind == .deletion, new.kind == .addition else { return nil }
+        return (old, new)
+    }
+
+    static func pairedRows(_ rows: [GitDiffRow]) -> [Int: Int] {
+        var result: [Int: Int] = [:]
+        for row in rows {
+            guard let pair = row.changedPair else { continue }
+            result[pair.old.id] = row.id
+            result[pair.new.id] = row.id
+        }
+        return result
+    }
+
+    static func intraLineChanges(_ rows: [GitDiffRow]) -> [Int: IntraLineDiff] {
+        var result: [Int: IntraLineDiff] = [:]
+        for row in rows {
+            guard let pair = row.changedPair, let changes = IntraLineDiff(old: pair.old.text, new: pair.new.text) else { continue }
+            result[row.id] = changes
+        }
+        return result
+    }
 
     static func pair(_ lines: [GitDiffLine]) -> [GitDiffRow] {
         var rows: [GitDiffRow] = []
