@@ -268,11 +268,18 @@ extension ChatJournalTests {
         drafts[terminal: left].images = [URL(filePath: "/tmp/a.png")]
         drafts[terminal: right].text = "Autre"
         try require(drafts[terminal: left].text == "Corrige le test" && drafts[terminal: right].text == "Autre", "Each terminal keeps its own draft")
-        let sent = drafts[terminal: left]
-        drafts[terminal: left].text = "Corrige le test et la doc"
-        drafts.clear(sent, of: left)
-        try require(drafts[terminal: left] == ChatDraft(text: "Corrige le test et la doc"), "Sending keeps text typed meanwhile and drops sent images")
-        drafts.clear(drafts[terminal: right], of: right)
+        let sent = drafts.take(from: left)
+        try require(sent == ChatDraft(text: "Corrige le test", images: [URL(filePath: "/tmp/a.png")]) && drafts[terminal: left] == ChatDraft(),
+                    "Sending empties the field before the send completes")
+        drafts[terminal: left].text = "Et la doc"
+        try require(drafts[terminal: left] == ChatDraft(text: "Et la doc"), "Text typed while sending starts a new draft")
+        drafts.restore(sent, to: left)
+        try require(drafts[terminal: left] == ChatDraft(text: "Corrige le test\nEt la doc", images: [URL(filePath: "/tmp/a.png")]),
+                    "A failed send puts its message back before the text typed meanwhile")
+        _ = drafts.take(from: right)
+        drafts.restore(ChatDraft(text: "Autre"), to: right)
+        try require(drafts[terminal: right] == ChatDraft(text: "Autre"), "A failed send restores the draft as it was")
+        _ = drafts.take(from: right)
         try require(drafts[terminal: right] == ChatDraft(), "A sent draft is cleared")
         try require(ChatDraft(text: " \n").isBlank && !ChatDraft(images: [URL(filePath: "/tmp/a.png")]).isBlank, "Blank drafts cannot be sent")
         print("PASS chat drafts per terminal")

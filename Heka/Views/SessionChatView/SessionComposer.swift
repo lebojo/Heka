@@ -104,12 +104,12 @@ struct SessionComposer: View {
     }
 
     private func submit() {
-        let sent = draft
-        guard isEnabled, !chat.isSending, !sent.isBlank else { return }
-        let message = source.agent?.prompt(sent.text, attaching: sent.images) ?? sent.text
+        guard isEnabled, !chat.isSending, !draft.isBlank else { return }
         let terminal = chat.terminal
+        let sent = drafts.take(from: terminal)
+        let message = source.agent?.prompt(sent.text, attaching: sent.images) ?? sent.text
         Task {
-            if await chat.send(message) { drafts.clear(sent, of: terminal) }
+            if await !chat.send(message) { drafts.restore(sent, to: terminal) }
         }
     }
 
