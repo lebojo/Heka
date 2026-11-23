@@ -48,7 +48,10 @@ struct SessionComposer: View {
             if !draft.images.isEmpty {
                 SessionComposerImages(images: draft.images)
             }
-            TextField(prompt, text: Bindable(drafts)[terminal: chat.terminal].text, axis: .vertical)
+            if !draft.visiblePastes.isEmpty {
+                SessionComposerPastes(pastes: draft.visiblePastes)
+            }
+            TextField(prompt, text: Bindable(drafts)[terminal: chat.terminal].editedText, axis: .vertical)
                 .font(Font.chatInput)
                 .autocorrectionDisabled()
                 .commandInputTraits()
@@ -108,8 +111,8 @@ struct SessionComposer: View {
         guard isEnabled, !chat.isSending, !draft.isBlank else { return }
         let terminal = chat.terminal
         let sent = drafts.take(from: terminal)
-        let message = source.agent?.prompt(sent.text, attaching: sent.images) ?? sent.text
-        let pending = PendingChatMessage(text: sent.text, prompt: message, agent: source.agent)
+        let message = source.agent?.prompt(sent.message, attaching: sent.images) ?? sent.message
+        let pending = PendingChatMessage(text: sent.message, prompt: message, agent: source.agent)
         Task {
             if await !chat.send(message, showing: pending) { drafts.restore(sent, to: terminal) }
         }

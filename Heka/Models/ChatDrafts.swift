@@ -16,9 +16,10 @@ import Observation
     }
 
     func restore(_ unsent: ChatDraft, to terminal: UUID) {
-        let typed = self[terminal: terminal]
+        let typed = self[terminal: terminal].renumberingPastes(after: unsent)
         self[terminal: terminal] = ChatDraft(text: [unsent.text, typed.text].filter { !$0.isEmpty }.joined(separator: "\n"),
-                                             images: unsent.images + typed.images)
+                                             images: unsent.images + typed.images,
+                                             pastes: unsent.pastes + typed.pastes)
     }
 
     func remove(_ image: URL, from terminal: UUID) {

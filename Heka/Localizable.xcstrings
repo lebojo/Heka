@@ -445,6 +445,67 @@
         }
       }
     },
+    "Pasted ~%lld lines" : {
+      "comment" : "Placeholder for a large paste in the chat composer",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Pasted ~%lld line"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Pasted ~%lld lines"
+                }
+              }
+            }
+          }
+        },
+        "fr" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Collé ~%lld ligne"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Collé ~%lld lignes"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Remove Pasted Text" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retirer le texte collé"
+          }
+        }
+      }
+    },
+    "Show Pasted Text" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Afficher le texte collé"
+          }
+        }
+      }
+    },
     "Plan before coding" : {
       "localizations" : {
         "fr" : {

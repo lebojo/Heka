@@ -398,6 +398,53 @@ extension ChatJournalTests {
         try require(drafts[terminal: right] == ChatDraft(), "A sent draft is cleared")
         try require(ChatDraft(text: " \n").isBlank && !ChatDraft(images: [URL(filePath: "/tmp/a.png")]).isBlank, "Blank drafts cannot be sent")
         print("PASS chat drafts per terminal")
+        try composerPastes()
+    }
+
+    @MainActor static func composerPastes() throws {
+        let code = (1...12).map { "line \($0)" }.joined(separator: "\n")
+        var draft = ChatDraft()
+        draft.editedText = "Fix  please"
+        draft.editedText = "Fix " + code + " please"
+        try require(draft.pastes.count == 1 && draft.text == "Fix [Pasted ~12 lines] please", "A large paste collapses into a placeholder where it was inserted")
+        try require(draft.message == "Fix " + code + " please", "Sending expands the placeholder into the pasted text")
+        draft.editedText = draft.text + "\nmore"
+        try require(draft.pastes.count == 1 && draft.message.hasSuffix(" please\nmore"), "Typing around a placeholder keeps the paste")
+        draft.editedText = draft.text.replacingOccurrences(of: "[Pasted ~12 lines]", with: "x " + code)
+        try require(draft.pastes.count == 1 && draft.text == "Fix [Pasted ~12 lines] please\nmore" && draft.message == "Fix x " + code + " please\nmore", "Replacing the placeholder drops the former paste")
+        draft.editedText = draft.text + code
+        try require(draft.pastes.map(\.token) == ["[Pasted ~12 lines]", "[Pasted ~12 lines #2]"], "Pastes of the same size keep distinct placeholders")
+        try require(draft.message == "Fix x " + code + " please\nmore" + code, "Every placeholder expands to its own text")
+        draft.removePaste(draft.pastes[0])
+        try require(draft.pastes.count == 1 && draft.text == "Fix  please\nmore[Pasted ~12 lines #2]", "Removing a paste removes its placeholder")
+        var short = ChatDraft()
+        short.editedText = "one\ntwo\nthree"
+        try require(short.pastes.isEmpty && short.message == "one\ntwo\nthree", "A short paste stays inline")
+        short.editedText = String(repeating: "a", count: ChatPaste.minimumCharacters)
+        try require(short.pastes.count == 1 && short.text == "[Pasted ~1 lines]", "A very long single line collapses too")
+        try require(ChatPaste.lineCount(of: "a\nb\n") == 2 && ChatPaste.lineCount(of: "a\r\nb") == 2, "Line counts ignore a trailing newline and handle CRLF")
+        try require(ChatPaste(text: "a\n```swift\nb\n```", excluding: "").markdown == "````\na\n```swift\nb\n```\n````", "The preview fence outgrows fences in the paste")
+        let drafts = ChatDrafts()
+        let terminal = UUID()
+        drafts[terminal: terminal].editedText = code
+        let sent = drafts.take(from: terminal)
+        try require(drafts[terminal: terminal] == ChatDraft(), "Sending clears the placeholder and its paste")
+        drafts.restore(sent, to: terminal)
+        try require(drafts[terminal: terminal] == sent && drafts[terminal: terminal].message == code, "A failed send restores the placeholder and its paste")
+        var undone = ChatDraft()
+        undone.editedText = "Fix " + code
+        undone.editedText = String(undone.text.dropLast())
+        try require(undone.visiblePastes.isEmpty && undone.message == undone.text, "A broken placeholder is sent as typed and hides its chip")
+        undone.editedText = undone.text + "]"
+        try require(undone.visiblePastes.count == 1 && undone.message == "Fix " + code, "Undoing an edit of a placeholder brings its paste back")
+        let other = (1...12).map { "other \($0)" }.joined(separator: "\n")
+        drafts[terminal: terminal].editedText = code
+        let unsent = drafts.take(from: terminal)
+        drafts[terminal: terminal].editedText = other
+        drafts.restore(unsent, to: terminal)
+        try require(drafts[terminal: terminal].text == "[Pasted ~12 lines]\n[Pasted ~12 lines #2]" && drafts[terminal: terminal].message == code + "\n" + other,
+                    "A failed send keeps both pastes when the text typed meanwhile used the same placeholder")
+        print("PASS composer paste placeholders")
     }
 
     @MainActor final class RecordingChannel: SessionChannel {
