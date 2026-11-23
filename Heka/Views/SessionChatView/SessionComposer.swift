@@ -109,8 +109,9 @@ struct SessionComposer: View {
         let terminal = chat.terminal
         let sent = drafts.take(from: terminal)
         let message = source.agent?.prompt(sent.text, attaching: sent.images) ?? sent.text
+        let pending = PendingChatMessage(text: sent.text, prompt: message, agent: source.agent)
         Task {
-            if await !chat.send(message) { drafts.restore(sent, to: terminal) }
+            if await !chat.send(message, showing: pending) { drafts.restore(sent, to: terminal) }
         }
     }
 

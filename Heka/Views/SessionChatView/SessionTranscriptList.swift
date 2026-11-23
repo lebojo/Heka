@@ -7,6 +7,7 @@ struct SessionTranscriptList: View {
     @State private var items: [SessionTranscriptItem] = []
 
     let messages: [SessionMessage]
+    let pending: [PendingChatMessage]
     let source: SessionChatSource
     let showsTypingIndicator: Bool
 
@@ -15,13 +16,16 @@ struct SessionTranscriptList: View {
             ScrollViewReader { proxy in
                 ScrollView {
                     LazyVStack(alignment: .leading, spacing: Spacing.xxl) {
-                        if messages.isEmpty {
+                        if messages.isEmpty && pending.isEmpty {
                             ContentUnavailableView(source.agent.map { "\($0.title) Conversation" } ?? "The Session Is Ready",
                                                    systemImage: "bubble.left.and.bubble.right",
                                                    description: Text(source.agent == nil ? "Write to continue working on the Mac." : "Messages from this session will appear here. Interactive menus are available in Terminal."))
                         }
                         ForEach(items) { item in
                             SessionTranscriptRow(item: item, agent: source.agent)
+                        }
+                        ForEach(pending) { message in
+                            SessionPendingMessage(message: message)
                         }
                         TypingIndicatorSlot(isVisible: showsTypingIndicator)
                         Color.clear.frame(height: 1).id("latest")
@@ -42,6 +46,9 @@ struct SessionTranscriptList: View {
                 .onChange(of: messages, initial: true) { items = SessionTranscriptItem.items(from: messages) }
                 .onChange(of: messages) { old, _ in
                     if old.isEmpty || followsLatest { proxy.scrollTo("latest", anchor: .bottom) }
+                }
+                .onChange(of: pending) { old, new in
+                    if new.count > old.count { followsLatest = true; proxy.scrollTo("latest", anchor: .bottom) }
                 }
                 .onChange(of: showsTypingIndicator) { if followsLatest { proxy.scrollTo("latest", anchor: .bottom) } }
                 .onChange(of: viewport.size.height) { if followsLatest { proxy.scrollTo("latest", anchor: .bottom) } }
