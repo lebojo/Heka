@@ -8560,6 +8560,46 @@
           }
         }
       }
+    },
+    "Chat Theme" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thème du chat"
+          }
+        }
+      }
+    },
+    "Light" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clair"
+          }
+        }
+      }
+    },
+    "Dark" : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sombre"
+          }
+        }
+      }
+    },
+    "System follows the light or dark appearance of the device. OLED is dark with a pure black background." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Système suit l’apparence claire ou sombre de l’appareil. OLED est sombre avec un fond noir pur."
+          }
+        }
+      }
     }
   },
   "version" : "1.1"

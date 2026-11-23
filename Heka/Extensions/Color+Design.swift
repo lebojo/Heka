@@ -6,6 +6,7 @@ extension Color {
     static let textTertiary = Color.systemTertiaryLabel
 
     static let surface = Color.systemSurface
+    static let pureBlackSurface = Color.black
     static let control = Color.systemControl
     static let fill = Color.systemFill
     static let searchFieldFill = fill.opacity(0.6)

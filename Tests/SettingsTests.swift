@@ -150,6 +150,14 @@ enum SettingsTests {
         try CoreTests.require(BorderBeamAppearance(rawValue: "garbage") == nil, "Invalid stored settings fall back to the defaults")
         print("PASS border beam settings")
 
+        try CoreTests.require(ChatTheme.allCases == [.system, .light, .dark, .oled], "The chat offers System, Light, Dark and OLED")
+        try CoreTests.require(ChatTheme.system.prefersDark == nil, "The System chat theme follows the device appearance")
+        try CoreTests.require(ChatTheme.light.prefersDark == false && ChatTheme.dark.prefersDark == true, "Light and Dark force their appearance")
+        try CoreTests.require(ChatTheme.oled.prefersDark == true && ChatTheme.oled.usesPureBlack, "OLED is dark with a pure black background")
+        try CoreTests.require(ChatTheme.allCases.filter(\.usesPureBlack) == [.oled], "Only OLED uses a pure black background")
+        try CoreTests.require(ChatTheme(rawValue: ChatTheme.oled.rawValue) == .oled && ChatTheme(rawValue: "sepia") == nil, "Chat themes round-trip through storage")
+        print("PASS chat theme")
+
         try runAgentSkill()
     }
 

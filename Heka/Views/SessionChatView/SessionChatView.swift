@@ -1,6 +1,10 @@
 import SwiftUI
 
 struct SessionChatView: View {
+    @AppStorage(ChatTheme.storageKey) private var theme = ChatTheme.system
+
+    @Environment(\.colorScheme) private var colorScheme
+
     @State private var chat: SessionChat
 
     let messages: [SessionMessage]
@@ -16,11 +20,13 @@ struct SessionChatView: View {
 
     var body: some View {
         SessionTranscriptList(messages: messages, source: source, showsTypingIndicator: isAgentWorking)
-        .background(Color.surface)
+        .background(.background)
         .safeAreaInset(edge: .bottom, spacing: 0) {
             SessionComposer(source: source, options: options, commands: commands, isEnabled: isEnabled,
                             isBusy: !(status?.acceptsCommands ?? true), isWorking: isAgentWorking)
         }
+        .backgroundStyle(theme.surface)
+        .environment(\.colorScheme, theme.colorScheme(following: colorScheme))
         .environment(chat)
         .onChange(of: status) { chat.awaitsAgent = false }
         .task(id: chat.awaitsAgent) {
