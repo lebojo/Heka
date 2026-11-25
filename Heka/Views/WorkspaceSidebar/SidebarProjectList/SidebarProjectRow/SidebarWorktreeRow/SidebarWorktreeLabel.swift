@@ -30,7 +30,7 @@ struct SidebarWorktreeLabel: View {
         }
         .help(path)
         #if os(macOS)
-        .draggable(worktreeID.uuidString)
+        .draggable(worktreeID.uuidString, title: displayName, systemImage: "arrow.triangle.branch", color: Color.textSecondary)
         #endif
         .contextMenu {
             Button("New Terminal", systemImage: "terminal") { openTerminal() }

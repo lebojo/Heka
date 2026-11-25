@@ -101,7 +101,7 @@ import Foundation
         print("PASS terminal paste and links")
 
         let folder = ProjectFolder(name: "Équipe mobile")
-        let project = Project(url: children[0], folderID: folder.id)
+        let project = Project(url: children[0], folderID: folder.id, terminals: [TerminalRecord(name: "Terminal")])
         let selection = project.worktrees[0].terminals[0].id
         let state = Workspace(folders: [folder], projects: [project], selection: selection, collapsed: [project.id])
         let stateFile = root.appendingPathComponent("state/workspace.json")
@@ -210,9 +210,9 @@ import Foundation
         do { _ = try AgentCLI.parse(["worktree", "create", "--branch", "stack/a", "--group", "  "], environment: env); throw WorkspaceError(message: "FAIL: blank --group accepted") }
         catch let error as WorkspaceError { try require(error.message.contains("--group") && !error.message.hasPrefix("FAIL"), "A blank --group is refused before creating the worktree") }
         let stack = WorktreeGroup(name: "Stack")
-        var stackProject = Project(url: URL(fileURLWithPath: "/one"))
+        var stackProject = Project(url: URL(fileURLWithPath: "/one"), terminals: [TerminalRecord(name: "Terminal")])
         stackProject.worktreeGroups = [stack]
-        let otherProject = Project(url: URL(fileURLWithPath: "/two"))
+        let otherProject = Project(url: URL(fileURLWithPath: "/two"), terminals: [TerminalRecord(name: "Terminal")])
         let groupedWorkspace = Workspace(projects: [otherProject, stackProject])
         let groupByID = try groupedWorkspace.worktreeGroup(stack.id.uuidString, in: otherProject)
         try require(groupByID?.project.id == stackProject.id, "A group UUID is found in any project")
@@ -348,7 +348,7 @@ import Foundation
                     "--stdin drops one final LF or CRLF")
         print("PASS terminal send, read, wait and close arguments")
         let mainID = UUID(), featureID = UUID()
-        var locatedProject = Project(url: URL(fileURLWithPath: "/work/app"))
+        var locatedProject = Project(url: URL(fileURLWithPath: "/work/app"), terminals: [TerminalRecord(name: "Terminal")])
         locatedProject.worktrees = [
             Worktree(id: mainID, name: "main", path: "/work/app", isPrimary: true),
             Worktree(id: featureID, name: "feature", path: "/work/app/.worktrees/feature")
@@ -403,7 +403,7 @@ import Foundation
         let repository = importRoot.appendingPathComponent("API")
         _ = try await GitService.run(["init", "-b", "main"], at: repository.path)
         _ = try await GitService.run(["-c", "user.name=Heka Tests", "-c", "user.email=tests@example.invalid", "commit", "--allow-empty", "-m", "Fixture"], at: repository.path)
-        let gitProject = Project(url: repository)
+        let gitProject = Project(url: repository, terminals: [TerminalRecord(name: "Terminal")])
         let worktree = try await GitService.createWorktree(project: gitProject, branch: "feature/agent-tests", root: root)
         let branch = try await GitService.run(["branch", "--show-current"], at: worktree.path)
         try require(branch == "feature/agent-tests", "New worktree has requested branch")
@@ -783,7 +783,7 @@ import Foundation
         _ = try await GitService.run(["-c", "user.name=Heka Tests", "-c", "user.email=tests@example.invalid", "commit", "-q", "--allow-empty", "-m", "Initial"], at: local.path)
         _ = try await GitService.run(["checkout", "-q", "-b", "feature"], at: local.path)
         _ = try await GitService.run(["pack-refs", "--all"], at: local.path)
-        let localProject = Project(url: local)
+        let localProject = Project(url: local, terminals: [TerminalRecord(name: "Terminal")])
         let linkedMain = root.appendingPathComponent("cleanup-local-main")
         _ = try await GitService.run(["worktree", "add", "-q", linkedMain.path, "main"], at: local.path)
         let linkedMainBranch = await GitBranchProtection.report(at: linkedMain.path, in: local.path).branch
@@ -901,7 +901,7 @@ import Foundation
         try await commit("Initial", at: local.path)
         _ = try await GitService.run(["remote", "add", "origin", remote.path], at: local.path)
         _ = try await GitService.run(["push", "-q", "-u", "origin", "main"], at: local.path)
-        let project = Project(url: local)
+        let project = Project(url: local, terminals: [TerminalRecord(name: "Terminal")])
 
         let pushed = try await GitService.createWorktree(project: project, branch: "merge/pushed", root: root)
         try await commit("Pushed work", at: pushed.path)
@@ -965,7 +965,7 @@ import Foundation
         try await commit("Initial", at: trunk.path)
         _ = try await GitService.run(["branch", "topic"], at: trunk.path)
         do {
-            try await deleteBranch("topic", .merged(confirmed: nil), project: Project(url: trunk))
+            try await deleteBranch("topic", .merged(confirmed: nil), project: Project(url: trunk, terminals: [TerminalRecord(name: "Terminal")]))
             throw WorkspaceError(message: "FAIL: branch deleted without a known main branch")
         } catch let error as UnmergedBranchError {
             try require(!error.hasMainBranch && String(localized: error.reason).contains("main branch couldn’t be found"),

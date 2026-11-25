@@ -56,7 +56,8 @@ struct SidebarFolderRow: View {
             .background(isDropTargeted ? Color.dropTargetFill : .clear, in: RoundedRectangle(cornerRadius: Radius.s))
             .help(folder.name)
             #if os(macOS)
-            .draggable(folder.id.uuidString)
+            .draggable(folder.id.uuidString, title: folder.name, systemImage: folder.appearance.displaySymbol.systemName,
+                       color: folder.appearance.color)
             .dropDestination(for: SidebarDropItem.self) { items, _ in
                 store.drop(items, into: folder.id)
             } isTargeted: { isDropTargeted = $0 }

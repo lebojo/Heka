@@ -81,7 +81,7 @@ import Foundation
         let modified = GitChange(path: "file.txt", originalPath: nil, indexStatus: " ", worktreeStatus: "M")
         _ = try await InspectorService.diff(modified, at: untrusted.path)
         _ = try await InspectorService.diff(GitChange(path: "nested", originalPath: nil, indexStatus: " ", worktreeStatus: "M"), at: untrusted.path)
-        _ = try await GitService.existingWorktrees(project: Project(url: untrusted))
+        _ = try await GitService.existingWorktrees(project: Project(url: untrusted, terminals: [TerminalRecord(name: "Terminal")]))
         let triggered = try fm.contentsOfDirectory(atPath: markers.path).sorted()
         try CoreTests.require(triggered.isEmpty, "Repository and submodule commands never run during automatic Git reads, got \(triggered)")
         try CoreTests.require(untrustedSnapshot.changes.contains(modified), "Status still reports real changes with filters disabled, got \(untrustedSnapshot.changes.map(\.path))")
@@ -155,7 +155,7 @@ import Foundation
         try fm.removeItem(at: promisor.appendingPathComponent(".git/objects/\(tree.prefix(2))/\(tree.dropFirst(2))"))
         let lazyMarker = markers.appendingPathComponent("promisor-fetch")
         _ = try? await InspectorService.localGit(at: promisor.path)
-        _ = try? await GitService.availableBranches(project: Project(url: promisor))
+        _ = try? await GitService.availableBranches(project: Project(url: promisor, terminals: [TerminalRecord(name: "Terminal")]))
         try CoreTests.require(!fm.fileExists(atPath: lazyMarker.path), "Automatic Git reads never fetch missing objects from a promisor remote")
         _ = try? await GitService.run(["status"], at: promisor.path, timeout: 20)
         try CoreTests.require(fm.fileExists(atPath: lazyMarker.path), "The promisor fixture does fetch when lazy fetching is allowed")
@@ -165,7 +165,7 @@ import Foundation
         let marker = root.appendingPathComponent("hook-pid")
         try "#!/bin/sh\necho $$ > '\(marker.path)'\nexec /bin/sleep 30\n".write(to: hook, atomically: true, encoding: .utf8)
         try fm.setAttributes([.posixPermissions: 0o700], ofItemAtPath: hook.path)
-        let project = Project(url: repo)
+        let project = Project(url: repo, terminals: [TerminalRecord(name: "Terminal")])
         let task = Task { try await GitService.createWorktree(project: project, branch: "cancelled", root: root) }
         for _ in 0..<200 {
             if fm.fileExists(atPath: marker.path) { break }

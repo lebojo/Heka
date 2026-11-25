@@ -40,7 +40,8 @@ struct SidebarProjectLabel: View {
         .contentShape(Rectangle())
         .help(project.path)
         #if os(macOS)
-        .draggable(project.id.uuidString)
+        .draggable(project.id.uuidString, title: project.name, systemImage: project.appearance.displaySymbol.systemName,
+                   color: project.appearance.color)
         #endif
         .contextMenu { SidebarProjectMenu(project: project) }
         .swipeActions(edge: .trailing) {

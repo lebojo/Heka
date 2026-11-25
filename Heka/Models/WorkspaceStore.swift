@@ -218,7 +218,6 @@ struct ForgottenWorktree: Sendable {
         }
         let project = Project(url: canonical, folderID: folderID)
         projects.append(project)
-        if selection == nil { selection = project.worktrees.first?.terminals.first?.id }
         save()
         Task(priority: .utility) { await refreshWorktrees(project.id) }
         return project
@@ -649,11 +648,29 @@ struct ForgottenWorktree: Sendable {
     }
 
     func wakeProject(_ id: UUID) {
-        guard !isReadOnly, let project = projects.first(where: { $0.id == id }),
-              project.worktrees.allSatisfy({ $0.terminals.isEmpty }),
-              let worktree = project.worktrees.first(where: \.isPrimary) ?? project.worktrees.first else { return }
-        do { _ = try addTerminal(projectID: id, worktreeID: worktree.id) }
+        do { try openFirstTerminal(inProject: id) }
         catch { errorMessage = error.localizedDescription }
+    }
+
+    private func openFirstTerminal(inProject id: UUID) throws {
+        guard let project = projects.first(where: { $0.id == id }) else { throw WorkspaceError(message: String(localized: "Project not found.")) }
+        if let open = project.openTerminal(preferring: selectedContext?.terminal.id, avoiding: removingWorktrees) {
+            reveal(projectID: id, worktreeID: open.worktreeID)
+            selection = open.terminalID
+            save()
+            return
+        }
+        guard !isReadOnly else {
+            throw WorkspaceError(message: String(localized: "The saved organization is unreadable. Fix it, then use Retry in the app before creating terminals."))
+        }
+        guard let worktree = project.worktreeForNewTerminal(avoiding: removingWorktrees) else {
+            throw WorkspaceError(message: String(localized: "This project has no worktree to open a terminal in."))
+        }
+        try addTerminal(projectID: id, worktreeID: worktree.id)
+    }
+
+    func isRemovingWorktree(containing terminalID: UUID) -> Bool {
+        context(for: terminalID).map { removingWorktrees.contains($0.worktree.id) } ?? false
     }
 
     @discardableResult func createWorktree(projectID: UUID, branch: String, remote: String? = nil, command: [String] = [], select: Bool = true) async throws -> TerminalContext {
@@ -887,6 +904,7 @@ struct ForgottenWorktree: Sendable {
         let added = discovered.filter { worktree in !projects[index].worktrees.contains { $0.path == worktree.path } }
         guard !added.isEmpty else { return }
         projects[index].worktrees.append(contentsOf: added)
+        collapsed.formUnion(added.map(\.id))
         save()
     }
 

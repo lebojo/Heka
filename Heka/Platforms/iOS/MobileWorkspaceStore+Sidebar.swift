@@ -24,8 +24,20 @@ extension MobileWorkspaceStore: SidebarModel {
     }
 
     func wakeProject(_ id: UUID) {
-        guard let project = workspace.projects.first(where: { $0.id == id }), project.worktrees.allSatisfy({ $0.terminals.isEmpty }),
-              let worktree = project.worktrees.first(where: \.isPrimary) ?? project.worktrees.first else { return }
+        guard let project = workspace.projects.first(where: { $0.id == id }) else {
+            error = String(localized: "Project not found.")
+            return
+        }
+        if let open = project.openTerminal(preferring: selection, avoiding: []) {
+            setExpanded(id, true)
+            setExpanded(open.worktreeID, true)
+            selection = open.terminalID
+            return
+        }
+        guard let worktree = project.worktreeForNewTerminal(avoiding: []) else {
+            error = String(localized: "This project has no worktree to open a terminal in.")
+            return
+        }
         Task { await newTerminal(projectID: id, worktreeID: worktree.id, opensShell: true) }
     }
 

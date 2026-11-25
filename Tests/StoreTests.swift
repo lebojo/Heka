@@ -42,6 +42,12 @@ private final class ChangeFlag: @unchecked Sendable {
             return false
         } catch { return true }
     }
+    @MainActor static func addProjectWithTerminal(_ url: URL, to store: WorkspaceStore) throws -> Project {
+        let project = try store.addProject(url)
+        try store.addTerminal(projectID: project.id, worktreeID: project.worktrees[0].id, select: false)
+        return store.projects.first { $0.id == project.id }!
+    }
+
     @MainActor static func main() async throws {
         let fm = FileManager.default
         let root = fm.temporaryDirectory.appendingPathComponent("heka-store-tests-\(UUID())")
@@ -49,8 +55,8 @@ private final class ChangeFlag: @unchecked Sendable {
         defer { try? fm.setAttributes([.posixPermissions: 0o700], ofItemAtPath: root.path); try? fm.removeItem(at: root) }
         let file = root.appendingPathComponent("workspace.json")
         let folder = ProjectFolder(name: "Studio")
-        let p1 = Project(url: root.appendingPathComponent("one"), folderID: folder.id)
-        let p2 = Project(url: root.appendingPathComponent("two"))
+        let p1 = Project(url: root.appendingPathComponent("one"), folderID: folder.id, terminals: [TerminalRecord(name: "Terminal")])
+        let p2 = Project(url: root.appendingPathComponent("two"), terminals: [TerminalRecord(name: "Terminal")])
         let initial = Workspace(folders: [folder], projects: [p1, p2])
         try WorkspaceDisk.save(initial, to: file)
         let store = WorkspaceStore(fileURL: file)
@@ -82,6 +88,28 @@ private final class ChangeFlag: @unchecked Sendable {
         store.errorMessage = nil
         print("PASS busy project removal")
 
+        store.wakeProject(p2.id)
+        try require(store.selection == p2.worktrees[0].terminals[0].id && store.errorMessage == nil,
+                    "Waking a project that already has a terminal selects it")
+        store.wakeProject(UUID())
+        try require(store.errorMessage != nil, "Waking a missing project shows an error instead of doing nothing")
+        store.errorMessage = nil
+        var waking = Project(url: root.appendingPathComponent("waking"), terminals: [TerminalRecord(name: "Terminal")])
+        let mainTerminal = waking.worktrees[0].terminals[0]
+        let feature = Worktree(name: "feature", path: root.appendingPathComponent("feature").path, isPrimary: false,
+                               terminals: [TerminalRecord(name: "A"), TerminalRecord(name: "B")])
+        waking.worktrees.append(feature)
+        try require(waking.openTerminal(preferring: nil, avoiding: []) == Project.OpenTerminal(worktreeID: waking.worktrees[0].id, terminalID: mainTerminal.id),
+                    "Waking opens the first terminal")
+        try require(waking.openTerminal(preferring: feature.terminals[1].id, avoiding: [])?.terminalID == feature.terminals[1].id,
+                    "Waking keeps the selected terminal of the project")
+        try require(waking.openTerminal(preferring: mainTerminal.id, avoiding: [waking.worktrees[0].id])?.terminalID == feature.terminals[0].id,
+                    "Waking skips a worktree being deleted")
+        try require(waking.openTerminal(preferring: nil, avoiding: Set(waking.worktrees.map(\.id))) == nil
+                    && waking.worktreeForNewTerminal(avoiding: [waking.worktrees[0].id])?.id == feature.id,
+                    "A new terminal goes to a worktree that isn't being deleted")
+        print("PASS waking a project never fails silently")
+
         if geteuid() != 0 {
             try fm.setAttributes([.posixPermissions: 0o500], ofItemAtPath: root.path)
             _ = store.addFolder("Pending save")
@@ -104,7 +132,7 @@ private final class ChangeFlag: @unchecked Sendable {
 
         let reviews = WorktreeGroup(name: "Reviews")
         let spare = WorktreeGroup(name: "Spare")
-        var sidebarProject = Project(url: root.appendingPathComponent("sidebar-project"))
+        var sidebarProject = Project(url: root.appendingPathComponent("sidebar-project"), terminals: [TerminalRecord(name: "Terminal")])
         let reviewed = Worktree(name: "fix-login", path: "/tmp/fix-login", terminals: [TerminalRecord(name: "codex")], groupID: reviews.id)
         let loose = Worktree(name: "feature-api", path: "/tmp/feature-api")
         sidebarProject.worktreeGroups = [reviews, spare]
@@ -134,7 +162,7 @@ private final class ChangeFlag: @unchecked Sendable {
         try require(nested.folders.first { $0.id == parent }?.parentID == nil, "Refused moves leave the hierarchy intact")
         try require(nested.folders.destinations(excluding: child).map(\.title) == ["Clients", "Ignoré"], "Destinations exclude the moved subtree")
         try require(nested.folders.destinations().map(\.title).contains("Clients › Acme › Mobile"), "Destinations show nested paths")
-        let nestedProject = Project(url: root.appendingPathComponent("one"), folderID: grandchild)
+        let nestedProject = Project(url: root.appendingPathComponent("one"), folderID: grandchild, terminals: [TerminalRecord(name: "Terminal")])
         let tree = SidebarFilterInput(folders: nested.folders, projects: [nestedProject], query: "").filtered()
         try require(tree.groups.map(\.folder.name) == ["Clients", "Ignoré"] && tree.groups[0].total == 1, "Nested folders render under their parent and count descendants")
         try require(tree.groups[0].subgroups[0].subgroups[0].projects == [nestedProject], "Projects appear in their nested folder")
@@ -158,10 +186,12 @@ private final class ChangeFlag: @unchecked Sendable {
         try fm.createDirectory(at: livingDirectory, withIntermediateDirectories: true)
         let living = try nested.addProject(livingDirectory, folderID: deadFolder)
         try require(living.folderID == nil, "A project added to a folder that no longer exists lands at the root")
+        try require(living.worktrees.allSatisfy(\.terminals.isEmpty),
+                    "An added project starts idle, without a terminal")
         nested.moveProject(living.id, to: deadFolder)
         try require(nested.projects.first { $0.id == living.id }?.folderID == nil, "Moving a project to a folder that no longer exists is refused")
         let strayFile = root.appendingPathComponent("stray.json")
-        try WorkspaceDisk.save(Workspace(projects: [Project(url: livingDirectory, folderID: deadFolder)]), to: strayFile)
+        try WorkspaceDisk.save(Workspace(projects: [Project(url: livingDirectory, folderID: deadFolder, terminals: [TerminalRecord(name: "Terminal")])]), to: strayFile)
         try require(WorkspaceStore(fileURL: strayFile).projects.allSatisfy { $0.folderID == nil }, "A project whose folder no longer exists comes back at the root")
         print("PASS unknown folders never hide a project")
 
@@ -188,7 +218,7 @@ private final class ChangeFlag: @unchecked Sendable {
         for url in orderedURLs { try fm.createDirectory(at: url, withIntermediateDirectories: true) }
         let orderedFile = root.appendingPathComponent("ordered.json")
         let ordered = WorkspaceStore(fileURL: orderedFile)
-        let alpha = try ordered.addProject(orderedURLs[0]).id, beta = try ordered.addProject(orderedURLs[1]).id, gamma = try ordered.addProject(orderedURLs[2]).id
+        let alpha = try addProjectWithTerminal(orderedURLs[0], to: ordered).id, beta = try ordered.addProject(orderedURLs[1]).id, gamma = try ordered.addProject(orderedURLs[2]).id
         ordered.reorderProjects([alpha, beta, gamma], from: [2], to: 0)
         try require(ordered.projects.map(\.id) == [gamma, alpha, beta], "Projects reorder")
         let folderOne = ordered.addFolder("Un"), folderTwo = ordered.addFolder("Deux"), inner = ordered.addFolder("Sous", parentID: folderOne)
@@ -220,7 +250,7 @@ private final class ChangeFlag: @unchecked Sendable {
         let split = WorkspaceStore(fileURL: splitFile)
         let splitRoot = root.appendingPathComponent("split-project")
         try fm.createDirectory(at: splitRoot, withIntermediateDirectories: true)
-        let splitProject = try split.addProject(splitRoot)
+        let splitProject = try addProjectWithTerminal(splitRoot, to: split)
         let first = splitProject.worktrees[0].terminals[0].id
         let right = try split.splitTerminal(first, axis: .horizontal).terminal.id
         let below = try split.splitTerminal(right, axis: .vertical).terminal.id
@@ -264,7 +294,7 @@ private final class ChangeFlag: @unchecked Sendable {
                     "Moving from another layout of the worktree dissolves the emptied layout")
         let elsewhere = root.appendingPathComponent("dropped-elsewhere")
         try fm.createDirectory(at: elsewhere, withIntermediateDirectories: true)
-        let otherWorktree = try split.addProject(elsewhere)
+        let otherWorktree = try addProjectWithTerminal(elsewhere, to: split)
         let foreign = otherWorktree.worktrees[0].terminals[0].id
         try require(!split.canMoveTerminal(foreign, beside: first) && !split.moveTerminal(foreign, beside: first, edge: .leading)
                     && split.layout(for: foreign) == .terminal(foreign), "Terminals of another worktree cannot be combined")
@@ -285,7 +315,7 @@ private final class ChangeFlag: @unchecked Sendable {
             let split = WorkspaceStore(fileURL: root.appendingPathComponent("blocks.json"))
             let blocksRoot = root.appendingPathComponent("blocks-project")
             try fm.createDirectory(at: blocksRoot, withIntermediateDirectories: true)
-            let splitProject = try split.addProject(blocksRoot)
+            let splitProject = try addProjectWithTerminal(blocksRoot, to: split)
             let first = splitProject.worktrees[0].terminals[0].id
             let worktreeID = splitProject.worktrees[0].id
             let b = try split.addTerminal(projectID: splitProject.id, worktreeID: worktreeID, name: "b").terminal.id
@@ -326,7 +356,7 @@ private final class ChangeFlag: @unchecked Sendable {
                         "Renaming a terminal rebuilds its worktree's blocks")
             let leadingRoot = root.appendingPathComponent("blocks-leading")
             try fm.createDirectory(at: leadingRoot, withIntermediateDirectories: true)
-            let leadingProject = try split.addProject(leadingRoot)
+            let leadingProject = try addProjectWithTerminal(leadingRoot, to: split)
             let leadingWorktree = leadingProject.worktrees[0].id
             let paneA = leadingProject.worktrees[0].terminals[0].id
             let paneB = try split.addTerminal(projectID: leadingProject.id, worktreeID: leadingWorktree, name: "b").terminal.id
@@ -367,7 +397,7 @@ private final class ChangeFlag: @unchecked Sendable {
             print("PASS sidebar split blocks")
         }
 
-        var busy = Project(url: root.appendingPathComponent("busy"))
+        var busy = Project(url: root.appendingPathComponent("busy"), terminals: [TerminalRecord(name: "Terminal")])
         let waiting = TerminalRecord(name: "Review")
         let working = TerminalRecord(name: "Build")
         let ready = TerminalRecord(name: "Docs")
@@ -387,7 +417,7 @@ private final class ChangeFlag: @unchecked Sendable {
                                                           .status(.ready), .terminal(ready.id)]
                         && progress[0].rows.first == .status(.waitingForInput, count: 1),
                     "Work in progress flattens into one list of status headers and terminals with stable identities")
-        var otherBusy = Project(url: root.appendingPathComponent("other"))
+        var otherBusy = Project(url: root.appendingPathComponent("other"), terminals: [TerminalRecord(name: "Terminal")])
         let otherWorking = TerminalRecord(name: "Lint")
         let otherSecond = TerminalRecord(name: "Format")
         otherBusy.worktrees[0].terminals = [otherWorking, otherSecond]
@@ -476,7 +506,7 @@ private final class ChangeFlag: @unchecked Sendable {
         try fm.createDirectory(at: lonelyRoot, withIntermediateDirectories: true)
         _ = try await GitService.run(["init", "-q", "-b", "main"], at: lonelyRoot.path)
         _ = try await GitService.run(["-c", "user.name=Heka Tests", "-c", "user.email=tests@example.invalid", "commit", "-q", "--allow-empty", "-m", "Initial"], at: lonelyRoot.path)
-        let lonely = try await GitService.createWorktree(project: Project(url: lonelyRoot), branch: "solo", root: worktreesRoot)
+        let lonely = try await GitService.createWorktree(project: Project(url: lonelyRoot, terminals: [TerminalRecord(name: "Terminal")]), branch: "solo", root: worktreesRoot)
         let broken = worktreesRoot.appendingPathComponent("broken")
         try fm.createDirectory(at: broken, withIntermediateDirectories: true)
         try "gitdir: \(root.path)/missing/.git/worktrees/broken\n".write(to: broken.appendingPathComponent(".git"), atomically: true, encoding: .utf8)
@@ -485,7 +515,7 @@ private final class ChangeFlag: @unchecked Sendable {
         try fm.createDirectory(at: clone, withIntermediateDirectories: true)
         _ = try await GitService.run(["init", "-q", "-b", "main"], at: clone.path)
         let extraRoot = root.appendingPathComponent("extra-worktrees")
-        let extra = try await GitService.createWorktree(project: Project(url: lonelyRoot), branch: "extra", root: extraRoot)
+        let extra = try await GitService.createWorktree(project: Project(url: lonelyRoot, terminals: [TerminalRecord(name: "Terminal")]), branch: "extra", root: extraRoot)
         let scanned = [worktreesRoot, extraRoot]
         await groups.adoptWorktrees(in: scanned)
         try require(groupedProject().worktrees.contains { $0.path == adoptable.path && $0.name == "adopt/me" },
@@ -606,6 +636,7 @@ private final class ChangeFlag: @unchecked Sendable {
         let locked = try await GitService.createWorktree(project: grouped, branch: "locked/one", root: worktreesRoot)
         await groups.refreshWorktrees(grouped.id)
         let lockedIndex = groupedProject().worktrees.firstIndex { $0.path == locked.path }
+        try require(!groups.isExpanded(groupedProject().worktrees[lockedIndex!].id), "A discovered worktree starts collapsed")
         _ = try await GitService.run(["worktree", "lock", locked.path], at: gitRoot.path)
         do {
             try await groups.deleteWorktree(projectID: grouped.id, worktreeID: groupedProject().worktrees[lockedIndex!].id)
@@ -761,7 +792,7 @@ private final class ChangeFlag: @unchecked Sendable {
         print("PASS agent sessions resume after relaunch")
 
         let relaunchFile = root.appendingPathComponent("relaunch.json")
-        var relaunchProject = Project(url: root.appendingPathComponent("relaunch"))
+        var relaunchProject = Project(url: root.appendingPathComponent("relaunch"), terminals: [TerminalRecord(name: "Terminal")])
         let agentTerminal = TerminalRecord(name: "Agent", resume: resume)
         let idleTerminal = relaunchProject.worktrees[0].terminals[0]
         relaunchProject.worktrees[0].terminals.append(agentTerminal)

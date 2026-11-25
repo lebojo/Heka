@@ -104,13 +104,31 @@ struct Project: Identifiable, Codable, Equatable, Sendable {
         worktreeGroups.contains { $0.id != groupID && $0.name.caseInsensitiveCompare(name) == .orderedSame }
     }
 
-    init(url: URL, folderID: UUID? = nil) {
+    struct OpenTerminal: Equatable {
+        let worktreeID: UUID
+        let terminalID: UUID
+    }
+
+    func openTerminal(preferring selected: UUID?, avoiding removing: Set<UUID>) -> OpenTerminal? {
+        let usable = worktrees.filter { !removing.contains($0.id) }
+        if let selected, let worktree = usable.first(where: { $0.terminals.contains { $0.id == selected } }) {
+            return OpenTerminal(worktreeID: worktree.id, terminalID: selected)
+        }
+        guard let worktree = usable.first(where: { !$0.terminals.isEmpty }), let terminal = worktree.terminals.first else { return nil }
+        return OpenTerminal(worktreeID: worktree.id, terminalID: terminal.id)
+    }
+
+    func worktreeForNewTerminal(avoiding removing: Set<UUID>) -> Worktree? {
+        let usable = worktrees.filter { !removing.contains($0.id) }
+        return usable.first(where: \.isPrimary) ?? usable.first
+    }
+
+    init(url: URL, folderID: UUID? = nil, terminals: [TerminalRecord] = []) {
         let path = WorkspacePath.canonical(url)
         self.name = url.lastPathComponent
         self.path = path
         self.folderID = folderID
-        self.worktrees = [Worktree(name: "Main", path: path, isPrimary: true,
-                                   terminals: [TerminalRecord(name: "Terminal")])]
+        self.worktrees = [Worktree(name: "Main", path: path, isPrimary: true, terminals: terminals)]
     }
 
     init(from decoder: Decoder) throws {

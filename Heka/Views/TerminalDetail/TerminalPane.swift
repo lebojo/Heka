@@ -25,6 +25,8 @@ struct TerminalPane: View {
                     store.sessions.close(context.terminal.id)
                     store.startSession(for: context.terminal.id)
                 }
+            } else if store.isRemovingWorktree(containing: context.terminal.id) {
+                ContentUnavailableView("This worktree is being deleted.", systemImage: "trash")
             } else {
                 ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
             }

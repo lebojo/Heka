@@ -8004,6 +8004,16 @@
         }
       }
     },
+    "This project has no worktree to open a terminal in." : {
+      "localizations" : {
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ce projet n’a aucun worktree où ouvrir un terminal."
+          }
+        }
+      }
+    },
     "This remote branch isn’t available on the Mac." : {
       "localizations" : {
         "fr" : {
