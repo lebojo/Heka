@@ -67,9 +67,14 @@ extension AgentEffort: Comparable {
 struct AgentOptions: Codable, Hashable, Sendable {
     var model = AgentModel.automatic
     var effort = AgentEffort.automatic
+    var copilot: CopilotModelState?
 
     func switching(to model: AgentModel, efforts: [AgentEffort]) -> AgentOptions {
-        AgentOptions(model: model, effort: effort.applied(within: efforts))
+        AgentOptions(model: model, effort: effort.applied(within: efforts), copilot: copilot)
+    }
+
+    func switching(toCopilot model: CopilotModel) -> AgentOptions {
+        AgentOptions(model: self.model, effort: effort, copilot: CopilotModelState(choosing: model))
     }
 }
 
@@ -77,11 +82,13 @@ struct AgentOptionsReport: Equatable, Sendable {
     var model: AgentModel?
     var effort: AgentEffort?
     var modelReportedOffset: UInt64?
+    var copilot: CopilotModelState?
 
-    init(model: AgentModel? = nil, effort: AgentEffort? = nil, modelReportedOffset: UInt64? = nil) {
+    init(model: AgentModel? = nil, effort: AgentEffort? = nil, modelReportedOffset: UInt64? = nil, copilot: CopilotModelState? = nil) {
         self.model = model
         self.effort = effort
         self.modelReportedOffset = modelReportedOffset
+        self.copilot = copilot
     }
 
     init(launchArguments arguments: [String]) {
@@ -102,7 +109,7 @@ struct AgentOptionsReport: Equatable, Sendable {
     func resolved(defaults: AgentOptionsReport) -> AgentOptions {
         let model = model ?? defaults.model ?? .automatic
         let effort = effort ?? defaults.effort ?? .automatic
-        return AgentOptions(model: model, effort: effort.applied(within: model.efforts))
+        return AgentOptions(model: model, effort: effort.applied(within: model.efforts), copilot: copilot)
     }
 
     func filling(_ fallback: AgentOptionsReport) -> AgentOptionsReport {

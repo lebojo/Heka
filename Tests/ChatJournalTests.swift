@@ -76,6 +76,70 @@ import Foundation
         ]
     }
 
+    static func copilotModelOptions() throws {
+        func options(_ events: [[String: Any]]) throws -> AgentOptionsReport {
+            var decoder = CopilotChatDecoder()
+            for (offset, event) in events.enumerated() { decoder.consume(try line(event), offset: UInt64(offset)) }
+            return decoder.options
+        }
+        let silent = try options([["type": "user.message", "data": ["content": "Bonjour"]]])
+        try require(silent == AgentOptionsReport(), "A Copilot journal without model events reports nothing")
+        let resolved = try options([
+            ["type": "session.start", "data": ["sessionId": "s"]],
+            ["type": "session.model_change", "data": ["cause": "initial_resolution", "source": "automatic", "newModel": "claude-sonnet-5.5", "reasoningEffort": "medium"]]
+        ])
+        try require(resolved.copilot == CopilotModelState(choosing: CopilotModel(id: "claude-sonnet-5.5")), "The initially resolved model is the selected model")
+        try require(resolved.resolved(defaults: AgentOptionsReport()).copilot?.shown.title == "Claude Sonnet 5.5", "Copilot model ids read as titles")
+        let auto = try options([
+            ["type": "session.start", "data": ["selectedModel": "auto"]],
+            ["type": "session.auto_mode_resolved", "data": ["chosenModel": "gpt-6-luna"]],
+            ["type": "assistant.message", "data": ["messageId": "m", "model": "gpt-6-luna", "content": "Oui"]]
+        ])
+        try require(auto.copilot?.shown == .automatic && auto.copilot?.running == CopilotModel(id: "gpt-6-luna"), "Auto keeps its selection and the model Copilot picked")
+        try require(auto.copilot?.title == "Auto (GPT-6 Luna)", "Auto shows the model Copilot runs")
+        let switched = try options([
+            ["type": "session.start", "data": ["selectedModel": "auto"]],
+            ["type": "session.auto_mode_resolved", "data": ["chosenModel": "gpt-6-luna"]],
+            ["type": "session.model_change", "data": ["newModel": "grok-4.7"]],
+            ["type": "assistant.message", "data": ["messageId": "m", "model": "grok-4.7", "content": "Oui"]]
+        ])
+        try require(switched.copilot == CopilotModelState(choosing: CopilotModel(id: "grok-4.7")), "/model changes are read from the journal")
+        let trimmedAuto = try options([
+            ["type": "session.model_change", "data": ["cause": "rate_limit", "source": "automatic", "newModel": "claude-sonnet-5"]],
+            ["type": "assistant.message", "data": ["messageId": "m", "model": "claude-sonnet-5", "content": "Oui"]]
+        ])
+        try require(trimmedAuto.copilot == CopilotModelState(running: CopilotModel(id: "claude-sonnet-5")) && trimmedAuto.copilot?.title == "Claude Sonnet 5",
+                    "An automatic switch read without the session start shows the running model without guessing the selection")
+        let commanded = try options([
+            ["type": "session.start", "data": ["sessionId": "s"]],
+            ["type": "session.model_change", "data": ["cause": "initial_resolution", "source": "automatic", "newModel": "claude-sonnet-5.5", "reasoningEffort": "medium"]],
+            ["type": "session.model_change", "data": ["source": "model_command", "newModel": "auto", "previousModel": "claude-sonnet-5.5", "previousReasoningEffort": "medium"]]
+        ])
+        try require(commanded.copilot == CopilotModelState(choosing: .automatic), "/model auto, as recorded by Copilot 1.0.112, selects Auto")
+        let fromMessage = try options([["type": "assistant.message", "data": ["messageId": "m", "model": "gpt-5.3-codex", "content": "Oui"]]])
+        try require(fromMessage.copilot?.title == "GPT-5.3 Codex", "A trimmed journal still shows the model of the replies")
+        try require(CopilotModel(reported: "Fusion") == .automatic && CopilotModel(reported: " ") == nil, "Copilot Fusion is the automatic model")
+        try require(CopilotModel(id: "mai-code-1.1-flash").title == "MAI Code 1.1 Flash" && CopilotModel(id: "claude-opus-4.8-fast").title == "Claude Opus 4.8 Fast",
+                    "Model titles keep acronyms and versions")
+        try require(CopilotModel(id: "gpt-6-luna").command == AgentCommand(text: "/model gpt-6-luna"), "A Copilot model is chosen with /model <id>")
+        let unknown = CopilotModel(id: "future-model")
+        try require(CopilotModel.choices(including: unknown).last == unknown && CopilotModel.choices(including: .automatic).first == .automatic
+                    && CopilotModel.choices(including: .automatic).count == CopilotModel.catalog.count + 1, "The menu lists Auto, the catalog and an unknown running model")
+        try require(SessionChatSource.copilot.supportsAgentOptions && SessionChatSource.copilot.models.isEmpty
+                    && SessionChatSource.copilot.efforts(for: .opus).isEmpty && SessionChatSource.copilot.modelPickerCommand == nil,
+                    "Copilot shows its own model menu, no Claude model or effort menu and no terminal picker")
+        try require(!SessionChatSource.codex.supportsAgentOptions && !SessionChatSource.openCode.supportsAgentOptions && !SessionChatSource.terminal.supportsAgentOptions,
+                    "Sources without readable options show no option menus")
+        try require(SessionChatSource.claude.models == AgentModel.allCases && SessionChatSource.claude.efforts(for: .sonnet) == AgentModel.sonnet.efforts,
+                    "Claude options are unchanged")
+        let encoded = try JSONEncoder().encode(AgentOptions(copilot: auto.copilot))
+        let decoded = try JSONDecoder().decode(AgentOptions.self, from: encoded)
+        try require(decoded == AgentOptions(copilot: auto.copilot), "Copilot model state survives remote encoding")
+        let legacy = try JSONDecoder().decode(AgentOptions.self, from: Data(#"{"model":"opus","effort":"high"}"#.utf8))
+        try require(legacy == AgentOptions(model: .opus, effort: .high), "Options from an older Mac still decode")
+        print("PASS Copilot model reports, titles, menu choices and remote encoding")
+    }
+
     static func chatActivity() throws {
         try require(ChatActivity(status: .working, isSending: false, isEnabled: true).showsIndicator, "working agent shows the indicator")
         try require(ChatActivity(status: .ready, isSending: true, isEnabled: true).showsIndicator, "sending shows the indicator before the agent reacts")
@@ -88,6 +152,20 @@ import Foundation
         try require(!ChatActivity(subagent: .done).showsIndicator, "a finished subagent hides the indicator")
         try require(!ChatActivity(subagent: .stopped).showsIndicator, "a stopped subagent hides the indicator")
         print("PASS chat activity indicator visibility")
+        try chatInterrupt()
+    }
+
+    static func chatInterrupt() throws {
+        let idle = ChatActivity(status: .ready, isSending: false, isEnabled: true)
+        let working = ChatActivity(status: .working, isSending: false, isEnabled: true)
+        let sending = ChatActivity(status: .ready, isSending: true, isEnabled: true)
+        try require(!idle.allowsInterrupt(from: .claude, status: .ready), "an idle agent hides Interrupt")
+        try require(ChatActivity(status: nil, isSending: false, isEnabled: true).allowsInterrupt(from: .codex, status: nil), "an unknown status keeps Interrupt available")
+        try require(working.allowsInterrupt(from: .claude, status: .working), "a working agent shows Interrupt")
+        try require(sending.allowsInterrupt(from: .copilot, status: .ready), "a message being sent shows Interrupt")
+        try require(idle.allowsInterrupt(from: .claude, status: .waitingForInput), "an approval prompt shows Interrupt")
+        try require(idle.allowsInterrupt(from: .terminal, status: .ready), "a plain terminal always offers Escape")
+        print("PASS chat interrupt visibility")
     }
 
     @MainActor static func main() async throws {
@@ -249,6 +327,7 @@ import Foundation
                     "Copilot failed tool execution reports its error")
         try require(copilot.messages[2].text == "Un test échoue.", "Copilot assistant reply")
         print("PASS Copilot events, tool executions and replies")
+        try copilotModelOptions()
 
         let root = FileManager.default.temporaryDirectory.appendingPathComponent("heka-claude-\(UUID())")
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)

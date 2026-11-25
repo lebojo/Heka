@@ -15,15 +15,7 @@ struct SessionComposerThumbnail: View {
         .frame(width: Dimension.Chat.attachmentSize, height: Dimension.Chat.attachmentSize)
         .clipShape(.rect(cornerRadius: Radius.m))
         .overlay(alignment: .topTrailing) {
-            Button { drafts.remove(image, from: chat.terminal) } label: {
-                Image(systemName: "xmark.circle.fill")
-                    .symbolRenderingMode(.palette)
-                    .foregroundStyle(Color.badgeSymbol, Color.badgeFill)
-            }
-            .buttonStyle(.plain)
-            .padding(Spacing.xxs)
-            .accessibilityLabel("Remove Image")
-            .help("Remove Image")
+            SessionComposerRemoveButton(title: "Remove Image") { drafts.remove(image, from: chat.terminal) }
         }
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Attached Image")

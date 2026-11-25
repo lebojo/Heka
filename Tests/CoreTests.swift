@@ -125,6 +125,13 @@ import Foundation
         try require(floating.focusedID == first.id, "Next tab wraps around")
         floating.selectTab(offset: -1)
         try require(floating.focusedID == right.id, "Selecting a tab restores its last focused pane")
+        floating.selectTab(at: 0)
+        try require(floating.focusedID == first.id, "Selecting a tab by index focuses its pane")
+        floating.selectTab(at: 2)
+        floating.selectTab(at: -1)
+        try require(floating.focusedID == first.id, "Selecting a missing tab changes nothing")
+        floating.selectTab(at: 1)
+        try require(floating.focusedID == right.id, "Selecting a tab by index restores its last focused pane")
         let beforeFocusChange = floating
         floating.focus(second.id)
         floating.select(floating.tabs[0])

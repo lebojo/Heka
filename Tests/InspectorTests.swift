@@ -193,6 +193,9 @@ enum InspectorTests {
         try require(deep.lineNumberDigits == 6 && deep.onlySection?.additions == 1, "Gutter fits the widest line number")
         print("PASS diff parsing and side-by-side pairing")
 
+        try intraLineDiff()
+        print("PASS intra-line changes of paired lines")
+
         let entries = try await InspectorService.children(at: repository)
         try require(!entries.contains(where: { $0.name == ".git" }), "Hide Git internals")
         let link = root.appendingPathComponent("inspector-link")
@@ -313,6 +316,38 @@ enum InspectorTests {
 
     private static func porcelainEntry(_ kind: String, _ codes: String, _ fields: Int, _ path: String) -> String {
         ([kind, codes] + Array(repeating: "x", count: fields - 2) + [path]).joined(separator: " ")
+    }
+
+    private static func intraLineDiff() throws {
+        let require = CoreTests.require
+        let comma = IntraLineDiff(old: "call(a, b)", new: "call(a b)")
+        try require(comma?.old == [6..<7] && comma?.new == [], "A removed comma is the only emphasized character")
+        let trailingComma = IntraLineDiff(old: "let x = 1", new: "let x = 1,")
+        try require(trailingComma?.old == [] && trailingComma?.new == [9..<10], "An added comma is the only emphasized character")
+        let insertion = IntraLineDiff(old: "let total = price", new: "let total = price * count")
+        try require(insertion?.old == [] && insertion?.new == [17..<25], "Inserted words are emphasized precisely")
+        let deletion = IntraLineDiff(old: "if a && b {", new: "if b {")
+        try require(deletion?.old == [3..<8] && deletion?.new == [], "Deleted words are emphasized precisely")
+        let digit = IntraLineDiff(old: "value1 = 0", new: "value2 = 0")
+        try require(digit?.old == [5..<6] && digit?.new == [5..<6], "Small edits inside a word are refined to characters")
+        let renamed = IntraLineDiff(old: "count = 1", new: "total = 1")
+        try require(renamed?.old == [0..<5] && renamed?.new == [0..<5], "Unrelated words are emphasized whole, not in fragments")
+        let unicode = IntraLineDiff(old: "café, 🇨🇭 ok", new: "café 🇨🇭 ok")
+        try require(unicode?.old == [4..<5] && unicode?.new == [], "Offsets count characters, not code units")
+        try require(IntraLineDiff(old: "foo", new: "bar") == nil && IntraLineDiff(old: "a b", new: "c d") == nil
+                    && IntraLineDiff(old: "same", new: "same") == nil, "Lines with nothing in common keep their whole-line rendering")
+        let longest = String(repeating: "a ", count: IntraLineDiff.maximumLength / 2)
+        try require(IntraLineDiff(old: longest, new: longest + ",") == nil && IntraLineDiff(old: String(longest.dropLast()) + ",", new: String(longest.dropLast())) != nil,
+                    "Very long lines keep their whole-line rendering")
+
+        let section = GitDiffSection(kind: .unstaged, patch: "@@ -1,3 +1,2 @@\n keep\n-call(a, b)\n-extra\n+call(a b)\n")
+        let lines = section.lines
+        try require(lines.map(\.kind) == [.hunk, .context, .deletion, .deletion, .addition], "Parse the paired fixture")
+        try require(section.changedRanges(of: lines[2]) == [6..<7] && section.changedRanges(of: lines[4]) == []
+                    && section.changedRanges(of: lines[3]) == [] && section.changedRanges(of: lines[1]) == [],
+                    "Unified rows emphasize paired lines only")
+        try require(section.changes(in: section.rows[2])?.old == [6..<7] && section.changes(in: section.rows[3]) == nil && section.changes(in: section.rows[1]) == nil,
+                    "Side-by-side rows emphasize paired lines only")
     }
 
     private static func previewModels() throws {

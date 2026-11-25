@@ -13,6 +13,7 @@ struct MobileSettingsView: View {
         NavigationStack {
             Form {
                 SessionDisplaySettingsSection(mode: $mode)
+                ChatThemeSettingsSection()
                 BorderBeamSettingsSection()
                 MobileTerminalSettingsSection()
                 MobileSavedHostsSection(scannerVisible: $scannerVisible)

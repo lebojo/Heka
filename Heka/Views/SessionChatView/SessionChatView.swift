@@ -1,6 +1,10 @@
 import SwiftUI
 
 struct SessionChatView: View {
+    @AppStorage(ChatTheme.storageKey) private var theme = ChatTheme.system
+
+    @Environment(\.colorScheme) private var colorScheme
+
     @State private var chat: SessionChat
 
     let messages: [SessionMessage]
@@ -10,19 +14,38 @@ struct SessionChatView: View {
     let isEnabled: Bool
     let status: AgentStatus?
 
+    private var activity: ChatActivity {
+        ChatActivity(status: status, isSending: chat.isSending || chat.awaitsAgent, isEnabled: isEnabled)
+    }
+
     private var isAgentWorking: Bool {
-        source.agent != nil && ChatActivity(status: status, isSending: chat.isSending || chat.awaitsAgent, isEnabled: isEnabled).showsIndicator
+        source.agent != nil && activity.showsIndicator
+    }
+
+    private var unconfirmedCandidates: [UUID] {
+        isAgentWorking ? [] : chat.sendingPendingIDs
     }
 
     var body: some View {
-        SessionTranscriptList(messages: messages, source: source, showsTypingIndicator: isAgentWorking)
-        .background(Color.surface)
+        SessionTranscriptList(messages: messages, pending: chat.pendingMessages, source: source, showsTypingIndicator: isAgentWorking)
+        .background(.background)
         .safeAreaInset(edge: .bottom, spacing: 0) {
             SessionComposer(source: source, options: options, commands: commands, isEnabled: isEnabled,
-                            isBusy: !(status?.acceptsCommands ?? true), isWorking: isAgentWorking)
+                            isBusy: !(status?.acceptsCommands ?? true), isWorking: isAgentWorking,
+                            isInterruptible: activity.allowsInterrupt(from: source, status: status))
         }
+        .backgroundStyle(theme.surface)
+        .environment(\.colorScheme, theme.colorScheme(following: colorScheme))
         .environment(chat)
         .onChange(of: status) { chat.awaitsAgent = false }
+        .onChange(of: messages, initial: true) { chat.reconcilePending(with: messages) }
+        .task(id: unconfirmedCandidates) {
+            let candidates = unconfirmedCandidates
+            guard !candidates.isEmpty else { return }
+            try? await Task.sleep(for: PendingChatMessages.confirmationGrace)
+            guard !Task.isCancelled else { return }
+            chat.markPendingUnconfirmed(candidates)
+        }
         .task(id: chat.awaitsAgent) {
             guard chat.awaitsAgent else { return }
             try? await Task.sleep(for: ChatActivity.agentStartGrace)

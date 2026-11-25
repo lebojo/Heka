@@ -5,6 +5,8 @@ enum Dimension {
         static let readableWidth: CGFloat = 760
         static let sendSize: CGFloat = 22
         static let attachmentSize: CGFloat = 56
+        static let quoteCardWidth: CGFloat = 200
+        static let quotePopoverWidth: CGFloat = 360
         static let commandPopupMaxHeight: CGFloat = 260
         #if os(macOS)
         static let bodyFontSize: CGFloat = 13

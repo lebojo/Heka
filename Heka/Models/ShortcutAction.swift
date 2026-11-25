@@ -32,15 +32,29 @@ enum ShortcutAction: String, CaseIterable, Identifiable, Sendable {
     case splitDown
     case previousTab
     case nextTab
+    case selectTab1
+    case selectTab2
+    case selectTab3
+    case selectTab4
+    case selectTab5
+    case selectTab6
+    case selectTab7
+    case selectTab8
+    case selectTab9
     case sendMessage
     case refreshInspector
+
+    static let tabSelections: [ShortcutAction] = [
+        .selectTab1, .selectTab2, .selectTab3, .selectTab4, .selectTab5, .selectTab6, .selectTab7, .selectTab8, .selectTab9,
+    ]
 
     var id: Self { self }
 
     var area: ShortcutArea {
         switch self {
         case .addProject, .importFolder, .newVirtualFolder, .floatingTerminal: .app
-        case .newTerminal, .splitRight, .splitDown, .previousTab, .nextTab: .terminal
+        case .newTerminal, .splitRight, .splitDown, .previousTab, .nextTab,
+             .selectTab1, .selectTab2, .selectTab3, .selectTab4, .selectTab5, .selectTab6, .selectTab7, .selectTab8, .selectTab9: .terminal
         case .sendMessage: .chat
         case .refreshInspector: .inspector
         }
@@ -57,6 +71,8 @@ enum ShortcutAction: String, CaseIterable, Identifiable, Sendable {
         case .splitDown: "Split Down"
         case .previousTab: "Previous Tab"
         case .nextTab: "Next Tab"
+        case .selectTab1, .selectTab2, .selectTab3, .selectTab4, .selectTab5, .selectTab6, .selectTab7, .selectTab8, .selectTab9:
+            "Select Tab \(tabNumber)"
         case .sendMessage: "Send to Session"
         case .refreshInspector: "Refresh"
         }
@@ -73,8 +89,14 @@ enum ShortcutAction: String, CaseIterable, Identifiable, Sendable {
         case .splitDown: KeyCombination("d", modifiers: [.command, .shift])
         case .previousTab: KeyCombination("[", modifiers: [.command, .shift])
         case .nextTab: KeyCombination("]", modifiers: [.command, .shift])
+        case .selectTab1, .selectTab2, .selectTab3, .selectTab4, .selectTab5, .selectTab6, .selectTab7, .selectTab8, .selectTab9:
+            KeyCombination(Character(String(tabNumber)))
         case .sendMessage: KeyCombination(.named(.returnKey))
         case .refreshInspector: KeyCombination("r")
         }
+    }
+
+    private var tabNumber: Int {
+        (Self.tabSelections.firstIndex(of: self) ?? 0) + 1
     }
 }

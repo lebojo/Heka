@@ -19,6 +19,7 @@ struct SessionComposer: View {
     let isEnabled: Bool
     let isBusy: Bool
     let isWorking: Bool
+    let isInterruptible: Bool
 
     private var draft: ChatDraft { drafts[terminal: chat.terminal] }
 
@@ -44,10 +45,16 @@ struct SessionComposer: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.m) {
+            if !draft.quotes.isEmpty {
+                SessionComposerQuotes(quotes: draft.quotes)
+            }
             if !draft.images.isEmpty {
                 SessionComposerImages(images: draft.images)
             }
-            TextField(prompt, text: Bindable(drafts)[terminal: chat.terminal].text, axis: .vertical)
+            if !draft.visiblePastes.isEmpty {
+                SessionComposerPastes(pastes: draft.visiblePastes)
+            }
+            TextField(prompt, text: Bindable(drafts)[terminal: chat.terminal].editedText, axis: .vertical)
                 .font(Font.chatInput)
                 .autocorrectionDisabled()
                 .commandInputTraits()
@@ -64,7 +71,7 @@ struct SessionComposer: View {
                 if source.supportsAgentOptions {
                     SessionAgentOptions(source: source, reported: options, isBusy: isBusy)
                 }
-                SessionComposerControls(source: source, isBusy: isBusy)
+                SessionComposerControls(source: source, isBusy: isBusy, isInterruptible: isInterruptible)
                 Spacer(minLength: Spacing.s)
                 if let pendingArgument {
                     Text("Add \(pendingArgument)")
@@ -87,9 +94,9 @@ struct SessionComposer: View {
         .background(Color.control, in: RoundedRectangle(cornerRadius: Radius.l))
         .overlay {
             RoundedRectangle(cornerRadius: Radius.l)
-                .strokeBorder(isFocused ? Color.accentColor : Color.textTertiary.opacity(0.4), lineWidth: Stroke.hairline)
+                .strokeBorder(isFocused ? beam.beamColor(for: source.agent) : Color.textTertiary.opacity(0.4), lineWidth: Stroke.hairline)
         }
-        .borderBeam(isActive: isWorking && beam.isEnabled, cornerRadius: Radius.l, color: beam.beamColor(for: source.agent))
+        .borderBeam(shape: .rounded(Radius.l), isActive: isWorking && beam.isEnabled, colors: beam.beamColors(for: source.agent))
         .overlay(alignment: .top) {
             if !commandMatches.isEmpty {
                 SessionCommandPopup(matches: commandMatches, selection: commandSelection, accept: accept)
@@ -99,17 +106,18 @@ struct SessionComposer: View {
         .frame(maxWidth: Dimension.Chat.readableWidth)
         .padding(Spacing.xl)
         .frame(maxWidth: .infinity)
-        .background(Color.surface)
+        .background(.background)
         .disabled(!isEnabled)
     }
 
     private func submit() {
-        let sent = draft
-        guard isEnabled, !chat.isSending, !sent.isBlank else { return }
-        let message = source.agent?.prompt(sent.text, attaching: sent.images) ?? sent.text
+        guard isEnabled, !chat.isSending, !draft.isBlank else { return }
         let terminal = chat.terminal
+        let sent = drafts.take(from: terminal)
+        let message = sent.prompt(for: source.agent)
+        let pending = PendingChatMessage(text: sent.message, prompt: message, agent: source.agent)
         Task {
-            if await chat.send(message) { drafts.clear(sent, of: terminal) }
+            if await !chat.send(message, showing: pending) { drafts.restore(sent, to: terminal) }
         }
     }
 

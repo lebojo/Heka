@@ -1,11 +1,6 @@
 import SwiftUI
 
 struct TerminalPane: View {
-    @AppStorage("sessionDisplayMode") private var displayMode: SessionDisplayMode = .terminal
-
-    @Environment(SettingsStore.self) private var settings
-    @Environment(InstalledAgents.self) private var installedAgents
-
     let store: WorkspaceStore
     let context: TerminalContext
     let isFocused: Bool
@@ -25,20 +20,7 @@ struct TerminalPane: View {
                 Divider()
             }
             if let session {
-                if displayMode == .chat, session.agent != nil {
-                    LocalSessionChat(session: session)
-                        .simultaneousGesture(TapGesture().onEnded { select() })
-                        .overlay(alignment: .topTrailing) { RemoteGridBadge(session: session) }
-                } else {
-                    NativeTerminalView(session: session, appearance: settings.terminal, isFocused: isFocused) { select() }
-                        .id(ObjectIdentifier(session))
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .overlay(alignment: .topTrailing) { RemoteGridBadge(session: session) }
-                    if displayMode == .chat, !session.hasExited, !installedAgents.agents.isEmpty {
-                        AgentShortcutBar(agents: installedAgents.agents) { agent in launch(agent, in: session) }
-                            .disabled(session.isLaunchingAgent)
-                    }
-                }
+                LocalSessionContent(session: session, isFocused: isFocused) { select() }
                 SessionEndedBar(session: session) {
                     store.sessions.close(context.terminal.id)
                     store.startSession(for: context.terminal.id)
@@ -53,13 +35,5 @@ struct TerminalPane: View {
 
     private func select() {
         if store.selection != context.terminal.id { store.selection = context.terminal.id }
-    }
-
-    private func launch(_ agent: ConversationAgent, in session: TerminalSession) {
-        select()
-        Task {
-            do { try await session.launch(agent, skippingPermissions: settings.agentLaunch.skipsPermissions, from: .local) }
-            catch { store.errorMessage = error.localizedDescription }
-        }
     }
 }

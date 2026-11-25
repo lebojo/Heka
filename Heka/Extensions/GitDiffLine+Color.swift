@@ -10,6 +10,14 @@ extension GitDiffLine.Kind {
         }
     }
 
+    var emphasis: Color {
+        switch self {
+        case .addition: Color.diffAdditionEmphasis
+        case .deletion: Color.diffDeletionEmphasis
+        case .context, .hunk, .meta: .clear
+        }
+    }
+
     var markerColor: Color {
         switch self {
         case .addition: Color.success

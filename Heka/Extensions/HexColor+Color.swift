@@ -14,6 +14,13 @@ extension BorderBeamAppearance {
         agent.map { color(for: $0).color } ?? Color.accentColor
     }
 
+    func beamColors(for agent: ConversationAgent?) -> [Color] {
+        switch colorMode {
+        case .perAgent: BorderBeamPalette.single(beamColor(for: agent))
+        case .multicolor: multicolorPalette.map(\.color)
+        }
+    }
+
     subscript(colorOf agent: ConversationAgent) -> Color {
         get { color(for: agent).color }
         set { setColor(HexColor(newValue, in: EnvironmentValues()), for: agent) }

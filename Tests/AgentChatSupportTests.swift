@@ -15,12 +15,12 @@ extension ChatJournalTests {
         try require(SlashCommandMatcher.query(in: "/rv") == "rv" && SlashCommandMatcher.query(in: "/model x") == nil
                     && SlashCommandMatcher.query(in: "hi /x") == nil, "Completion only runs on a leading /word")
         try require(SessionChatSource.terminal.slashCommands.isEmpty, "Terminal sessions have no slash commands")
-        let fuzzy = SlashCommandMatcher.matches(for: "rv", in: commands, recent: [])
+        let fuzzy = SlashCommandMatcher.matches(for: "rv", in: SessionChatSource.codex.slashCommands, recent: [])
         try require(fuzzy.first?.command.name == "review" && fuzzy.first?.matchedOffsets == [0, 2], "/rv matches /review first")
         let prefix = SlashCommandMatcher.matches(for: "co", in: commands, recent: [])
         try require(prefix.prefix(4).allSatisfy { $0.command.name.hasPrefix("co") }, "Prefix matches rank first")
-        let recent = SlashCommandMatcher.matches(for: "co", in: commands, recent: ["cost"])
-        try require(recent.first?.command.name == "cost", "Recently used commands rank higher among equal matches")
+        let recent = SlashCommandMatcher.matches(for: "co", in: commands, recent: ["copy"])
+        try require(recent.first?.command.name == "copy", "Recently used commands rank higher among equal matches")
         try require(SlashCommandMatcher.matches(for: "zzz", in: commands, recent: []).isEmpty, "Non-matching queries list nothing")
         guard let model = commands.first(where: { $0.name == "model" }) else { throw NSError(domain: "Claude has /model", code: 1) }
         try require(SlashCommandMatcher.insertion(for: model) == "/model " && model.argument == "model", "Accepting inserts the command and its argument hint")
@@ -33,11 +33,11 @@ extension ChatJournalTests {
         let single = SlashCommandMatcher.matches(for: "secur", in: commands, recent: [])
         try require(SlashCommandMatcher.commandToAcceptOnReturn(draft: "/secur", matches: single, selection: 0, isNavigated: false)?.name == "security-review",
                     "Return accepts an unambiguous match")
-        let exact = SlashCommandMatcher.matches(for: "review", in: commands, recent: [])
-        try require(SlashCommandMatcher.commandToAcceptOnReturn(draft: "/review", matches: exact, selection: 0, isNavigated: true) == nil,
+        let exact = SlashCommandMatcher.matches(for: "compact", in: commands, recent: [])
+        try require(SlashCommandMatcher.commandToAcceptOnReturn(draft: "/compact", matches: exact, selection: 0, isNavigated: true) == nil,
                     "Return sends a draft that already is the selected command")
-        let recentLonger = SlashCommandMatcher.matches(for: "review", in: commands, recent: ["security-review"])
-        try require(recentLonger.first?.command.name == "review", "An exact match ranks first")
+        let recentLonger = SlashCommandMatcher.matches(for: "skills", in: commands, recent: ["reload-skills"])
+        try require(recentLonger.first?.command.name == "skills", "An exact match ranks first")
         let recentPrefix = SlashCommandMatcher.matches(for: "model", in: SessionChatSource.openCode.slashCommands + [SlashCommand("model", "Change the model")], recent: ["models"])
         try require(recentPrefix.first?.command.name == "model", "An exact match beats a recent longer prefix")
         let custom = SlashCommandDiscovery.command(name: "deploy", markdown: "---\ndescription: \"Ship it\"\nargument-hint: [env]\n---\nBody")
@@ -75,8 +75,15 @@ extension ChatJournalTests {
         let literal = SlashCommandDiscovery.command(name: "x", markdown: "---\r\ndescription: |\r\n  one\r\n  two\r\n---\r\n")
         try require(literal?.summary == "one\ntwo", "CRLF block scalars keep their lines")
         try require(tasks == "- ☑ Done\n- ☐ Todo\n```\n- [ ] code\n```", "Task list items get checkboxes outside code blocks")
-        try require(SlashCommandDiscovery.merged(commands, [SlashCommand("review", "Other"), SlashCommand("deploy", "Ship")]).filter { $0.name == "review" }.count == 1,
-                    "Custom commands never duplicate built-in ones")
+        let mergedCommands = SlashCommandDiscovery.merged(commands, [SlashCommand("compact", "Other"), SlashCommand("deploy", "Ship"), SlashCommand("deploy", "Again")])
+        try require(mergedCommands.filter { $0.name == "compact" }.count == 1 && mergedCommands.filter { $0.name == "deploy" }.count == 1,
+                    "Custom commands never duplicate built-in ones or each other")
+        let sources: [SessionChatSource] = [.claude, .codex, .copilot, .openCode]
+        try require(sources.allSatisfy { Set($0.slashCommands.map(\.name)).count == $0.slashCommands.count && !$0.slashCommands.isEmpty },
+                    "Built-in command lists have unique names")
+        try require(["code-review", "simplify", "effort", "goal", "btw"].allSatisfy { name in commands.contains { $0.name == name } }
+                    && !commands.contains { ["cost", "review", "pr-comments", "agents"].contains($0.name) },
+                    "Claude lists its current built-ins and drops the removed ones")
         print("PASS Slash command fuzzy completion, Return handling and custom commands")
     }
 
@@ -109,9 +116,42 @@ extension ChatJournalTests {
         print("PASS transcript tool grouping, identifiers and group state")
     }
 
+    static func customCommandDiscovery() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("heka-slash-\(UUID())")
+        defer { try? FileManager.default.removeItem(at: root) }
+        let home = root.appendingPathComponent("home")
+        let project = root.appendingPathComponent("project")
+        func write(_ text: String, _ path: String, in base: URL) throws {
+            let file = base.appendingPathComponent(path)
+            try FileManager.default.createDirectory(at: file.deletingLastPathComponent(), withIntermediateDirectories: true)
+            try text.write(to: file, atomically: true, encoding: .utf8)
+        }
+        try write("---\nname: ship\ndescription: Ship it\n---\n", ".github/skills/ship/SKILL.md", in: project)
+        try write("---\nname: ship\ndescription: Again\n---\n", ".agents/skills/ship/SKILL.md", in: home)
+        try write("---\nname: tidy\ndescription: Tidy up\n---\n", ".copilot/skills/tidy/SKILL.md", in: home)
+        try write("---\nname: hidden\nuser-invocable: false\n---\n", ".copilot/skills/hidden/SKILL.md", in: home)
+        let copilot = await SlashCommandDiscovery.customCommands(for: .copilot, directory: project.path, home: home)
+        let copilotMerged = SlashCommandDiscovery.merged(SessionChatSource.copilot.slashCommands, copilot)
+        try require(copilotMerged.filter { $0.name == "ship" }.map(\.summary) == ["Ship it"] && copilotMerged.contains { $0.name == "tidy" }
+                    && !copilotMerged.contains { $0.name == "hidden" }, "Copilot lists project and personal skills once")
+        try write("---\ndescription: Deploy\nname: ignored\n---\nBody", ".opencode/commands/team/deploy.md", in: project)
+        try write("Run the checks", ".config/opencode/command/check.md", in: home)
+        try write("---\nname: lint\ndescription: Lint\n---\n", ".opencode/skills/lint/SKILL.md", in: project)
+        try write("---\nname: polish\ndescription: Polish\n---\n", ".claude/skills/polish/SKILL.md", in: home)
+        try write("---\ndescription: Mine\n---\n", ".opencode/commands/review.md", in: project)
+        let openCode = await SlashCommandDiscovery.customCommands(for: .openCode, directory: project.path, home: home)
+        let openCodeMerged = SlashCommandDiscovery.merged(SessionChatSource.openCode.slashCommands, openCode)
+        try require(openCodeMerged.first { $0.name == "team/deploy" }?.summary == "Deploy" && openCodeMerged.first { $0.name == "check" }?.summary == "Run the checks",
+                    "OpenCode commands are named after their path in the commands folder")
+        try require(["lint", "polish"].allSatisfy { name in openCodeMerged.contains { $0.name == name } }, "OpenCode lists its own and shared skills")
+        try require(openCodeMerged.filter { $0.name == "review" }.count == 1, "OpenCode custom commands never duplicate built-in ones")
+        print("PASS Copilot and OpenCode custom slash commands")
+    }
+
     @MainActor static func agentChatSupport() async throws {
         try slashCommandCompletion()
         try transcriptToolGrouping()
+        try await customCommandDiscovery()
         let root = FileManager.default.temporaryDirectory.appendingPathComponent("heka-chat-support-\(UUID())")
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: root) }
@@ -257,8 +297,84 @@ extension ChatJournalTests {
         print("PASS syntax highlighting tokens and Unicode ranges")
         try codeBlocksReachHekaHighlighter()
         try composerDrafts()
+        try composerQuotes()
         try await sessionChatActions()
+        try pendingMessagesReconcile()
+        try await pendingMessagesFollowSends()
         try composerImageCleanup()
+    }
+
+    static func pendingMessagesReconcile() throws {
+        let history = [SessionMessage(id: "old", kind: .input, text: "Bonjour"), SessionMessage(id: "reply", kind: .assistant, text: "Salut")]
+        var pending = PendingChatMessages()
+        pending.reconcile(with: history)
+        let first = PendingChatMessage(text: "Corrige  le test", prompt: "/tmp/a.png Corrige  le test")
+        let second = PendingChatMessage(text: "Puis la doc", prompt: "Puis la doc")
+        pending.add(first)
+        pending.add(second)
+        pending.reconcile(with: history + [SessionMessage(id: "reply-2", kind: .assistant, text: "Je regarde")])
+        try require(pending.items.map(\.id) == [first.id, second.id], "Pending messages stay until an input reaches the transcript")
+        let echoed = history + [SessionMessage(id: "first", kind: .input, text: "[Image #1] Corrige le test\n")]
+        pending.reconcile(with: echoed)
+        try require(pending.items.map(\.id) == [second.id], "The matching input replaces its pending bubble, whitespace and attachments aside")
+        pending.reconcile(with: echoed)
+        try require(pending.items.map(\.id) == [second.id], "A known input never consumes another pending message")
+        pending.markUnconfirmed([second.id])
+        try require(pending.items.first?.state == .unconfirmed, "A message missing from the transcript becomes unconfirmed")
+        pending.reconcile(with: echoed + [SessionMessage(id: "second", kind: .input, text: "Puis la doc")])
+        try require(pending.items.isEmpty, "An unconfirmed message is still replaced once it appears")
+
+        let third = PendingChatMessage(text: "Troisième", prompt: "Troisième")
+        let fourth = PendingChatMessage(text: "Quatrième", prompt: "Quatrième")
+        pending.add(third)
+        pending.add(fourth)
+        pending.reconcile(with: echoed + [SessionMessage(id: "fourth", kind: .input, text: "Quatrième")])
+        try require(pending.items.isEmpty, "A later message reaching the transcript clears the earlier ones")
+
+        let rewritten = PendingChatMessage(text: "Explique", prompt: "Explique")
+        pending.add(rewritten)
+        pending.reconcile(with: echoed + [SessionMessage(id: "rewritten", kind: .input, text: "Explain")])
+        try require(pending.items.map(\.id) == [rewritten.id], "An unmatched input never drops a bubble during its grace period")
+        pending.reconcile(with: echoed + [SessionMessage(id: "rewritten", kind: .input, text: "Explain"), SessionMessage(id: "late", kind: .input, text: "Explique")])
+        try require(pending.items.isEmpty, "Input typed in the terminal right after a send keeps the bubble until its message arrives")
+        let rewrittenAgain = PendingChatMessage(text: "Résume", prompt: "Résume")
+        pending.add(rewrittenAgain)
+        pending.reconcile(with: echoed + [SessionMessage(id: "rewritten", kind: .input, text: "Explain"), SessionMessage(id: "late", kind: .input, text: "Explique"),
+                                          SessionMessage(id: "summary", kind: .input, text: "Summarize")])
+        pending.markUnconfirmed([rewrittenAgain.id])
+        try require(pending.items.isEmpty, "A bubble followed only by an unmatched input is taken as rewritten once its grace period ends")
+
+        let echo = PendingChatMessage(text: "Refactor", prompt: "Refactor")
+        let waiting = PendingChatMessage(text: "Then test", prompt: "Then test")
+        pending.add(echo)
+        pending.add(waiting)
+        let batch = echoed + [SessionMessage(id: "rewritten", kind: .input, text: "Explain"), SessionMessage(id: "echo", kind: .input, text: "Refactor"),
+                              SessionMessage(id: "typed", kind: .input, text: "y")]
+        pending.reconcile(with: batch)
+        try require(pending.items.map(\.id) == [waiting.id], "An unmatched input never drops a second bubble once another input matched")
+        pending.markUnconfirmed([waiting.id])
+        pending.reconcile(with: batch + [SessionMessage(id: "typed-2", kind: .input, text: "n")])
+        try require(pending.items.map(\.id) == [waiting.id], "An unrelated input never drops a bubble that is past its grace period")
+        pending.remove(waiting.id)
+
+        try require(PendingChatMessage(text: "/model", prompt: "/model", agent: .claude) == nil, "Slash commands never show a pending bubble")
+        try require(PendingChatMessage(text: "/model", prompt: "/model", agent: nil) != nil, "Shell input starting with a slash is shown")
+        try require(PendingChatMessage(text: " ", prompt: "/tmp/a.png", agent: .codex)?.text == "/tmp/a.png", "An image-only message shows its prompt")
+        print("PASS pending chat messages reconcile with the transcript")
+    }
+
+    @MainActor static func pendingMessagesFollowSends() async throws {
+        let channel = RecordingChannel()
+        let chat = SessionChat(channel: channel)
+        chat.reconcilePending(with: [])
+        let sent = await chat.send("hello", showing: PendingChatMessage(text: "hello", prompt: "hello"))
+        try require(sent && chat.pendingMessages.map(\.text) == ["hello"] && chat.sendingPendingIDs.count == 1, "A delivered message shows a pending bubble")
+        chat.reconcilePending(with: [SessionMessage(id: "hello", kind: .input, text: "hello")])
+        try require(chat.pendingMessages.isEmpty, "The real message replaces the pending bubble without a duplicate")
+        channel.fails = true
+        let failed = await chat.send("lost", showing: PendingChatMessage(text: "lost", prompt: "lost"))
+        try require(!failed && chat.pendingMessages.isEmpty && chat.error != nil, "A failed send drops its pending bubble and reports the error")
+        print("PASS session chat pending bubbles follow sends")
     }
 
     @MainActor static func composerDrafts() throws {
@@ -268,14 +384,68 @@ extension ChatJournalTests {
         drafts[terminal: left].images = [URL(filePath: "/tmp/a.png")]
         drafts[terminal: right].text = "Autre"
         try require(drafts[terminal: left].text == "Corrige le test" && drafts[terminal: right].text == "Autre", "Each terminal keeps its own draft")
-        let sent = drafts[terminal: left]
-        drafts[terminal: left].text = "Corrige le test et la doc"
-        drafts.clear(sent, of: left)
-        try require(drafts[terminal: left] == ChatDraft(text: "Corrige le test et la doc"), "Sending keeps text typed meanwhile and drops sent images")
-        drafts.clear(drafts[terminal: right], of: right)
+        let sent = drafts.take(from: left)
+        try require(sent == ChatDraft(text: "Corrige le test", images: [URL(filePath: "/tmp/a.png")]) && drafts[terminal: left] == ChatDraft(),
+                    "Sending empties the field before the send completes")
+        drafts[terminal: left].text = "Et la doc"
+        try require(drafts[terminal: left] == ChatDraft(text: "Et la doc"), "Text typed while sending starts a new draft")
+        drafts.restore(sent, to: left)
+        try require(drafts[terminal: left] == ChatDraft(text: "Corrige le test\nEt la doc", images: [URL(filePath: "/tmp/a.png")]),
+                    "A failed send puts its message back before the text typed meanwhile")
+        _ = drafts.take(from: right)
+        drafts.restore(ChatDraft(text: "Autre"), to: right)
+        try require(drafts[terminal: right] == ChatDraft(text: "Autre"), "A failed send restores the draft as it was")
+        _ = drafts.take(from: right)
         try require(drafts[terminal: right] == ChatDraft(), "A sent draft is cleared")
         try require(ChatDraft(text: " \n").isBlank && !ChatDraft(images: [URL(filePath: "/tmp/a.png")]).isBlank, "Blank drafts cannot be sent")
         print("PASS chat drafts per terminal")
+        try composerPastes()
+    }
+
+    @MainActor static func composerPastes() throws {
+        let code = (1...12).map { "line \($0)" }.joined(separator: "\n")
+        var draft = ChatDraft()
+        draft.editedText = "Fix  please"
+        draft.editedText = "Fix " + code + " please"
+        try require(draft.pastes.count == 1 && draft.text == "Fix [Pasted ~12 lines] please", "A large paste collapses into a placeholder where it was inserted")
+        try require(draft.message == "Fix " + code + " please", "Sending expands the placeholder into the pasted text")
+        draft.editedText = draft.text + "\nmore"
+        try require(draft.pastes.count == 1 && draft.message.hasSuffix(" please\nmore"), "Typing around a placeholder keeps the paste")
+        draft.editedText = draft.text.replacingOccurrences(of: "[Pasted ~12 lines]", with: "x " + code)
+        try require(draft.pastes.count == 1 && draft.text == "Fix [Pasted ~12 lines] please\nmore" && draft.message == "Fix x " + code + " please\nmore", "Replacing the placeholder drops the former paste")
+        draft.editedText = draft.text + code
+        try require(draft.pastes.map(\.token) == ["[Pasted ~12 lines]", "[Pasted ~12 lines #2]"], "Pastes of the same size keep distinct placeholders")
+        try require(draft.message == "Fix x " + code + " please\nmore" + code, "Every placeholder expands to its own text")
+        draft.removePaste(draft.pastes[0])
+        try require(draft.pastes.count == 1 && draft.text == "Fix  please\nmore[Pasted ~12 lines #2]", "Removing a paste removes its placeholder")
+        var short = ChatDraft()
+        short.editedText = "one\ntwo\nthree"
+        try require(short.pastes.isEmpty && short.message == "one\ntwo\nthree", "A short paste stays inline")
+        short.editedText = String(repeating: "a", count: ChatPaste.minimumCharacters)
+        try require(short.pastes.count == 1 && short.text == "[Pasted ~1 lines]", "A very long single line collapses too")
+        try require(ChatPaste.lineCount(of: "a\nb\n") == 2 && ChatPaste.lineCount(of: "a\r\nb") == 2, "Line counts ignore a trailing newline and handle CRLF")
+        try require(ChatPaste(text: "a\n```swift\nb\n```", excluding: "").markdown == "````\na\n```swift\nb\n```\n````", "The preview fence outgrows fences in the paste")
+        let drafts = ChatDrafts()
+        let terminal = UUID()
+        drafts[terminal: terminal].editedText = code
+        let sent = drafts.take(from: terminal)
+        try require(drafts[terminal: terminal] == ChatDraft(), "Sending clears the placeholder and its paste")
+        drafts.restore(sent, to: terminal)
+        try require(drafts[terminal: terminal] == sent && drafts[terminal: terminal].message == code, "A failed send restores the placeholder and its paste")
+        var undone = ChatDraft()
+        undone.editedText = "Fix " + code
+        undone.editedText = String(undone.text.dropLast())
+        try require(undone.visiblePastes.isEmpty && undone.message == undone.text, "A broken placeholder is sent as typed and hides its chip")
+        undone.editedText = undone.text + "]"
+        try require(undone.visiblePastes.count == 1 && undone.message == "Fix " + code, "Undoing an edit of a placeholder brings its paste back")
+        let other = (1...12).map { "other \($0)" }.joined(separator: "\n")
+        drafts[terminal: terminal].editedText = code
+        let unsent = drafts.take(from: terminal)
+        drafts[terminal: terminal].editedText = other
+        drafts.restore(unsent, to: terminal)
+        try require(drafts[terminal: terminal].text == "[Pasted ~12 lines]\n[Pasted ~12 lines #2]" && drafts[terminal: terminal].message == code + "\n" + other,
+                    "A failed send keeps both pastes when the text typed meanwhile used the same placeholder")
+        print("PASS composer paste placeholders")
     }
 
     @MainActor final class RecordingChannel: SessionChannel {
@@ -310,6 +480,13 @@ extension ChatJournalTests {
         channel.fails = true
         chat[effort: reported] = .high
         try await eventually("failed request is forgotten") { chat.requestedOptions == nil && chat.error != nil }
+        channel.fails = false
+        let copilot = AgentOptions(copilot: CopilotModelState(selected: .automatic, running: CopilotModel(id: "gpt-6-luna")))
+        chat[copilotModel: copilot] = CopilotModel(id: "grok-4.7")
+        try require(chat.shownOptions(copilot).copilot == CopilotModelState(choosing: CopilotModel(id: "grok-4.7")), "A requested Copilot model shows before Copilot reports it")
+        try await eventually("Copilot model command runs") { channel.commands.last == AgentCommand(text: "/model grok-4.7") }
+        chat.forgetRequestedOptions()
+        channel.fails = true
         let failed = await chat.send("again")
         try require(!failed && channel.sent == ["hello"], "A failed send reports its error and keeps the draft")
         print("PASS session chat actions through an environment model")

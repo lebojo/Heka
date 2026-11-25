@@ -28,5 +28,6 @@ struct SessionMessageRow: View, Equatable {
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
+        .quotable(message, agent: agent)
     }
 }

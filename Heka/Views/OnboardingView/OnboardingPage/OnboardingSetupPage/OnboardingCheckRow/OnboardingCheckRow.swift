@@ -1,17 +1,15 @@
 import SwiftUI
 
-struct OnboardingCheckRow: View {
+struct OnboardingCheckRow<Accessory: View>: View {
     let title: LocalizedStringKey
     let status: OnboardingCheckStatus
-    let fixURL: URL?
+    let accessory: Accessory
 
     var body: some View {
         LabeledContent {
             HStack {
                 OnboardingCheckStatusLabel(status: status)
-                if let fixURL {
-                    Link("Install…", destination: fixURL)
-                }
+                accessory
             }
         } label: {
             Text(title)
